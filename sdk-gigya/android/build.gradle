@@ -1,0 +1,110 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.2.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.21")
+    }
+}
+
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+
+ext {
+    name = "OwnID React Native Gigya SDK"
+    groupId = "com.ownid.android-sdk"
+    artifactId = "react-native-gigya"
+    versionName = "1.0.0"
+}
+
+android {
+    namespace "com.ownid.sdk.reactnative.gigya"
+    compileSdkVersion 32
+    buildToolsVersion "32.0.0"
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 32
+
+        gradle.projectsEvaluated {
+            preBuild.dependsOn(setVersionProperties)
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        freeCompilerArgs += ["-module-name", "com.ownid.sdk.reactnative.gigya"]
+        freeCompilerArgs += "-Xexplicit-api=strict"
+        freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
+    }
+    lint {
+        enable "Interoperability"
+    }
+}
+
+repositories {
+    def found = false
+    def defaultDir = null
+
+    if (rootProject.ext.has("reactNativeAndroidRoot")) {
+        defaultDir = rootProject.ext.get("reactNativeAndroidRoot")
+    } else {
+        defaultDir = new File(projectDir, "/../../../node_modules/react-native/android")
+    }
+
+    if (defaultDir.exists()) {
+        maven { url defaultDir.toString() }
+        found = true
+    } else {
+        def parentDir = rootProject.projectDir
+
+        1.upto(5, {
+            if (found) return true
+            parentDir = parentDir.parentFile
+
+            def androidSourcesDir = new File(parentDir, "node_modules/react-native")
+            def androidPrebuiltBinaryDir = new File(parentDir, "node_modules/react-native/android")
+
+            if (androidPrebuiltBinaryDir.exists()) {
+                maven { url androidPrebuiltBinaryDir.toString() }
+                found = true
+            } else if (androidSourcesDir.exists()) {
+                maven { url androidSourcesDir.toString() }
+                found = true
+            }
+        })
+    }
+
+    if (!found) {
+        throw new GradleException(
+                "${project.name}: unable to locate React Native android sources. " +
+                        "Ensure you have you installed React Native as a dependency in your project and try again."
+        )
+    }
+
+    mavenCentral { content { excludeGroup "com.facebook.react" } }
+    google()
+    maven { url "https://www.jitpack.io" }
+}
+
+dependencies {
+    api project(":ownid-react-native-core")
+    api "com.ownid.android-sdk:gigya:1.0.0"
+}
+
+def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-gigya.properties"
+
+task setVersionProperties(type: org.gradle.api.tasks.WriteProperties) {
+    outputFile file(propertiesFileName)
+    property "name", "OwnIDReactNativeGigya"
+    property "version", project.ext.versionName
+}
+
+clean { delete propertiesFileName }

@@ -1,0 +1,29 @@
+{
+  "name": "ownid-react-native-sdk-demo-gigya",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OwnID React Native Gigya SDK Demo",
+  "license": "Apache-2.0",
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start"
+  },
+  "dependencies": {
+    "@ownid/react-native-gigya": "^1.0.0",
+    "@react-navigation/native": "~6.0.6",
+    "@react-navigation/stack": "~6.0.11",
+    "react": "17.0.2",
+    "react-native": "^0.68.0",
+    "react-native-gesture-handler": "~2.1.0",
+    "react-native-safe-area-context": "^3.3.2",
+    "react-native-screens": "^3.13.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.17.10",
+    "@babel/runtime": "^7.17.9",
+    "babel-plugin-module-resolver": "^4.1.0",
+    "metro-react-native-babel-preset": "^0.70.2",
+    "react-native-cli": "^2.0.1"
+  }
+}
