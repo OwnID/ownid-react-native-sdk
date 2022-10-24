@@ -3,9 +3,4 @@ applyNativeModulesSettingsGradle(settings)
 
 include ":app"
 
-include ":ownid-react-native-core"
-project(":ownid-react-native-core").projectDir = new File("../node_modules/@ownid/react-native-core/android")
-include ":ownid-react-native-gigya"
-project(":ownid-react-native-gigya").projectDir = new File("../node_modules/@ownid/react-native-gigya/android")
-
 includeBuild("../node_modules/react-native-gradle-plugin")

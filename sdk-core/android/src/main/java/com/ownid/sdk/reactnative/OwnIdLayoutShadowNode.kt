@@ -1,14 +1,16 @@
 package com.ownid.sdk.reactnative
 
 import android.view.View
+import androidx.annotation.WorkerThread
 import com.facebook.react.uimanager.LayoutShadowNode
 import com.facebook.yoga.YogaMeasureFunction
 import com.facebook.yoga.YogaMeasureMode
 import com.facebook.yoga.YogaMeasureOutput
 import com.facebook.yoga.YogaNode
 import com.ownid.sdk.InternalOwnIdAPI
+import java.util.*
 
-@InternalOwnIdAPI
+@androidx.annotation.OptIn(InternalOwnIdAPI::class)
 public class OwnIdLayoutShadowNode : LayoutShadowNode(), YogaMeasureFunction {
     private var requestedWidth: Float = 0f
     private var requestedWidthMode: YogaMeasureMode = YogaMeasureMode.UNDEFINED
@@ -17,6 +19,21 @@ public class OwnIdLayoutShadowNode : LayoutShadowNode(), YogaMeasureFunction {
 
     private var measuredWidth: Int = 0
     private var measuredHeight: Int = 0
+
+    internal interface MeasureListener {
+        @WorkerThread
+        public fun onMeasure()
+    }
+
+    private val measureListenerSet = Collections.synchronizedSet(mutableSetOf<MeasureListener>())
+
+    internal fun registerStringsSetListener(listener: MeasureListener) {
+        measureListenerSet.add(listener)
+    }
+
+    internal fun unregisterStringsSetListener(listener: MeasureListener) {
+        measureListenerSet.remove(listener)
+    }
 
     init {
         setMeasureFunction(this)
@@ -27,6 +44,8 @@ public class OwnIdLayoutShadowNode : LayoutShadowNode(), YogaMeasureFunction {
         requestedWidthMode = widthMode
         requestedHeight = height
         requestedHeightMode = heightMode
+
+        measureListenerSet.forEach { listener -> listener.onMeasure() }
 
         return YogaMeasureOutput.make(measuredWidth, measuredHeight)
     }

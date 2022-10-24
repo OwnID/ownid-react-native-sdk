@@ -1,36 +1,53 @@
 {
   "name": "@ownid/react-native-gigya",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "OwnID React Native Gigya SDK",
   "license": "Apache-2.0",
-  "main": "dist/index.js",
+  "homepage": "https://ownid.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OwnID/ownid-react-native-sdk.git"
+  },
+  "main": "lib/commonjs/index",
+  "module": "lib/module/index",
+  "types": "lib/typescript/src/index.d.ts",
+  "react-native": "src/index",
+  "source": "src/index",
   "files": [
-    "dist",
+    "src",
+    "lib",
     "android",
     "ios",
-    "!android/build"
+    "sdk-gigya.podspec",
+    "!android/build",
+    "!ios/build"
   ],
   "scripts": {
-    "build": "rollup -c"
+    "build": "bob build"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
   },
   "dependencies": {
-    "@ownid/react-native-core": "^1.0.0"
+    "@ownid/react-native-core": "2.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.9",
-    "@types/react-native": "^0.67.7",
-    "babel-core": "^6.26.3",
-    "babel-runtime": "^6.26.0",
-    "react": "^18.1.0",
-    "react-native": "^0.68.0",
-    "rollup": "^2.74.1",
-    "rollup-plugin-typescript2": "^0.31.2",
-    "rollup-plugin-uglify": "^6.0.4",
-    "tslib": "^2.3.0",
-    "typescript": "^4.5.5"
+    "@types/react": "^18.0.0",
+    "@types/react-native": "^0.70.0",
+    "metro-react-native-babel-preset": "^0.73.0",
+    "react": "^18.0.0",
+    "react-native": "^0.70.0",
+    "react-native-builder-bob": "^0.20.0",
+    "typescript": "^4.8.0"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      "typescript"
+    ]
   }
 }

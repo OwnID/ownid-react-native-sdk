@@ -1,74 +1,224 @@
 # OwnID React Native Gigya SDK
-A library for integrating OwnID into a React Native application.
+The OwnID React Native Gigya SDK integrates with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-android-sdk).
+
+The [OwnID](https://ownid.com/) React Native Gigya SDK is a client library that provides a passwordless login alternative for your React Native application by using cryptographic keys to replace the traditional password. The SDK allows the user to perform Registration and Login flows in a React Native application. The SDK is available from the npm repository. For more general information about OwnID SDKs, see [OwnID React Native SDK](../README.md).
 
 ## Table of contents
-* [Installation](#installation)
-* [Configure Android](#configure-android)
-* [Configure iOS](#configure-ios)
-* [Integrate OwnID with your React Native App](#implement-the-registration-screen)
+* [Add Dependency to your project](#add-dependency-to-your-project)
+* [Configure](#configure)
+* [Integrate OwnID with your React Native App](#integrate-ownid-with-your-react-native-app)
+   + [Create OwnID Gigya instance](#create-ownid-gigya-instance)
    + [Registration](#registration)
    + [Login](#login)
-   + [Customizing the UI](#customizing-the-ui)
-* [What is OwnID?](#what-is-ownid)
-* [License](#license)
+* [Tooltip](#tooltip)   
+* [Customizing the UI](#customizing-the-ui)
+* [Advanced Configuration](#advanced-configuration)
+   + [Initialization Alternative](#initialization-alternative)
 
 ---
 
-## Installation
-Use the npm CLI to run:
+## Add Dependency to your project
+The OwnID React Native Core & Gigya SDKs are available from the [npm repository](https://www.npmjs.com/search?q=%40ownid%2Freact-native-):
 ```bash
-npm install @ownid/react-native-gigya
+npm install @ownid/react-native-core @ownid/react-native-gigya
+cd ios && pod install && cd .. # CocoaPods on iOS needs this extra step
+```
+The OwnID React Native Gigya SDK supports [autolinking](https://github.com/react-native-community/cli/blob/main/docs/autolinking.md) and is built with Android API version 33 (minimum API version 23) and Java 8. The OwnID React Native Gigya iOS SDK supports iOS 13 and higher.
+
+## Configure
+
+If you [create OwnID Gigya instance](#create-ownid-gigya-instance) from React Native there is no need for any additional configuration. Alternatively, you can create OwnID Gigya SDK instance from native side. See [Initialization Alternative](#initialization-alternative).
+
+
+## Integrate OwnID with your React Native App
+
+### Create OwnID Gigya instance
+
+Before using OwnID Button on your screens, you have to create OwnID Gigya instance. If you use default Gigya account model (`GigyaAccount` class / `GigyaAccount` struct ) then you can do this from React Native. To do so, call `OwnIdGigya.init` function with OwnID configuration. At a minimum, this configuration object defines the OwnID App Id - the unique identifier of your OwnID application, which you can obtain from the [OwnID Console](https://console.ownid.com), and `redirection_uri_ios` to set redirection Uri value for iOS:
+
+```ts
+import OwnIdGigya from '@ownid/react-native-gigya';
+
+OwnIdGigya.init({ app_id: "47tb9nt6iaur0zv", redirection_uri_ios: "com.myapp.demo://bazco" });
 ```
 
-### Configure Android
+**Important:** The `OwnIdGigya.init` function must be called after Android/iOS native Gigya instance is initialized.
+See details for [Android](https://github.com/SAP/gigya-android-sdk/tree/main/sdk-core#initialization) and [iOS](https://github.com/SAP/gigya-swift-sdk/tree/main/GigyaSwift#initialization). It's also recommended to create OwnID instance as early as possible in the application lifecycle, as OwnID Button will only be shown after creation completes.
 
-**Enable Java 8 Compatibility in Your Project**
+If you use custom Gigya account model you have to create OwnID Gigya instance in native code, see [Initialization Alternative](#initialization-alternative).
 
-The OwnID SDK requires [Java 8 bytecode](https://developer.android.com/studio/write/java8-support). To enable this feature, add the following to your application `build.gradle` file:
+### Registration
 
-```groovy
-android {
-   compileOptions {
-      sourceCompatibility JavaVersion.VERSION_1_8
-      targetCompatibility JavaVersion.VERSION_1_8
-   }
-   kotlinOptions {
-      jvmTarget = "1.8"
-   }
+Add the passwordless authentication to your application's Registration screen by including the OwnIdButton view with type `OwnIdButtonType.Register`. Call `OwnIdRegister` function once user finishes OwnID flow in OwnID WebApp and tap "Create Account" on registration form (check [complete example](https://github.com/OwnID/ownid-react-native-sdk/blob/master/demo-gigya/src/screens/Registration.js)):
+
+```ts
+import { OwnIdButton, OwnIdButtonType, OwnIdEvent, OwnIdRegister, OwnIdRegisterEvent } from '@ownid/react-native-gigya';
+
+const [name, setName] = useState('');
+const [email, setEmail] = useState('');
+
+const [ownIdReadyToRegister, setOwnIdReadyToRegister] = useState(false);
+
+const onSubmit = async (event) => {
+  event.preventDefault();
+  ...
+  
+  if (ownIdReadyToRegister) {
+    const profile = JSON.stringify({ firstName: name });
+    OwnIdRegister(email, { profile });
+    return;
+  }
+  
+  ...
 }
+
+const onOwnIdEvent = (event: OwnIdEvent) => {
+  switch (event.eventType) {
+      // Event when OwnID is busy processing request
+      case OwnIdRegisterEvent.Busy:
+        /* Show busy status 'event.isBusy' according to your application UI */
+        break;
+
+      // Event when user successfully finishes Skip Password in OwnID Web App  
+      case OwnIdRegisterEvent.ReadyToRegister:
+        setOwnIdReadyToRegister(true);
+        setEmail(event.loginId); // OwnID Web App may ask user to enter his login id (like email)
+        break;
+      
+      // Event when user select "Undo" option in ready-to-register state
+      case OwnIdRegisterEvent.Undo:
+        setOwnIdReadyToRegister(false);
+        break;
+
+      // Event when OwnID creates Gigya account and logs in user  
+      case OwnIdRegisterEvent.LoggedIn:
+        setOwnIdReadyToRegister(false);
+        /* User is logged in with OwnID */
+        break;
+      
+      // Event when OwnID returns an error
+      case OwnIdRegisterEvent.Error:
+        /* Handle 'event.cause' according to your application flow */
+        break;
+  }
+};
+
+return (
+  <View>
+    <TextInput value={name} onChangeText={setName} placeholder="First Name"/>
+    <TextInput value={email} onChangeText={setEmail} placeholder="Email"/>
+
+    <View>
+      <TextInput placeholder="Password"/>
+      <OwnIdButton type={OwnIdButtonType.Register} loginId={email} onOwnIdEvent={onOwnIdEvent} />
+    </View>
+
+    <TouchableOpacity onPress={onSubmit}><Text>Create Account</Text></TouchableOpacity>
+  </View>
+);
 ```
 
-**Add React Native Dependencies**
+The OwnID `OwnIdRegister()` function must be called in response to the `ReadyToRegister` event. This function calls the standard Gigya SDK function `register(String email, String password, Map<String, Object> params, GigyaLoginCallback<T> callback)` to register the user in Gigya, so you do not need to call this Gigya function yourself. You can define custom parameters for the registration request and pass it to `OwnIdRegister().` These parameters are passed to the [Gigya registration call](https://github.com/SAP/gigya-android-sdk/tree/main/sdk-core#register-via-email--password).
 
-In your applicaltion `build.gradle` add a dependency to `ownid-react-native-gigya` project:
+### Login
+Similar to the Registration screen, add the passwordless authentication to your application's Login screen by including the OwnIdButton view with type `OwnIdButtonType.Login`. Your app then waits for events while the user interacts with OwnID. (check [complete example](https://github.com/OwnID/ownid-react-native-sdk/blob/master/demo-gigya/src/screens/Login.js)):
 
-```groovy
-implementation project(":ownid-react-native-gigya")
+```ts
+import { OwnIdButton, OwnIdButtonType, OwnIdEvent, OwnIdLoginEvent } from '@ownid/react-native-gigya';
+
+const [email, setEmail] = useState('');
+
+const onOwnIdEvent = (event: OwnIdEvent) => {
+  switch (event.eventType) {
+    // Event when OwnID is busy processing request
+    case OwnIdLoginEvent.Busy:
+      /* Show busy status 'event.isBusy' according to your application UI */
+      break;
+    
+    //Event when user who previously set up OwnID logs in with Skip Password
+    case OwnIdLoginEvent.LoggedIn:
+      /* User is logged in with OwnID */
+      break;
+    
+    // Event when OwnID returns an error
+    case OwnIdLoginEvent.Error:
+      /* Handle 'event.cause' according to your application flow  */
+      break;
+    }
+};
+
+return (
+  <View>
+    <TextInput value={email} placeholder="Email"/>
+
+    <View>
+      <TextInput placeholder="Password"/>
+      <OwnIdButton type={OwnIdButtonType.Login} loginId={email} onOwnIdEvent={onOwnIdEvent} />
+    </View>
+    ...
+  </View>
+);
 ```
 
-Set the correct path to `ownid-react-native-core` and `ownid-react-native-gigya` projects in your `settings.gradle` file:
+## Tooltip
+The OwnID SDK by default shows a Tooltip with text "Login with Fingerprint" on Android and "Login with FaceID / TouchID" on iOS. For Login the Tooltip appears/hides every time the OwnIdButton is shown/hides. For Registration the Tooltip appears when email input contains valid email address, and follows the same OwnIdButton shown/hides logic.
 
-```groovy
-include ":ownid-react-native-core"
-project(":ownid-react-native-core").projectDir = new File("../node_modules/@ownid/react-native-core/android")
-include ":ownid-react-native-gigya"
-project(":ownid-react-native-gigya").projectDir = new File("../node_modules/@ownid/react-native-gigya/android")
+![OwnID Tooltip UI Example](tooltip_example.png) ![OwnID Tooltip Dark UI Example](tooltip_example_dark.png)
+
+OwnIdButton has parameters to specify Tooltip parameters:
+* `tooltipPosition` - tooltip position `top`/`bottom`/`start`/`end`/`none` (default `top`)
+* `tooltipBackgroundColor` - tooltip background color (default value `#FFFFFF`, default value-night: `#2A3743`)
+* `tooltipBorderColor` - tooltip border color (default value `#D0D0D0`, default value-night: `#2A3743`) 
+
+Here's an example on how you can change these parameters:
+
+```ts
+<OwnIdButton ... onOwnIdEvent={onOwnIdEvent} style={{tooltipPosition: OwnIdTooltipPosition.Top, tooltipBackgroundColor: "#FFFFFF", tooltipBorderColor: "#D0D0D0"}}/>
 ```
 
-**Create Configuration File**
+## Customizing the UI
+
+![OwnIdButton UI Example](button_view_example.jpg) ![OwnIdButton Dark UI Example](button_view_example_dark.jpg)
+
+The following is a complete list of UI customization parameters:
+
+**Parameters**
+
+* `variant` - button icon variant (default value `OwnIdButtonVariant.Fingerprint`, alternative `OwnIdButtonVariant.FaceId`)
+* `showOr` - controls showing "or" (default value `true`)
+* `backgroundColor` - background color of the button (default value `#FFFFFF`, default value-night: `#2A3743`)
+* `borderColor` - border color of the button (default value `#D0D0D0`, default value-night: `#2A3743`) 
+* `biometryIconColor` - icon or text color (default value `#0070F2`, default value-night: `#2E8FFF`)
+
+Here's an example on how you can change these parameters:
+
+```ts
+<OwnIdButton ... variant={OwnIdButtonVariant.Fingerprint} showOr={true} style={{ backgroundColor: "#FFFFFF", biometryIconColor: "#0070F2", borderColor: "#D0D0D0" }}/>
+```
+
+## Advanced Configuration
+
+### Initialization Alternative
+
+In case you don't want to create an instance of OwnID Gigya SDK from React Native or you use custom Gigya account model, you can create OwnID Gigya SDK instance from native Android and iOS code.
+
+**Android - Create Configuration File**
 
 The OwnID SDK uses a configuration file in your `assets` folder to configure itself.  At a minimum, this JSON configuration file defines the OwnID App Id - the unique identifier of your OwnID application, which you can obtain from the [OwnID Console](https://console.ownid.com). Create `assets/ownIdGigyaSdkConfig.json` and define the `app_id` parameter:
 
 ```json
 {
-   "app_id": "47tb9nt6iaur0zv" // Use your app id
+   "app_id": "47tb9nt6iaur0zv"
 }
 ```
 
-**Create Default OwnID CDC Instance**
+**Android - Create OwnID Gigya Instance**
 
-Before adding OwnID UI to your app screens, you need to use an Android Context and instance of CDC to create a default instance of OwnID CDC. Most commonly, you create this OwnID CDC instance using the Android  [Application class](https://developer.android.com/reference/kotlin/android/app/Application). For information on initializing and creating an instance of CDC, refer to the [SAP CDC documentation](https://github.com/SAP/gigya-android-sdk).
+ Most commonly, you create OwnID CDC instance using the Android [Application class](https://developer.android.com/reference/kotlin/android/app/Application). For information on initializing and creating an instance of CDC, refer to the [SAP CDC documentation](https://github.com/SAP/gigya-android-sdk). The `MyAccount` is an optional class that extends `GigyaAccount`. More details in [SAP CDC documentation](https://github.com/SAP/gigya-android-sdk/tree/main/sdk-core#explicit-initialization).
 
+
+<details open>
+<summary>Kotlin</summary>
 
 ```kotlin
 class MyApplication : Application() {
@@ -76,37 +226,45 @@ class MyApplication : Application() {
       super.onCreate()
       // Create Gigya instance
       Gigya.setApplication(this)
-      val gigya = Gigya.getInstance(MyAccount::class.java)
+
       // Create OwnID Gigya instance
-      OwnId.createGigyaInstance(this /* Context */, gigya)
+      OwnId.createGigyaInstance(this /* Context */)
+
+      // If you use custom account class
+      // OwnId.createGigyaInstance(this, gigya = Gigya.getInstance(MyAccount::class.java))
    }
 }
 ```
+</details>
+
+<details>
+<summary>Java</summary>
+
+```java
+class MyApplication extends Application {
+   @Override
+   public void onCreate() {
+      super.onCreate();
+      // Create Gigya instance
+      Gigya.setApplication(this);
+      
+      // Create OwnID Gigya instance
+      OwnIdGigyaFactory.createInstance(this /* Context */);
+
+      // If you use custom account class set Gigya Account type first
+      // Gigya.getInstance(MyAccount.class);
+      // Then create OwnID Gigya instance
+      // OwnIdGigyaFactory.createInstance(this /* Context */);
+   }
+}
+```
+</details>
 
 The OwnID SDK automatically reads the `ownIdGigyaSdkConfig.json` configuration file from your `assets` folder and creates a default instance that is accessible as `OwnId.gigya`.
 
-Finally, locate ReactNativeHost’s getPackages() method and add the `com.ownid.sdk.OwnIdPackage` package to the packages list getPackages():
+For additional configuration options, check [OwnID Gigya SDK documentation](https://github.com/OwnID/android-sdk/blob/develop/docs/sdk-gigya-doc.md).
 
-```kotlin
-override fun getPackages(): List<ReactPackage> =
-    PackageList(this).packages.apply {
-        add(OwnIdPackage())
-    }
-```
-
-### Configure iOS
-
-**Add Package Dependency**
-
-The OwnID iOS SDK is distributed as an SPM package. Use the Swift Package Manager to add the following package dependency to your project:
-
-```
-https://github.com/OwnID/ownid-ios-sdk
-```
-
-When prompted, select the **OwnIDGigyaSDK** product.
-
-**Add Property List File to Project**
+**iOS - Add Property List File to Project**
 
 When the application starts, the OwnID SDK automatically reads `OwnIDConfiguration.plist` from the file system to configure the default instance that is created. In this PLIST file, you must define a redirection URI and the OwnID App Id. Create `OwnIDConfiguration.plist` and define the following mandatory parameters:
 
@@ -118,7 +276,7 @@ When the application starts, the OwnID SDK automatically reads `OwnIDConfigurati
 	<key>OwnIDRedirectionURL</key>
 	<string>com.myapp.demo://bazco</string>
 	<key>OwnIDAppID</key>
-	<string>47tb9nt6iaur0zv</string> // Use your app id
+	<string>47tb9nt6iaur0zv</string>
 </dict>
 </plist>
 ```
@@ -132,24 +290,9 @@ Where:
 
 You need to open your project and create a new URL type that corresponds to the redirection URL specified in `OwnIDConfiguration.plist`. In Xcode, go to **Info > URL Types**, and then use the **URL Schemes** field to specify the redirection URL. For example, if the value of the `OwnIDRedirectionURL` key is `com.myapp.demo://bazco`, then you could copy `com.myapp.demo` and paste it into the **URL Schemes** field.
 
-**Add Source Files**
+**iOS - Initialize the SDK**
 
-`OwnIDReactCoreSDK` : add folder to the target OwnIDReactCoreSDK from sdk-core/ios  
-`OwnIDReactGigyaSDK`: add folder to the target OwnIDReactGigyaSDK from sdk-gigya/ios
-
-:::note
-
-When performing the actions described above, on the dialog, we recommend you to do the following:
-
-- uncheck "Copy items if needed" checkbox
-- make sure "Create groups" is selected. 
-- add files to your target in order to make it work properly
-
-:::
-
-**Initialize the SDK**
-
-Now that you have added the OwnID package dependency, you need to import the OwnID module so you can access the SDK features. Add the following import to your source files:
+Import the OwnID module so you can access the SDK features. Add the following import to your native source files:
 
 ```swift
 import OwnIDGigyaSDK
@@ -157,8 +300,7 @@ import OwnIDGigyaSDK
 
 The OwnID React SDK must be initialized properly using the `configure()` function, preferably in the main entry point of your app (in the `@main` `App` struct).
 
-Also, when react creates the OwnID button, the viewCreationClosure needs to receive the [custom account schema](https://sap.github.io/gigya-swift-sdk/GigyaSwift/#initialization) you use to communicate with Gigya (example: MyAccount.self).
-Place the function `createViewClosure()` in the same main entry point of your app: 
+Main entry point of your app: 
 
 ```swift
 @main
@@ -169,157 +311,10 @@ struct ExampleApp: App {
         Gigya.sharedInstance(MyAccount.self)
         
         //Init OwnID React SDK
-        OwnID.ReactGigyaSDK.configure()
-
-        //create view closure
-        createViewClosure()
-    }
-
-    private func createViewClosure() {
-      CreationInformation.shared.viewCreationClosure = { type in
-      let vc = OwnIDGigyaButtonViewController<MyAccount>()
-      vc.type = type
-      return vc
+        OwnID.ReactGigyaSDK.configure(MyAccount.self)
     }
   }
 }
 ```
 
-## Integrate OwnID with your React Native App
-
-### Registration
-
-Import OwnIdButton and OwnIdRegister functions:
-
-```js
-import { OwnIdButton, OwnIdRegister } from '@ownid/react-native-gigya';
-```
-
-Add the passwordless authentication to your application's Registration screen by including the OwnIdButton view with type `register`
-
-```js
-const [name, setName] = useState('');
-const [email, setEmail] = useState('');
-const [ownIdReadyToRegister, setOwnIdReadyToRegister] = useState(false);
-const onSubmit = async (event) => {
-  event.preventDefault();
-  ...
-  
-  if (ownIdReadyToRegister) {
-    const profile = JSON.stringify({ firstName: name });
-    OwnIdRegister(email, { profile });
-    return;
-  }
-  
-  ...
-}
-const onOwnIdEvent = (event) => {
-  switch (event.eventType) {
-      // Event when OwnID is busy processing request
-      case 'OwnIdRegisterEvent.Busy':
-        /* Show busy status 'event.isBusy' according to your application UI */
-        break;
-      // Event when user successfully finishes Skip Password in OwnID Web App  
-      case 'OwnIdRegisterEvent.ReadyToRegister':
-        setOwnIdReadyToRegister(true);
-        setEmail(event.loginId); // OwnID Web App may ask user to enter his login id (like email)
-        break;
-      
-      // Event when user select "Undo" option in ready-to-register state
-      case 'OwnIdRegisterEvent.Undo':
-        setOwnIdReadyToRegister(false);
-        break;
-      // Event when OwnID creates Gigya account and logs in user  
-      case 'OwnIdRegisterEvent.LoggedIn':
-        setOwnIdReadyToRegister(false);
-        /* User is logged in with OwnID */
-        break;
-      
-      // Event when OwnID returns an error
-      case 'OwnIdRegisterEvent.Error':
-        /* Handle 'event.cause' according to your application flow  */
-        break;
-  }
-};
-return (
-  <View>
-    <TextInput value={name} onChangeText={setName} placeholder="First Name"/>
-    <TextInput value={email} onChangeText={setEmail} placeholder="Email"/>
-    <View>
-      <TextInput placeholder="Password" secureTextEntry={true}/>
-      <OwnIdButton type="register" loginId={email} onOwnIdEvent={onOwnIdEvent} />
-    </View>
-    <TouchableOpacity onPress={onSubmit}><Text>Create Account</Text></TouchableOpacity>
-  </View>
-);
-```
-
-The OwnID `OwnIdRegister()` function must be called in response to the `ReadyToRegister` event. This function calls the standard Gigya SDK function `register(String email, String password, Map<String, Object> params, GigyaLoginCallback<T> callback)` to register the user in Gigya, so you do not need to call this Gigya function yourself. You can define custom parameters for the registration request and pass it to `OwnIdRegister().` These parameters are passed to the [Gigya registration call](https://github.com/SAP/gigya-android-sdk/tree/main/sdk-core#register-via-email--password).
-
-### Login
-
-The process of implementing your Login screen is very similar to the one used to implement the Registration screen - add an OwnIdButton view to your Login screen. Your app then waits for events while the user interacts with OwnID.
-
-Import OwnIdButton function:
-
-```js
-import { OwnIdButton } from '@ownid/react-native-gigya';
-```
-
-Similar to the Registration screen, add the passwordless authentication to your application's Login screen by including the OwnIdButton view with type `login`:
-
-```js
-const [email, setEmail] = useState('');
-const [password, setPassword] = useState('');
-const onOwnIdEvent = (event) => {
-  switch (event.eventType) {
-    // Event when OwnID is busy processing request
-    case 'OwnIdLoginEvent.Busy':
-      /* Show busy status 'event.isBusy' according to your application UI */
-      break;
-    
-    //Event when user who previously set up OwnID logs in with Skip Password
-    case 'OwnIdLoginEvent.LoggedIn':
-      /* User is logged in with OwnID */
-      break;
-    
-    // Event when OwnID returns an error
-    case 'OwnIdLoginEvent.Error':
-      /* Handle 'event.cause' according to your application flow  */
-      break;
-    }
-};
-return (
-  <View>
-    <TextInput value={email} onChangeText={setEmail} placeholder="Email"/>
-    <View>
-      <TextInput value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry={true} />
-      <OwnIdButton type="login" loginId={email} onOwnIdEvent={onOwnIdEvent} />
-    </View>
-    ...
-  </View>
-);
-```
-
-## Customizing the UI
-
-The following is a complete list of UI customization parameters:
-
-**Parameters**
-
-* `backgroundColor` - background color of the button (default value `#FFFFFF`, default value-night: `#2A3743`)
-* `borderColor` - border color of the button (default value `#D0D0D0`, default value-night: `#2A3743`) 
-* `biometryIconColor` - icon or text color (default value `#0070F2`, default value-night: `#2E8FFF`)
-
-Here's an example on how you can change these parameters:
-
-```js
-<OwnIdButton ... showOr={true} style={{ backgroundColor: "#FFFFFF", biometryIconColor: "#0070F2", borderColor: "#D0D0D0" }}/>
-```
-
-## What is OwnID?
-OwnID offers a passwordless login alternative to a website by using cryptographic keys to replace the traditional password. The public part of a key is stored in the website's identity platform while the private part is stored on the mobile device. With OwnID, the user’s phone becomes their method of login.
-When a user registers for an account on their phone, selecting Skip Password is all that is needed to store the private key on the phone. As a result, as long as they are logging in on their phone, selecting Skip Password logs the user into the site automatically. If the user accesses the website on a desktop, they register and log in by using their mobile device to scan a QR code. Enhanced security is available by incorporating biometrics or other multi-factor authentication methods into the registration and login process.
-
-## License
-This project is licensed under the Apache License 2.0. See the LICENSE file for more information.
+For additional options, check [OwnID Gigya SDK documentation](https://github.com/OwnID/ownid-gigya-ios-sdk).

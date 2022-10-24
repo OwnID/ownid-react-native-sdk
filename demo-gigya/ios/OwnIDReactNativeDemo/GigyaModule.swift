@@ -7,11 +7,11 @@ final class GigyaModule: NSObject {
   let genericErrorCode = "323332323232323"
   
   @objc func isLoggedIn(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    resolve(GigyaShared.instance.isLoggedIn())
+    resolve(Gigya.sharedInstance().isLoggedIn())
   }
   
   @objc func getProfile(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    GigyaShared.instance.getAccount(true) { result in
+    Gigya.sharedInstance().getAccount(true) { result in
       switch result {
       case .success(data: let account):
         let profileDict: [String: Any] = ["name": account.profile?.firstName ?? "", "email": account.profile?.email ?? ""]
@@ -33,7 +33,7 @@ final class GigyaModule: NSObject {
                       name: String,
                       resolve: @escaping RCTPromiseResolveBlock,
                       reject: @escaping RCTPromiseRejectBlock) {
-    GigyaShared.instance.register(email: loginId, password: password, params: params(firstName: name)) { result in
+    Gigya.sharedInstance().register(email: loginId, password: password, params: params(firstName: name)) { result in
       switch result {
       case .success(data: let account):
         let profileDict: [String: Any] = ["name": account.profile?.firstName ?? "", "email": account.profile?.email ?? ""]
@@ -47,10 +47,10 @@ final class GigyaModule: NSObject {
   
   @objc func login(_ loginId: String,
                    password: String,
-                   params: [String: Any],
+//                   params: [String: Any],
                    resolve: @escaping RCTPromiseResolveBlock,
                    reject: @escaping RCTPromiseRejectBlock) {
-    GigyaShared.instance.login(loginId: loginId, password: password, params: params) { result in
+    Gigya.sharedInstance().login(loginId: loginId, password: password) { result in
       switch result {
       case .success(data: let account):
         let profileDict: [String: Any] = ["name": account.profile?.firstName ?? "", "email": account.profile?.email ?? ""]
@@ -63,8 +63,8 @@ final class GigyaModule: NSObject {
   }
   
   @objc func logout(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    if GigyaShared.instance.isLoggedIn() {
-      GigyaShared.instance.logout()
+    if Gigya.sharedInstance().isLoggedIn() {
+      Gigya.sharedInstance().logout()
     }
     resolve(nil)
   }

@@ -7,9 +7,6 @@ import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
 import com.facebook.soloader.SoLoader
 import com.gigya.android.sdk.Gigya
-import com.ownid.sdk.OwnId
-import com.ownid.sdk.OwnIdPackage
-import com.ownid.sdk.createGigyaInstance
 
 class MainApplication : Application(), ReactApplication {
 
@@ -19,7 +16,6 @@ class MainApplication : Application(), ReactApplication {
 
         override fun getPackages(): List<ReactPackage> =
             PackageList(this).packages.apply {
-                add(OwnIdPackage())
                 add(GigyaPackage())
             }
 
@@ -33,8 +29,5 @@ class MainApplication : Application(), ReactApplication {
         SoLoader.init(this,  /* native exopackage */false)
 
         Gigya.setApplication(this)
-        val gigya = Gigya.getInstance(MyAccount::class.java)
-
-        OwnId.createGigyaInstance(this, gigya)
     }
 }
