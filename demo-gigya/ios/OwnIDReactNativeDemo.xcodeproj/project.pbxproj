@@ -7,33 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		160E813E28094D9900FB04E0 /* OwnIDAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160E813D28094D9900FB04E0 /* OwnIDAccount.swift */; };
-		163800EC284558050068411D /* ViewDisplayType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163800EB284558050068411D /* ViewDisplayType.swift */; };
-		163800EE284558380068411D /* CreationInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163800ED284558380068411D /* CreationInformation.swift */; };
-		163800F02845586A0068411D /* OwnIDButtonViewControllerWrapperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163800EF2845586A0068411D /* OwnIDButtonViewControllerWrapperView.swift */; };
-		163800F2284558AF0068411D /* OwnIDButtonViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163800F1284558AF0068411D /* OwnIDButtonViewController.swift */; };
-		163800F42845594D0068411D /* String+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163800F32845594D0068411D /* String+Hex.swift */; };
+		16210CBD28EFEA21000B5718 /* ErrorMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16210CB928EFEA21000B5718 /* ErrorMapper.swift */; };
+		16210CBE28EFEA21000B5718 /* NormalizedGigyaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16210CBA28EFEA21000B5718 /* NormalizedGigyaError.swift */; };
+		16210CBF28EFEA21000B5718 /* NetworkGeneralError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16210CBB28EFEA21000B5718 /* NetworkGeneralError.swift */; };
 		1646A3A0280E72890073E9BA /* GigyaModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1646A39F280E72890073E9BA /* GigyaModule.swift */; };
 		1646A3A2280E72F00073E9BA /* GigyaModuleObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 1646A3A1280E72F00073E9BA /* GigyaModuleObjC.m */; };
-		16503E732849D47200BA7A31 /* UIView+Constraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16503E722849D47200BA7A31 /* UIView+Constraints.swift */; };
-		16503E752849D92C00BA7A31 /* SizeInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16503E742849D92C00BA7A31 /* SizeInfo.swift */; };
-		16503E772849D99500BA7A31 /* OwnIDButtonRCTShadowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16503E762849D99500BA7A31 /* OwnIDButtonRCTShadowView.swift */; };
 		16742694280581B50005582D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1674268E280581B50005582D /* LaunchScreen.storyboard */; };
 		16742695280581B50005582D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 16742690280581B50005582D /* main.m */; };
 		16742696280581B50005582D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16742691280581B50005582D /* Images.xcassets */; };
 		16742699280581BE0005582D /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 16742692280581B50005582D /* AppDelegate.mm */; };
-		167ADDE82864AD78005E3F38 /* OwnIDGigyaSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 167ADDE72864AD78005E3F38 /* OwnIDGigyaSDK */; };
-		167ADDEA2864ADE6005E3F38 /* NormalizedGigyaError in Frameworks */ = {isa = PBXBuildFile; productRef = 167ADDE92864ADE6005E3F38 /* NormalizedGigyaError */; };
-		167CD7442859923D00547958 /* localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 167CD71C2859923D00547958 /* localizable.strings */; };
-		16D68C89280689AF0091EF68 /* Gigya in Frameworks */ = {isa = PBXBuildFile; productRef = 16D68C88280689AF0091EF68 /* Gigya */; };
 		16D68CA72806D9A60091EF68 /* SDKInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D68CA62806D9A60091EF68 /* SDKInitializer.swift */; };
-		16EC331828630B6800364147 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16EC331728630B6800364147 /* OwnIDConfiguration.plist */; };
-		16EC5F8B2853566D00CC59A5 /* OwnIDReactGigyaSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EC5F8A2853566D00CC59A5 /* OwnIDReactGigyaSDK.swift */; };
-		16F8D9C52833F01800FFA4A5 /* OwnIDActionButtonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F8D9C02833F01800FFA4A5 /* OwnIDActionButtonManager.swift */; };
-		16F8D9C62833F01800FFA4A5 /* OwnIdNativeModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F8D9C22833F01800FFA4A5 /* OwnIdNativeModule.swift */; };
-		16F8D9C72833F01800FFA4A5 /* OwnIDObjCExposer.m in Sources */ = {isa = PBXBuildFile; fileRef = 16F8D9C32833F01800FFA4A5 /* OwnIDObjCExposer.m */; };
-		16F8D9C82833F01800FFA4A5 /* ButtonEventsEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F8D9C42833F01800FFA4A5 /* ButtonEventsEmitter.swift */; };
-		16F8D9CB2833F10700FFA4A5 /* OwnIDGigyaButtonViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F8D9CA2833F10700FFA4A5 /* OwnIDGigyaButtonViewController.swift */; };
 		A2C769C1D3B972F75873582D /* libPods-OwnIDReactNativeDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F287BE4468FDABACAE8C89E3 /* libPods-OwnIDReactNativeDemo.a */; };
 /* End PBXBuildFile section */
 
@@ -53,70 +36,24 @@
 /* Begin PBXFileReference section */
 		11DBBAA35FED4474C99F7F84 /* Pods-OwnIDReactNativeDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OwnIDReactNativeDemo.debug.xcconfig"; path = "Target Support Files/Pods-OwnIDReactNativeDemo/Pods-OwnIDReactNativeDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* OwnIDReactNativeDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OwnIDReactNativeDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		160E813D28094D9900FB04E0 /* OwnIDAccount.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OwnIDAccount.swift; sourceTree = "<group>"; };
-		163800EB284558050068411D /* ViewDisplayType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewDisplayType.swift; sourceTree = "<group>"; };
-		163800ED284558380068411D /* CreationInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationInformation.swift; sourceTree = "<group>"; };
-		163800EF2845586A0068411D /* OwnIDButtonViewControllerWrapperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnIDButtonViewControllerWrapperView.swift; sourceTree = "<group>"; };
-		163800F1284558AF0068411D /* OwnIDButtonViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnIDButtonViewController.swift; sourceTree = "<group>"; };
-		163800F32845594D0068411D /* String+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Hex.swift"; sourceTree = "<group>"; };
+		16210CB928EFEA21000B5718 /* ErrorMapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ErrorMapper.swift; sourceTree = "<group>"; };
+		16210CBA28EFEA21000B5718 /* NormalizedGigyaError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NormalizedGigyaError.swift; sourceTree = "<group>"; };
+		16210CBB28EFEA21000B5718 /* NetworkGeneralError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkGeneralError.swift; sourceTree = "<group>"; };
 		1646A39F280E72890073E9BA /* GigyaModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigyaModule.swift; sourceTree = "<group>"; };
 		1646A3A1280E72F00073E9BA /* GigyaModuleObjC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GigyaModuleObjC.m; sourceTree = "<group>"; };
-		16503E722849D47200BA7A31 /* UIView+Constraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Constraints.swift"; sourceTree = "<group>"; };
-		16503E742849D92C00BA7A31 /* SizeInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SizeInfo.swift; sourceTree = "<group>"; };
-		16503E762849D99500BA7A31 /* OwnIDButtonRCTShadowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnIDButtonRCTShadowView.swift; sourceTree = "<group>"; };
 		1674268E280581B50005582D /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1674268F280581B50005582D /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		16742690280581B50005582D /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		16742691280581B50005582D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		16742692280581B50005582D /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
 		16742693280581B50005582D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		167CD71D2859923D00547958 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD71E2859923D00547958 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD71F2859923D00547958 /* zh-Hant-TW */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant-TW"; path = "zh-Hant-TW.lproj/localizable.strings"; sourceTree = "<group>"; };
-		167CD7202859923D00547958 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7212859923D00547958 /* el */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = el; path = el.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7222859923D00547958 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7232859923D00547958 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7242859923D00547958 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7252859923D00547958 /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/localizable.strings"; sourceTree = "<group>"; };
-		167CD7262859923D00547958 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7272859923D00547958 /* sl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sl; path = sl.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7282859923D00547958 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7292859923D00547958 /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = et; path = et.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD72A2859923D00547958 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD72B2859923D00547958 /* bg */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = bg; path = bg.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD72C2859923D00547958 /* sk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sk; path = sk.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD72D2859923D00547958 /* sr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sr; path = sr.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD72E2859923D00547958 /* ms */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ms; path = ms.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD72F2859923D00547958 /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sv; path = sv.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7302859923D00547958 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7312859923D00547958 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7322859923D00547958 /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hu; path = hu.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7332859923D00547958 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7342859923D00547958 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7352859923D00547958 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = vi; path = vi.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7362859923D00547958 /* es-MX */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es-MX"; path = "es-MX.lproj/localizable.strings"; sourceTree = "<group>"; };
-		167CD7372859923D00547958 /* lt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = lt; path = lt.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7382859923D00547958 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7392859923D00547958 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD73A2859923D00547958 /* fi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fi; path = fi.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD73B2859923D00547958 /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = id.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD73C2859923D00547958 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD73D2859923D00547958 /* th */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = th; path = th.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD73E2859923D00547958 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD73F2859923D00547958 /* zh-Hant-MO */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant-MO"; path = "zh-Hant-MO.lproj/localizable.strings"; sourceTree = "<group>"; };
-		167CD7402859923D00547958 /* pt-PT */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-PT"; path = "pt-PT.lproj/localizable.strings"; sourceTree = "<group>"; };
-		167CD7412859923D00547958 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/localizable.strings; sourceTree = "<group>"; };
-		167CD7422859923D00547958 /* hr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hr; path = hr.lproj/localizable.strings; sourceTree = "<group>"; };
+		1682C9DF286C1E3800605A5B /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
+		1682C9E0286C1E3800605A5B /* GigyaSDKConfiguration.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = GigyaSDKConfiguration.json; sourceTree = "<group>"; };
+		1682C9E2286C1E3800605A5B /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
+		1682C9E3286C1E3800605A5B /* GigyaSDKConfiguration.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = GigyaSDKConfiguration.json; sourceTree = "<group>"; };
+		1682C9E5286C1E3800605A5B /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
+		1682C9E6286C1E3800605A5B /* GigyaSDKConfiguration.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = GigyaSDKConfiguration.json; sourceTree = "<group>"; };
 		16D68CA62806D9A60091EF68 /* SDKInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKInitializer.swift; sourceTree = "<group>"; };
-		16EC331728630B6800364147 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
-		16EC5F8A2853566D00CC59A5 /* OwnIDReactGigyaSDK.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnIDReactGigyaSDK.swift; sourceTree = "<group>"; };
-		16F8D9C02833F01800FFA4A5 /* OwnIDActionButtonManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OwnIDActionButtonManager.swift; sourceTree = "<group>"; };
-		16F8D9C12833F01800FFA4A5 /* OwnIDReactCoreSDK-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OwnIDReactCoreSDK-Bridging-Header.h"; sourceTree = "<group>"; };
-		16F8D9C22833F01800FFA4A5 /* OwnIdNativeModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OwnIdNativeModule.swift; sourceTree = "<group>"; };
-		16F8D9C32833F01800FFA4A5 /* OwnIDObjCExposer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OwnIDObjCExposer.m; sourceTree = "<group>"; };
-		16F8D9C42833F01800FFA4A5 /* ButtonEventsEmitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ButtonEventsEmitter.swift; sourceTree = "<group>"; };
-		16F8D9CA2833F10700FFA4A5 /* OwnIDGigyaButtonViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OwnIDGigyaButtonViewController.swift; sourceTree = "<group>"; };
 		19F6CBCC0A4E27FBF8BF4A61 /* libPods-MyTestProject-MyTestProjectTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MyTestProject-MyTestProjectTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		23E780AD112A5F313D660C4F /* Pods-OwnIDReactSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OwnIDReactSDK.debug.xcconfig"; path = "Target Support Files/Pods-OwnIDReactSDK/Pods-OwnIDReactSDK.debug.xcconfig"; sourceTree = "<group>"; };
 		28BADBE2C3D74AD7F33BE599 /* Pods-OwnIDReactNativeDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OwnIDReactNativeDemo.release.xcconfig"; path = "Target Support Files/Pods-OwnIDReactNativeDemo/Pods-OwnIDReactNativeDemo.release.xcconfig"; sourceTree = "<group>"; };
@@ -135,9 +72,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				167ADDEA2864ADE6005E3F38 /* NormalizedGigyaError in Frameworks */,
-				167ADDE82864AD78005E3F38 /* OwnIDGigyaSDK in Frameworks */,
-				16D68C89280689AF0091EF68 /* Gigya in Frameworks */,
 				A2C769C1D3B972F75873582D /* libPods-OwnIDReactNativeDemo.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -145,17 +79,32 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		16210CB628EFEA21000B5718 /* OwnIDAccount */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = OwnIDAccount;
+			sourceTree = "<group>";
+		};
+		16210CB828EFEA21000B5718 /* NormalizedGigyaError */ = {
+			isa = PBXGroup;
+			children = (
+				16210CB928EFEA21000B5718 /* ErrorMapper.swift */,
+				16210CBA28EFEA21000B5718 /* NormalizedGigyaError.swift */,
+				16210CBB28EFEA21000B5718 /* NetworkGeneralError.swift */,
+			);
+			path = NormalizedGigyaError;
+			sourceTree = "<group>";
+		};
 		1674268D280581B50005582D /* OwnIDReactNativeDemo */ = {
 			isa = PBXGroup;
 			children = (
-				16EC331728630B6800364147 /* OwnIDConfiguration.plist */,
-				167CD71A2859923D00547958 /* Translations */,
-				16F8D9C92833F10700FFA4A5 /* OwnIDReactGigyaSDK */,
-				16F8D9BF2833F01800FFA4A5 /* OwnIDReactCoreSDK */,
+				16210CB828EFEA21000B5718 /* NormalizedGigyaError */,
+				16210CB628EFEA21000B5718 /* OwnIDAccount */,
+				1682C9DD286C1E3800605A5B /* Configs */,
 				16D68CA62806D9A60091EF68 /* SDKInitializer.swift */,
 				1646A3A1280E72F00073E9BA /* GigyaModuleObjC.m */,
 				1646A39F280E72890073E9BA /* GigyaModule.swift */,
-				160E813D28094D9900FB04E0 /* OwnIDAccount.swift */,
 				1674268E280581B50005582D /* LaunchScreen.storyboard */,
 				1674268F280581B50005582D /* AppDelegate.h */,
 				16742692280581B50005582D /* AppDelegate.mm */,
@@ -166,51 +115,41 @@
 			path = OwnIDReactNativeDemo;
 			sourceTree = "<group>";
 		};
-		167CD71A2859923D00547958 /* Translations */ = {
+		1682C9DD286C1E3800605A5B /* Configs */ = {
 			isa = PBXGroup;
 			children = (
-				167CD71B2859923D00547958 /* Resources */,
+				1682C9DE286C1E3800605A5B /* Prod */,
+				1682C9E1286C1E3800605A5B /* Stage */,
+				1682C9E4286C1E3800605A5B /* Dev */,
 			);
-			path = Translations;
+			path = Configs;
 			sourceTree = "<group>";
 		};
-		167CD71B2859923D00547958 /* Resources */ = {
+		1682C9DE286C1E3800605A5B /* Prod */ = {
 			isa = PBXGroup;
 			children = (
-				167CD71C2859923D00547958 /* localizable.strings */,
+				1682C9DF286C1E3800605A5B /* OwnIDConfiguration.plist */,
+				1682C9E0286C1E3800605A5B /* GigyaSDKConfiguration.json */,
 			);
-			path = Resources;
+			path = Prod;
 			sourceTree = "<group>";
 		};
-		16F8D9BF2833F01800FFA4A5 /* OwnIDReactCoreSDK */ = {
+		1682C9E1286C1E3800605A5B /* Stage */ = {
 			isa = PBXGroup;
 			children = (
-				16F8D9C02833F01800FFA4A5 /* OwnIDActionButtonManager.swift */,
-				16503E762849D99500BA7A31 /* OwnIDButtonRCTShadowView.swift */,
-				16503E742849D92C00BA7A31 /* SizeInfo.swift */,
-				16F8D9C12833F01800FFA4A5 /* OwnIDReactCoreSDK-Bridging-Header.h */,
-				16F8D9C22833F01800FFA4A5 /* OwnIdNativeModule.swift */,
-				16F8D9C32833F01800FFA4A5 /* OwnIDObjCExposer.m */,
-				16F8D9C42833F01800FFA4A5 /* ButtonEventsEmitter.swift */,
-				163800EB284558050068411D /* ViewDisplayType.swift */,
-				163800ED284558380068411D /* CreationInformation.swift */,
-				163800EF2845586A0068411D /* OwnIDButtonViewControllerWrapperView.swift */,
-				163800F1284558AF0068411D /* OwnIDButtonViewController.swift */,
-				163800F32845594D0068411D /* String+Hex.swift */,
-				16503E722849D47200BA7A31 /* UIView+Constraints.swift */,
+				1682C9E2286C1E3800605A5B /* OwnIDConfiguration.plist */,
+				1682C9E3286C1E3800605A5B /* GigyaSDKConfiguration.json */,
 			);
-			name = OwnIDReactCoreSDK;
-			path = "../../../sdk-core/ios/OwnIDReactCoreSDK";
+			path = Stage;
 			sourceTree = "<group>";
 		};
-		16F8D9C92833F10700FFA4A5 /* OwnIDReactGigyaSDK */ = {
+		1682C9E4286C1E3800605A5B /* Dev */ = {
 			isa = PBXGroup;
 			children = (
-				16F8D9CA2833F10700FFA4A5 /* OwnIDGigyaButtonViewController.swift */,
-				16EC5F8A2853566D00CC59A5 /* OwnIDReactGigyaSDK.swift */,
+				1682C9E5286C1E3800605A5B /* OwnIDConfiguration.plist */,
+				1682C9E6286C1E3800605A5B /* GigyaSDKConfiguration.json */,
 			);
-			name = OwnIDReactGigyaSDK;
-			path = "../../../sdk-gigya/ios/OwnIDReactGigyaSDK";
+			path = Dev;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
@@ -290,11 +229,6 @@
 			dependencies = (
 			);
 			name = OwnIDReactNativeDemo;
-			packageProductDependencies = (
-				16D68C88280689AF0091EF68 /* Gigya */,
-				167ADDE72864AD78005E3F38 /* OwnIDGigyaSDK */,
-				167ADDE92864ADE6005E3F38 /* NormalizedGigyaError */,
-			);
 			productName = MyTestProject;
 			productReference = 13B07F961A680F5B00A75B9A /* OwnIDReactNativeDemo.app */;
 			productType = "com.apple.product-type.application";
@@ -358,10 +292,6 @@
 				hr,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
-			packageReferences = (
-				16D68C87280689AF0091EF68 /* XCRemoteSwiftPackageReference "gigya-swift-sdk" */,
-				167ADDE62864AD78005E3F38 /* XCRemoteSwiftPackageReference "ownid-ios-sdk" */,
-			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -376,10 +306,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				167CD7442859923D00547958 /* localizable.strings in Resources */,
 				16742694280581B50005582D /* LaunchScreen.storyboard in Resources */,
 				16742696280581B50005582D /* Images.xcassets in Resources */,
-				16EC331828630B6800364147 /* OwnIDConfiguration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -398,7 +326,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+			shellScript = "set -e\n\nexport NODE_BINARY=/opt/homebrew/bin/node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
 		};
 		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -482,78 +410,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16F8D9CB2833F10700FFA4A5 /* OwnIDGigyaButtonViewController.swift in Sources */,
-				16F8D9C62833F01800FFA4A5 /* OwnIdNativeModule.swift in Sources */,
-				16503E772849D99500BA7A31 /* OwnIDButtonRCTShadowView.swift in Sources */,
-				163800F42845594D0068411D /* String+Hex.swift in Sources */,
-				16F8D9C82833F01800FFA4A5 /* ButtonEventsEmitter.swift in Sources */,
-				160E813E28094D9900FB04E0 /* OwnIDAccount.swift in Sources */,
+				16210CBD28EFEA21000B5718 /* ErrorMapper.swift in Sources */,
 				16D68CA72806D9A60091EF68 /* SDKInitializer.swift in Sources */,
-				16503E732849D47200BA7A31 /* UIView+Constraints.swift in Sources */,
 				1646A3A2280E72F00073E9BA /* GigyaModuleObjC.m in Sources */,
+				16210CBF28EFEA21000B5718 /* NetworkGeneralError.swift in Sources */,
 				16742699280581BE0005582D /* AppDelegate.mm in Sources */,
-				163800EC284558050068411D /* ViewDisplayType.swift in Sources */,
+				16210CBE28EFEA21000B5718 /* NormalizedGigyaError.swift in Sources */,
 				16742695280581B50005582D /* main.m in Sources */,
-				163800EE284558380068411D /* CreationInformation.swift in Sources */,
-				16F8D9C52833F01800FFA4A5 /* OwnIDActionButtonManager.swift in Sources */,
-				16EC5F8B2853566D00CC59A5 /* OwnIDReactGigyaSDK.swift in Sources */,
-				163800F2284558AF0068411D /* OwnIDButtonViewController.swift in Sources */,
-				163800F02845586A0068411D /* OwnIDButtonViewControllerWrapperView.swift in Sources */,
-				16F8D9C72833F01800FFA4A5 /* OwnIDObjCExposer.m in Sources */,
-				16503E752849D92C00BA7A31 /* SizeInfo.swift in Sources */,
 				1646A3A0280E72890073E9BA /* GigyaModule.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		167CD71C2859923D00547958 /* localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				167CD71D2859923D00547958 /* de */,
-				167CD71E2859923D00547958 /* he */,
-				167CD71F2859923D00547958 /* zh-Hant-TW */,
-				167CD7202859923D00547958 /* ar */,
-				167CD7212859923D00547958 /* el */,
-				167CD7222859923D00547958 /* ja */,
-				167CD7232859923D00547958 /* en */,
-				167CD7242859923D00547958 /* nb */,
-				167CD7252859923D00547958 /* en-GB */,
-				167CD7262859923D00547958 /* es */,
-				167CD7272859923D00547958 /* sl */,
-				167CD7282859923D00547958 /* da */,
-				167CD7292859923D00547958 /* et */,
-				167CD72A2859923D00547958 /* it */,
-				167CD72B2859923D00547958 /* bg */,
-				167CD72C2859923D00547958 /* sk */,
-				167CD72D2859923D00547958 /* sr */,
-				167CD72E2859923D00547958 /* ms */,
-				167CD72F2859923D00547958 /* sv */,
-				167CD7302859923D00547958 /* cs */,
-				167CD7312859923D00547958 /* ko */,
-				167CD7322859923D00547958 /* hu */,
-				167CD7332859923D00547958 /* tr */,
-				167CD7342859923D00547958 /* pl */,
-				167CD7352859923D00547958 /* vi */,
-				167CD7362859923D00547958 /* es-MX */,
-				167CD7372859923D00547958 /* lt */,
-				167CD7382859923D00547958 /* ru */,
-				167CD7392859923D00547958 /* fr */,
-				167CD73A2859923D00547958 /* fi */,
-				167CD73B2859923D00547958 /* id */,
-				167CD73C2859923D00547958 /* nl */,
-				167CD73D2859923D00547958 /* th */,
-				167CD73E2859923D00547958 /* pt */,
-				167CD73F2859923D00547958 /* zh-Hant-MO */,
-				167CD7402859923D00547958 /* pt-PT */,
-				167CD7412859923D00547958 /* ro */,
-				167CD7422859923D00547958 /* hr */,
-			);
-			name = localizable.strings;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
@@ -567,7 +435,7 @@
 				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = OwnIDReactNativeDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -579,9 +447,13 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.react;
 				PRODUCT_NAME = OwnIDReactNativeDemo;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -596,7 +468,7 @@
 				DEFINES_MODULE = NO;
 				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
 				INFOPLIST_FILE = OwnIDReactNativeDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -608,8 +480,12 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.react;
 				PRODUCT_NAME = OwnIDReactNativeDemo;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
@@ -647,7 +523,7 @@
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -681,6 +557,7 @@
 					"-DFOLLY_MOBILE=1",
 					"-DFOLLY_USE_LIBCPP=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -718,7 +595,7 @@
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -744,6 +621,7 @@
 					"-DFOLLY_MOBILE=1",
 					"-DFOLLY_USE_LIBCPP=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -771,43 +649,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		167ADDE62864AD78005E3F38 /* XCRemoteSwiftPackageReference "ownid-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/OwnID/ownid-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
-		16D68C87280689AF0091EF68 /* XCRemoteSwiftPackageReference "gigya-swift-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SAP/gigya-swift-sdk";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		167ADDE72864AD78005E3F38 /* OwnIDGigyaSDK */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 167ADDE62864AD78005E3F38 /* XCRemoteSwiftPackageReference "ownid-ios-sdk" */;
-			productName = OwnIDGigyaSDK;
-		};
-		167ADDE92864ADE6005E3F38 /* NormalizedGigyaError */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 167ADDE62864AD78005E3F38 /* XCRemoteSwiftPackageReference "ownid-ios-sdk" */;
-			productName = NormalizedGigyaError;
-		};
-		16D68C88280689AF0091EF68 /* Gigya */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16D68C87280689AF0091EF68 /* XCRemoteSwiftPackageReference "gigya-swift-sdk" */;
-			productName = Gigya;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

@@ -1,19 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  UIManager,
-  findNodeHandle,
-  requireNativeComponent,
-  DeviceEventEmitter,
-  NativeEventEmitter,
-  NativeModules,
-  Platform, EmitterSubscription
-} from 'react-native';
+import { UIManager, findNodeHandle, requireNativeComponent, DeviceEventEmitter, NativeEventEmitter, NativeModules, Platform, EmitterSubscription } from 'react-native';
 
 const { ButtonEventsEventEmitter, OwnIdNativeModule } = NativeModules;
 
 const OwnIdNativeViewManager = requireNativeComponent('OwnIdButtonManager');
 
-let ownIdButtonIds = {};
+const ownIdButtonIds: { [index: string]: number | null } = {};
 
 function setViewId(buttonType: OwnIdButtonType, viewId: number | null) {
   ownIdButtonIds[buttonType] = viewId;
@@ -21,6 +13,25 @@ function setViewId(buttonType: OwnIdButtonType, viewId: number | null) {
 
 function getViewId(buttonType: OwnIdButtonType) {
   return ownIdButtonIds[buttonType];
+}
+
+export interface OwnIdConfiguration {
+  app_id: string;
+  env?: string;
+  redirection_uri?: string;
+  redirection_uri_ios?: string;
+  redirection_uri_android?: string;
+  enable_logging?: boolean;
+}
+
+export enum OwnIdButtonType {
+  Register = 'register',
+  Login = 'login',
+}
+
+export enum OwnIdButtonVariant {
+  Fingerprint = 'fingerprint',
+  FaceId = 'faceId',
 }
 
 export enum OwnIdLoginEvent {
@@ -37,6 +48,14 @@ export enum OwnIdRegisterEvent {
   Error = 'OwnIdRegisterEvent.Error',
 }
 
+export enum OwnIdTooltipPosition {
+  None = 'none',
+  Top = 'top',
+  Bottom = 'bottom',
+  Start = 'start',
+  End = 'end',
+}
+
 export interface OwnIdEventCause {
   className: string;
   message: string;
@@ -44,28 +63,42 @@ export interface OwnIdEventCause {
   stackTrace: string;
 }
 
-export interface OwnIdEvent {
-  eventType: OwnIdLoginEvent | OwnIdRegisterEvent;
-  isBusy?: boolean;
-  loginId?: string;
-  cause?: OwnIdEventCause;
-}
+export type OwnIdEvent =
+  {
+    eventType: OwnIdLoginEvent.Busy | OwnIdRegisterEvent.Busy;
+    isBusy: boolean;
+  } |
+  {
+    eventType: OwnIdLoginEvent.Error | OwnIdRegisterEvent.Error;
+    cause: OwnIdEventCause;
+  } |
+  {
+    eventType: OwnIdRegisterEvent.ReadyToRegister;
+    loginId: string;
+  } |
+  {
+    eventType: OwnIdLoginEvent.LoggedIn | OwnIdRegisterEvent.LoggedIn | OwnIdRegisterEvent.Undo;
+  };
 
 export interface OwnIdButtonProps {
-  style: {
-    biometryIconColor: string;
-    backgroundColor: string;
-    borderColor: string;
-    [key: string]: string;
-  };
-  onOwnIdEvent: (event: OwnIdEvent) => void;
-  showOr?: boolean;
   type: OwnIdButtonType;
+  variant?: OwnIdButtonVariant;
+  loginId?: string;
+  style?: {
+    iconColor?: string;
+    backgroundColor?: string;
+    borderColor?: string;
+    tooltipPosition?: OwnIdTooltipPosition;
+    tooltipBackgroundColor?: string;
+    tooltipBorderColor?: string;
+    [key: string]: string | undefined;
+  };
+  onOwnIdEvent?: (event: OwnIdEvent) => void;
+  showOr?: boolean;
 }
 
-export const OwnIdButton = ({ style, onOwnIdEvent = () => { }, showOr = true, type, ...restProps }: OwnIdButtonProps) => {
-
-  const { biometryIconColor, backgroundColor, borderColor, ...styles } = { height: 48, marginStart: 10, ...style }
+export const OwnIdButton = ({ variant = OwnIdButtonVariant.Fingerprint, style, onOwnIdEvent = () => { }, showOr = true, type, ...restProps }: OwnIdButtonProps) => {
+  const { iconColor, backgroundColor, borderColor, tooltipPosition, tooltipBackgroundColor, tooltipBorderColor, ...styles } = { height: 48, marginStart: 10, tooltipPosition: OwnIdTooltipPosition.Top, ...style }
 
   const ref = useRef(null);
   const subscription = useRef<EmitterSubscription | null>(null);
@@ -79,7 +112,8 @@ export const OwnIdButton = ({ style, onOwnIdEvent = () => { }, showOr = true, ty
       UIManager.dispatchViewManagerCommand(viewId, UIManager.OwnIdButtonManager.Commands.create.toString(), [viewId]);
     }
     if (Platform.OS === 'ios') {
-      subscription.current = new NativeEventEmitter(ButtonEventsEventEmitter).addListener('OwnIdEvent', onOwnIdEvent);
+      const emitter = new NativeEventEmitter(ButtonEventsEventEmitter);
+      subscription.current = emitter.addListener('OwnIdEvent', onOwnIdEvent);
     }
     return () => {
       subscription.current!.remove();
@@ -89,11 +123,15 @@ export const OwnIdButton = ({ style, onOwnIdEvent = () => { }, showOr = true, ty
   return (
     <OwnIdNativeViewManager
       // @ts-ignore
+      variant={variant}
       style={styles}
       showOr={showOr}
-      biometryIconColor={biometryIconColor}
+      iconColor={iconColor}
       buttonBackgroundColor={backgroundColor}
       buttonBorderColor={borderColor}
+      tooltipPosition={tooltipPosition}
+      tooltipBackgroundColor={tooltipBackgroundColor}
+      tooltipBorderColor={tooltipBorderColor}
       type={type}
       {...restProps}
       ref={ref}
@@ -101,12 +139,12 @@ export const OwnIdButton = ({ style, onOwnIdEvent = () => { }, showOr = true, ty
   );
 };
 
-export type OwnIdButtonType = 'register' | 'login';
+export type RegistrationParameters = any;
 
-export const OwnIdRegister = (loginId: string, registrationParameters: RegistrationOptions) => {
+export const OwnIdRegister = (loginId: string, registrationParameters: RegistrationParameters) => {
   if (Platform.OS === 'android') {
     // @ts-ignore
-    UIManager.dispatchViewManagerCommand(getViewId('register'), UIManager.OwnIdButtonManager.Commands.register.toString(), [loginId, registrationParameters]);
+    UIManager.dispatchViewManagerCommand(getViewId(OwnIdButtonType.Register), UIManager.OwnIdButtonManager.Commands.register.toString(), [loginId, registrationParameters]);
   }
   if (Platform.OS === 'ios') {
     OwnIdNativeModule.register(loginId, registrationParameters);
