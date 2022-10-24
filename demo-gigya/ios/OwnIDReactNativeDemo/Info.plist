@@ -44,9 +44,9 @@
       <string>da</string>
   </array>
 	<key>GigyaApiDomain</key>
-	<string>eu1.gigya.com</string>
+	<string>us1.gigya.com</string>
 	<key>GigyaApiKey</key>
-	<string>4_CvcAyQNloWNf2RuusXe4aQ</string>
+	<string>3_O4QE0Kk7QstG4VGDPED5omrr8mgbTuf_Gim8V_Y19YDP75m_msuGtNGQz89X0KWP</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>CFBundleDevelopmentRegion</key>
