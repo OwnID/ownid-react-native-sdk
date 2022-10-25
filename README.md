@@ -1,4 +1,4 @@
-![logo](docs/logo.svg)
+![logo](logo.svg)
 <br>
 <br>
 [![React Native Core SDK version](https://img.shields.io/npm/v/@ownid/react-native-core?label=React%20Native%20Core%20SDK)](https://www.npmjs.com/package/@ownid/react-native-core) [![React Native Gigya SDK version](https://img.shields.io/npm/v/@ownid/react-native-gigya?label=React%20Native%20Gigya%20SDK)](https://www.npmjs.com/package/@ownid/react-native-gigya)
