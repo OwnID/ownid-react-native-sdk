@@ -1,8 +1,6 @@
 import Foundation
 import Gigya
-import OwnIDCoreSDK
 import SDKGigya
-import SDKCore
 
 @objc
 public final class OwnIDSDKInitializer: NSObject {

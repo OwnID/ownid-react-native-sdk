@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { ActivityIndicator, GestureResponderEvent, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { StackActions, useTheme } from '@react-navigation/native';
 
-import auth from '../services/auth.gigya.service';
+import auth from '../services/auth.service';
 import styles from '../styles';
 
-import { OwnIdButton, OwnIdButtonType, OwnIdButtonVariant, OwnIdEvent, OwnIdLoginEvent } from '@ownid/react-native-gigya';
+import { OwnIdButton, OwnIdButtonType, OwnIdEvent, OwnIdLoginEvent } from '@ownid/react-native-gigya';
 
 export const LoginPage = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -75,8 +75,8 @@ export const LoginPage = ({ navigation }: any) => {
           <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background }} value={email} onChangeText={setEmail} placeholder="Email" keyboardType="email-address" />
 
           <View style={styles.row}>
-            <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background, flex: 1 }} value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry={true} />
             <OwnIdButton type={OwnIdButtonType.Login} loginId={email} onOwnIdEvent={onOwnIdEvent} />
+            <TextInput style={{ ...styles.ownInput, marginStart: 8, backgroundColor: colors.background, flex: 1 }} value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry={true} />
           </View>
 
           <TouchableOpacity onPress={onSubmit} style={styles.buttonContainer}>

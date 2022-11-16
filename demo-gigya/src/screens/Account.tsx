@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Text, View, TouchableOpacity } from "react-native";
 import { StackActions, useTheme } from '@react-navigation/native';
 
-import auth from '../services/auth.gigya.service';
+import auth from '../services/auth.service';
 import styles from '../styles';
 
 export const AccountPage = ({ navigation }: any) => {

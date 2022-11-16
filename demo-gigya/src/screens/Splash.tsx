@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View } from "react-native";
 import { StackActions } from '@react-navigation/native';
 
-import auth from '../services/auth.gigya.service';
+import auth from '../services/auth.service';
 
 export const SplashPage = ({ navigation }) => {
     const [isLoggedIn, setLoggedIn] = useState(null);

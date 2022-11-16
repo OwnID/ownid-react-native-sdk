@@ -5,6 +5,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
+import com.ownid.sdk.Configuration
 import com.ownid.sdk.OwnId
 import com.ownid.sdk.OwnIdLogger
 import com.ownid.sdk.createGigyaInstanceFromJson
@@ -18,9 +19,12 @@ public class OwnIdGigyaModule(reactContext: ReactApplicationContext) : ReactCont
     public fun createInstance(configuration: ReadableMap, promise: Promise) {
         try {
             val configurationJson = JSONObject(configuration.toHashMap())
-            if (configurationJson.has("redirection_uri_android")) {
-                configurationJson.put("redirection_uri", configurationJson.getString("redirection_uri_android"))
+            val redirectionUriAndroid = configurationJson.optString(Configuration.KEY.REDIRECTION_URI_ANDROID)
+
+            if (redirectionUriAndroid.isNotBlank()) {
+                configurationJson.put(Configuration.KEY.REDIRECTION_URI, redirectionUriAndroid)
             }
+
             OwnId.createGigyaInstanceFromJson(reactApplicationContext, configurationJson.toString())
             promise.resolve(null)
         } catch (cause: Throwable) {

@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.3.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.21")
     }
 }
 
@@ -16,7 +16,7 @@ ext {
     name = "OwnID React Native Gigya SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-gigya"
-    versionName = "2.0.0"
+    versionName = "2.1.0"
 }
 
 android {
@@ -95,7 +95,7 @@ repositories {
 
 dependencies {
     api project(":ownid_react-native-core")
-    api "com.ownid.android-sdk:gigya:2.0.0"
+    api "com.ownid.android-sdk:gigya:2.1.0"
 }
 
 def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-gigya.properties"

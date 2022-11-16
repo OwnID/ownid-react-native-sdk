@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, GestureResponderEvent, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { StackActions, useTheme } from '@react-navigation/native';
 
-import auth from '../services/auth.gigya.service';
+import auth from '../services/auth.service';
 import styles from '../styles';
 
 import { OwnIdButton, OwnIdButtonType, OwnIdEvent, OwnIdRegister, OwnIdRegisterEvent } from '@ownid/react-native-gigya';
@@ -95,8 +95,8 @@ export const RegistrationPage = ({ navigation }: any) => {
           <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background }} value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="Email" />
 
           <View style={styles.row}>
-            <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background, flex: 1 }} value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry={true} />
             <OwnIdButton type={OwnIdButtonType.Register} loginId={email} onOwnIdEvent={onOwnIdEvent} />
+            <TextInput style={{ ...styles.ownInput, marginStart: 8, backgroundColor: colors.background, flex: 1 }} value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry={true} />
           </View>
 
           <TouchableOpacity onPress={onSubmit} style={styles.buttonContainer}>

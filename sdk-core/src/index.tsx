@@ -48,6 +48,11 @@ export enum OwnIdRegisterEvent {
   Error = 'OwnIdRegisterEvent.Error',
 }
 
+export enum OwnIdWidgetPosition {
+  Start = 'start',
+  End = 'end',
+}
+
 export enum OwnIdTooltipPosition {
   None = 'none',
   Top = 'top',
@@ -75,14 +80,20 @@ export type OwnIdEvent =
   {
     eventType: OwnIdRegisterEvent.ReadyToRegister;
     loginId: string;
+    authType: string;
   } |
   {
-    eventType: OwnIdLoginEvent.LoggedIn | OwnIdRegisterEvent.LoggedIn | OwnIdRegisterEvent.Undo;
+    eventType: OwnIdLoginEvent.LoggedIn | OwnIdRegisterEvent.LoggedIn;
+    authType: string;
+  } |
+  {
+    eventType: OwnIdRegisterEvent.Undo;
   };
 
 export interface OwnIdButtonProps {
   type: OwnIdButtonType;
   variant?: OwnIdButtonVariant;
+  widgetPosition?: OwnIdWidgetPosition;
   loginId?: string;
   style?: {
     iconColor?: string;
@@ -97,8 +108,14 @@ export interface OwnIdButtonProps {
   showOr?: boolean;
 }
 
-export const OwnIdButton = ({ variant = OwnIdButtonVariant.Fingerprint, style, onOwnIdEvent = () => { }, showOr = true, type, ...restProps }: OwnIdButtonProps) => {
-  const { iconColor, backgroundColor, borderColor, tooltipPosition, tooltipBackgroundColor, tooltipBorderColor, ...styles } = { height: 48, marginStart: 10, tooltipPosition: OwnIdTooltipPosition.Top, ...style }
+export const OwnIdButton = ({
+  variant = OwnIdButtonVariant.Fingerprint, widgetPosition = OwnIdWidgetPosition.Start, style, onOwnIdEvent = () => { }, showOr = true, type, ...restProps
+}: OwnIdButtonProps) => {
+  const {
+    iconColor, backgroundColor, borderColor, tooltipPosition, tooltipBackgroundColor, tooltipBorderColor, ...styles
+  } = {
+    height: 48, tooltipPosition: OwnIdTooltipPosition.Top, ...style
+  }
 
   const ref = useRef(null);
   const subscription = useRef<EmitterSubscription | null>(null);
@@ -124,6 +141,7 @@ export const OwnIdButton = ({ variant = OwnIdButtonVariant.Fingerprint, style, o
     <OwnIdNativeViewManager
       // @ts-ignore
       variant={variant}
+      widgetPosition={widgetPosition}
       style={styles}
       showOr={showOr}
       iconColor={iconColor}
