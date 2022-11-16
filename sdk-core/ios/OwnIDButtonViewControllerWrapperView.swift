@@ -36,6 +36,12 @@ final class OwnIDButtonViewControllerWrapperView: UIView {
         }
     }
     
+    @objc var widgetPosition: NSString = "" {
+        didSet {
+            setWidgetPosition(value: widgetPosition)
+        }
+    }
+    
     @objc var loginId: NSString = "" {
         didSet {
             controller?.loginId = loginId as String
@@ -116,10 +122,21 @@ private extension OwnIDButtonViewControllerWrapperView {
         let isOrViewEnabled = value.boolValue
         controller?.applyShowOr(isOrViewEnabled: isOrViewEnabled)
     }
+    
+    func setWidgetPosition(value: NSString) {
+        if let widgetPosition = OwnID.UISDK.WidgetPosition(rawValue: widgetPosition.lowercased) {
+            controller?.applyWidgetPosition(widgetPosition: widgetPosition)
+        }
+    }
 }
 
 private extension OwnIDButtonViewControllerWrapperView {
     func createButtonController(type: ViewDisplayType) {
+        if !OwnID.CoreSDK.shared.isSDKConfigured {
+            let loadingEventDictionary = ["eventType": "OwnIdRegisterEvent.Error", "cause": ["message": "SDK is not initialized. Please initalize it before using it's code."]] as [String : Any]
+            ButtonEventsEventEmitter.shared?.sendEvent(withName: ButtonEventsEventEmitter.EventType.OwnIdEvent.rawValue, body: loadingEventDictionary)
+            return
+        }
         controller = CreationInformation.shared.controllerCreationClosure()
         controller.type = type
         controller.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -132,6 +149,7 @@ private extension OwnIDButtonViewControllerWrapperView {
         setIconColor(value: iconColor)
         setShowOr(value: showOr)
         setVariant(value: variant)
+        setWidgetPosition(value: widgetPosition)
         
         // tooltip styles
         setTooltipPosition(value: tooltipPosition)

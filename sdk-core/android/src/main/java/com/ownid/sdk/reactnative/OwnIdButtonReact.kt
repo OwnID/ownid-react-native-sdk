@@ -12,16 +12,22 @@ import com.ownid.sdk.view.tooltip.TooltipPosition
 @androidx.annotation.OptIn(InternalOwnIdAPI::class)
 public class OwnIdButtonReact(
     context: Context,
-    variant: IconVariant,
-    backgroundColor: Int? = null,
-    borderColor: Int? = null,
-    iconColor: Int? = null,
-    showOr: Boolean = true,
-    tooltipBackgroundColor: Int? = null,
-    tooltipBorderColor: Int? = null,
-    private val tooltipPositionReact: TooltipPosition? = null,
+    private val properties: Properties,
     private val shadowNode: OwnIdLayoutShadowNode,
 ) : OwnIdButton(context) {
+
+    @InternalOwnIdAPI
+    public data class Properties(
+        internal val variant: IconVariant = IconVariant.FINGERPRINT,
+        internal val widgetPosition: Position = Position.START,
+        internal val backgroundColor: Int? = null,
+        internal val borderColor: Int? = null,
+        internal val iconColor: Int? = null,
+        internal val tooltipBackgroundColor: Int? = null,
+        internal val tooltipBorderColor: Int? = null,
+        internal val tooltipPosition: TooltipPosition? = null, // None
+        internal val showOr: Boolean = true
+    )
 
     private val measureListener = object : OwnIdLayoutShadowNode.MeasureListener {
         override fun onMeasure() {
@@ -30,19 +36,21 @@ public class OwnIdButtonReact(
     }
 
     init {
-        bOwnId.setIconVariant(variant)
+        position = properties.widgetPosition
 
-        tvOr.visibility = if (showOr) View.VISIBLE else View.GONE
+        bOwnId.setIconVariant(properties.variant)
 
-        if (backgroundColor != null || borderColor != null || iconColor != null)
+        tvOr.visibility = if (properties.showOr) View.VISIBLE else View.GONE
+
+        if (properties.backgroundColor != null || properties.borderColor != null || properties.iconColor != null)
             bOwnId.setColors(
-                backgroundColor?.let { ColorStateList.valueOf(it) },
-                borderColor?.let { ColorStateList.valueOf(it) },
-                iconColor?.let { ColorStateList.valueOf(it) }
+                properties.backgroundColor?.let { ColorStateList.valueOf(it) },
+                properties.borderColor?.let { ColorStateList.valueOf(it) },
+                properties.iconColor?.let { ColorStateList.valueOf(it) }
             )
 
-        tooltipBackgroundColor?.let { this.tooltipBackgroundColor = it }
-        tooltipBorderColor?.let { this.tooltipBorderColor = it }
+        properties.tooltipBackgroundColor?.let { this.tooltipBackgroundColor = it }
+        properties.tooltipBorderColor?.let { this.tooltipBorderColor = it }
         tooltipPosition = null
     }
 
@@ -66,8 +74,8 @@ public class OwnIdButtonReact(
     }
 
     private fun onMeasureDone() {
-        if (tooltipPositionReact == null) return
-        tooltipPosition = tooltipPositionReact
+        if (properties.tooltipPosition == null) return
+        tooltipPosition = properties.tooltipPosition
         createTooltip()
     }
 }

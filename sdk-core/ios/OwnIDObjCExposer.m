@@ -19,6 +19,7 @@ RCT_EXPORT_VIEW_PROPERTY(buttonBorderColor, NSString)
 RCT_EXPORT_VIEW_PROPERTY(tooltipPosition, NSString)
 RCT_EXPORT_VIEW_PROPERTY(tooltipBackgroundColor, NSString)
 RCT_EXPORT_VIEW_PROPERTY(tooltipBorderColor, NSString)
+RCT_EXPORT_VIEW_PROPERTY(widgetPosition, NSString)
 
 @end
 

@@ -6,7 +6,7 @@
 
 #import <React/RCTAppSetupUtils.h>
 #import <React/RCTViewManager.h>
-#import "OwnIDReactNativeDemo-Swift.h"
+#import "RNGigya-Swift.h"
 
 #if RCT_NEW_ARCH_ENABLED
 #import <React/CoreModulesPlugins.h>

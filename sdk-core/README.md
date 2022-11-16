@@ -1,26 +1,16 @@
-# OwnID React Native Core SDK
+## OwnID React Native Core SDK
 
-The [OwnID](https://ownid.com/) React Native SDK is a client library that provides a passwordless login alternative for your React Native application by using cryptographic keys to replace the traditional password. The SDK allows the user to perform Registration and Login flows in a React Native application.
+The [OwnID](https://ownid.com) React Native Core SDK is a client library that provides a passwordless login add-on for your React Native application that uses biometric (FaceID, Fingerprint, passcode, etc) authentication to replace the traditional password. During registration or login, users can choose to use their phones to authenticate instead of using a password. The user’s phone becomes their login method, protected by the phone unlock mechanism (FaceID, Fingerprint, passcode, etc).
 
-The React Native Core module wraps native [Android Core](https://github.com/OwnID/ownid-android-sdk) and [iOS Core](https://github.com/OwnID/ownid-ios-sdk) modules that provide core functionality like setting up an OwnID configuration, performing network calls to the OwnID server, interacting with a browser, handling a redirect URI, and checking and returning results to the application.
+The OwnID React Native Core SDK wraps native [OwnID Android Core](https://github.com/OwnID/ownid-android-sdk) and [OwnID iOS Core](https://github.com/OwnID/ownid-core-ios-sdk) SDKs that provides core functionality.
+
+Check **[OwnID React Native Core SDK - Custom Intergration]()** for detailed integration instructions.
+
+The following SDKs extend the React Native Core SDK for a specific identify management system:
+- **[OwnID React Native Gigya SDK](https://www.npmjs.com/package/@ownid/react-native-gigya)**
 
 ## Feedback
 We'd love to hear from you! If you have any questions or suggestions, feel free to reach out by creating a GitHub issue.
 
 ## License
-
-```
-Copyright 2022 OwnID INC.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
+This project is licensed under the Apache License 2.0. See the LICENSE file for more information.

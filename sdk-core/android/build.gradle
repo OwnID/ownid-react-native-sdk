@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.3.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.21")
     }
 }
 
@@ -16,7 +16,7 @@ ext {
     name = "OwnID React Native Core SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-core"
-    versionName = "2.0.0"
+    versionName = "2.1.0"
 }
 
 android {
@@ -95,7 +95,7 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     api "com.facebook.react:react-native:+"
-    api "com.ownid.android-sdk:core:2.0.0"
+    api "com.ownid.android-sdk:core:2.1.0"
 }
 
 def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-core.properties"

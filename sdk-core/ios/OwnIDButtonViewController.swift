@@ -124,12 +124,19 @@ open class OwnIDButtonViewController: UIViewController {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .readyToRegister(let usersEmailFromWebApp):
+                    case .readyToRegister(let usersEmailFromWebApp, let authType):
                         isBusy = false
-                        eventDictionary = ["eventType": "OwnIdRegisterEvent.ReadyToRegister", "loginId": usersEmailFromWebApp as Any]
+                        eventDictionary["loginId"] = usersEmailFromWebApp as Any
+                        if let authType = authType {
+                            eventDictionary["authType"] = authType as Any
+                        }
+                        eventDictionary["eventType"] = "OwnIdRegisterEvent.ReadyToRegister"
                         
-                    case .userRegisteredAndLoggedIn:
+                    case .userRegisteredAndLoggedIn(_, let authType):
                         isBusy = false
+                        if let authType = authType {
+                            eventDictionary["authType"] = authType as Any
+                        }
                         eventDictionary = ["eventType": "OwnIdRegisterEvent.LoggedIn"]
                         
                     case .loading:
@@ -164,8 +171,11 @@ open class OwnIDButtonViewController: UIViewController {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .loggedIn:
+                    case .loggedIn(_, let authType):
                         isBusy = false
+                        if let authType = authType {
+                            eventDictionary["authType"] = authType as Any
+                        }
                         eventDictionary = ["eventType": "OwnIdLoginEvent.LoggedIn"]
                         
                     case .loading:
@@ -215,6 +225,11 @@ extension OwnIDButtonViewController {
     func applyShowOr(isOrViewEnabled: Bool) {
         ownIdLoginButton?.rootView.visualConfig.isOrViewEnabled = isOrViewEnabled
         ownIdRegisterButton?.rootView.visualConfig.isOrViewEnabled = isOrViewEnabled
+    }
+    
+    func applyWidgetPosition(widgetPosition: OwnID.UISDK.WidgetPosition) {
+        ownIdLoginButton?.rootView.visualConfig.widgetPosition = widgetPosition
+        ownIdRegisterButton?.rootView.visualConfig.widgetPosition = widgetPosition
     }
 }
 

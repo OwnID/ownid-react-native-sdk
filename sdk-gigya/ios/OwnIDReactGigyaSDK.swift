@@ -1,8 +1,8 @@
 import Foundation
-import OwnIDGigyaSDK
 import Gigya
 import SwiftUI
-import SDKCore
+@_exported import OwnIDGigyaSDK
+@_exported import SDKCore
 
 extension OwnID.ReactGigyaSDK {
     static let sdkName = "React"
