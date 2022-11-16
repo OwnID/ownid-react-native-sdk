@@ -49,12 +49,6 @@
 		16742691280581B50005582D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		16742692280581B50005582D /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
 		16742693280581B50005582D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		1682C9DF286C1E3800605A5B /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
-		1682C9E0286C1E3800605A5B /* GigyaSDKConfiguration.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = GigyaSDKConfiguration.json; sourceTree = "<group>"; };
-		1682C9E2286C1E3800605A5B /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
-		1682C9E3286C1E3800605A5B /* GigyaSDKConfiguration.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = GigyaSDKConfiguration.json; sourceTree = "<group>"; };
-		1682C9E5286C1E3800605A5B /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
-		1682C9E6286C1E3800605A5B /* GigyaSDKConfiguration.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = GigyaSDKConfiguration.json; sourceTree = "<group>"; };
 		16D68CA62806D9A60091EF68 /* SDKInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKInitializer.swift; sourceTree = "<group>"; };
 		19F6CBCC0A4E27FBF8BF4A61 /* libPods-MyTestProject-MyTestProjectTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MyTestProject-MyTestProjectTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		23E780AD112A5F313D660C4F /* Pods-OwnIDReactSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OwnIDReactSDK.debug.xcconfig"; path = "Target Support Files/Pods-OwnIDReactSDK/Pods-OwnIDReactSDK.debug.xcconfig"; sourceTree = "<group>"; };
@@ -95,7 +89,6 @@
 			isa = PBXGroup;
 			children = (
 				16210CB828EFEA21000B5718 /* NormalizedGigyaError */,
-				1682C9DD286C1E3800605A5B /* Configs */,
 				16D68CA62806D9A60091EF68 /* SDKInitializer.swift */,
 				1646A3A1280E72F00073E9BA /* GigyaModuleObjC.m */,
 				1646A39F280E72890073E9BA /* GigyaModule.swift */,
@@ -107,43 +100,6 @@
 				16742693280581B50005582D /* Info.plist */,
 			);
 			path = OwnIDReactNativeGigyaDemo;
-			sourceTree = "<group>";
-		};
-		1682C9DD286C1E3800605A5B /* Configs */ = {
-			isa = PBXGroup;
-			children = (
-				1682C9DE286C1E3800605A5B /* Prod */,
-				1682C9E1286C1E3800605A5B /* Stage */,
-				1682C9E4286C1E3800605A5B /* Dev */,
-			);
-			path = Configs;
-			sourceTree = "<group>";
-		};
-		1682C9DE286C1E3800605A5B /* Prod */ = {
-			isa = PBXGroup;
-			children = (
-				1682C9DF286C1E3800605A5B /* OwnIDConfiguration.plist */,
-				1682C9E0286C1E3800605A5B /* GigyaSDKConfiguration.json */,
-			);
-			path = Prod;
-			sourceTree = "<group>";
-		};
-		1682C9E1286C1E3800605A5B /* Stage */ = {
-			isa = PBXGroup;
-			children = (
-				1682C9E2286C1E3800605A5B /* OwnIDConfiguration.plist */,
-				1682C9E3286C1E3800605A5B /* GigyaSDKConfiguration.json */,
-			);
-			path = Stage;
-			sourceTree = "<group>";
-		};
-		1682C9E4286C1E3800605A5B /* Dev */ = {
-			isa = PBXGroup;
-			children = (
-				1682C9E5286C1E3800605A5B /* OwnIDConfiguration.plist */,
-				1682C9E6286C1E3800605A5B /* GigyaSDKConfiguration.json */,
-			);
-			path = Dev;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
