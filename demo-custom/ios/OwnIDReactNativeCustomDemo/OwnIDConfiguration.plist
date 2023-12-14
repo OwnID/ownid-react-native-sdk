@@ -6,7 +6,5 @@
 	<string>com.ownid.demo.react://ownid</string>
 	<key>OwnIDAppID</key>
 	<string></string>
-	<key>OwnIDEnv</key>
-	<string></string>
 </dict>
 </plist>
