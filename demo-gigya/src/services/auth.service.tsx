@@ -14,7 +14,7 @@ class GigyaAuth {
 
   async register(email: string, password: string, name: string) {
     try {
-      return result = await GigyaModule.register(email, password, name);
+      return await GigyaModule.register(email, password, name);
     } catch (error) {
       return { error };
     }
@@ -22,7 +22,7 @@ class GigyaAuth {
 
   async login(loginId: string, password: string) {
     try {
-      return result = await GigyaModule.login(loginId, password);
+      return await GigyaModule.login(loginId, password);
     } catch (error) {
       return { error };
     }

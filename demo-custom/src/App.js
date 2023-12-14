@@ -10,10 +10,6 @@ import { LoginPage } from "./screens/Login";
 import { RegistrationPage } from "./screens/Registration";
 import { AccountPage } from "./screens/Account";
 
-import OwnIdGigya from '@ownid/react-native-gigya';
-
-OwnIdGigya.init({ app_id: "l16tzgmvvyf5qn", redirection_uri_ios: 'com.ownid.demo.react://ownid' });
-
 const Stack = createStackNavigator();
 
 const App = () => {
