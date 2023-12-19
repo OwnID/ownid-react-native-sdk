@@ -4,9 +4,8 @@ require_relative '../node_modules/@react-native-community/cli-platform-ios/nativ
 platform :ios, '13.0'
 install! 'cocoapods', :deterministic_uuids => false
 
-target 'OwnIDReactNativeGigyaDemo' do
+target 'OwnIDReactNativeCustomDemo' do
   config = use_native_modules!
-  pod 'Gigya'
   
   # Flags change depending on the env values.
   flags = get_default_flags()
