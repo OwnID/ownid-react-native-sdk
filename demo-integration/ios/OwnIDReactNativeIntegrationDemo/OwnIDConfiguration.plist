@@ -3,8 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>OwnIDRedirectionURL</key>
-	<string>com.ownid.demo.react://ownid</string>
+	<string>com.ownid.demo.react://ios</string>
 	<key>OwnIDAppID</key>
-	<string></string>
+	<string>d1yk6gcngrc0og</string>
+	<key>OwnIDEnv</key>
+	<string>dev</string>
 </dict>
 </plist>

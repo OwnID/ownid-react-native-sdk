@@ -4,7 +4,7 @@ import Gigya
 
 @objc(GigyaModule)
 final class GigyaModule: NSObject {
-  let genericErrorCode = "323332323232323"
+  let genericErrorCode = "profileError"
   
   @objc func isLoggedIn(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     resolve(Gigya.sharedInstance().isLoggedIn())
@@ -28,6 +28,13 @@ final class GigyaModule: NSObject {
     }
   }
   
+  @objc func initialize(_ config: [String: String],
+                        resolve: @escaping RCTPromiseResolveBlock,
+                        reject: @escaping RCTPromiseRejectBlock) {
+    Gigya.sharedInstance().initFor(apiKey: config["apiKey"]!, apiDomain: config["apiDomain"]!)
+    resolve([:])
+  }
+  
   @objc func register(_ loginId: String,
                       password: String,
                       name: String,
@@ -40,14 +47,13 @@ final class GigyaModule: NSObject {
         resolve(profileDict)
         
       case .failure(let error):
-        reject(self.genericErrorCode, error.error.generalError.localizedDescription, error.error.generalError)
+        reject(self.genericErrorCode, error.error.localizedDescription, error.error)
       }
     }
   }
   
   @objc func login(_ loginId: String,
                    password: String,
-//                   params: [String: Any],
                    resolve: @escaping RCTPromiseResolveBlock,
                    reject: @escaping RCTPromiseRejectBlock) {
     Gigya.sharedInstance().login(loginId: loginId, password: password) { result in
@@ -57,16 +63,19 @@ final class GigyaModule: NSObject {
         resolve(profileDict)
         
       case .failure(let error):
-        reject(self.genericErrorCode, error.error.generalError.localizedDescription, error.error.generalError)
+        reject(self.genericErrorCode, error.error.localizedDescription, error.error)
       }
     }
   }
   
   @objc func logout(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     if Gigya.sharedInstance().isLoggedIn() {
-      Gigya.sharedInstance().logout()
+      Gigya.sharedInstance().logout { _ in
+        resolve(nil)
+      }
+    } else {
+      resolve(nil)
     }
-    resolve(nil)
   }
   
   private func params(firstName: String) -> [String: Any] {

@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "RNCustom.app"
-               BlueprintName = "OwnIDReactNativeCustomDemo"
-               ReferencedContainer = "container:OwnIDReactNativeCustomDemo.xcodeproj">
+               BuildableName = "RNIntegration.app"
+               BlueprintName = "OwnIDReactNativeIntegrationDemo"
+               ReferencedContainer = "container:OwnIDReactNativeIntegrationDemo.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "RNCustom.app"
-            BlueprintName = "OwnIDReactNativeCustomDemo"
-            ReferencedContainer = "container:OwnIDReactNativeCustomDemo.xcodeproj">
+            BuildableName = "RNIntegration.app"
+            BlueprintName = "OwnIDReactNativeIntegrationDemo"
+            ReferencedContainer = "container:OwnIDReactNativeIntegrationDemo.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <EnvironmentVariables>
