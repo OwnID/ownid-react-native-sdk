@@ -3,14 +3,15 @@ import React
 
 extension ButtonEventsEventEmitter {
     enum EventType: String, CaseIterable {
-        case OwnIdEvent
+        case ownIdIntegrationEvent = "OwnIdIntegrationEvent"
+        case ownIdFlowEvent = "OwnIdFlowEvent"
     }
 }
 
 @objc(ButtonEventsEventEmitter)
 final class ButtonEventsEventEmitter: RCTEventEmitter {
     
-    static var shared:ButtonEventsEventEmitter?
+    static var shared: ButtonEventsEventEmitter?
     
     override init() {
         super.init()

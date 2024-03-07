@@ -1,0 +1,9 @@
+{
+  "name": "@ownid/react-native-demo",
+  "version": "3.1.0",
+  "description": "OwnID React Native Demo",
+  "license": "Apache-2.0",
+  "scripts": {
+    "co:login": "aws codeartifact login --tool npm --repository npm --domain nuget --domain-owner 450051947300"
+  }
+}

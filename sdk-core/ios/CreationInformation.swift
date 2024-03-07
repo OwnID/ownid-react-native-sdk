@@ -7,7 +7,7 @@ final public class CreationInformation: NSObject {
     private override init() {}
     weak var viewInstance: OwnIDButtonViewControllerWrapperView?
     weak var managerInstance: OwnIDActionButtonManager?
-    public var controllerCreationClosure: (() -> OwnIDButtonViewController)!
-    public var errorTransformClosure: ((_ error: OwnID.CoreSDK.Error) -> OwnID.CoreSDK.Error) = { $0 }
-    public var shouldSkipErrorClosure: ((_ error: OwnID.CoreSDK.Error) -> Bool) = { _ in true }
+    public weak var registerViewModel: OwnID.FlowsSDK.RegisterView.ViewModel?
+    public var hasIntegration = false
+    public var authIntegration: AuthIntegration!
 }

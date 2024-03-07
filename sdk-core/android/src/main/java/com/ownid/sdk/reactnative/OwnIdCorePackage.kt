@@ -6,13 +6,14 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ReactShadowNode
 import com.facebook.react.uimanager.ViewManager
+import com.ownid.sdk.InternalOwnIdAPI
 
-// It's here for autolinking to work
 public class OwnIdCorePackage : ReactPackage {
 
     override fun createNativeModules(reactContext: ReactApplicationContext): MutableList<NativeModule> =
-        mutableListOf()
+        mutableListOf(OwnIdModule(reactContext))
 
+    @OptIn(InternalOwnIdAPI::class)
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<out View, out ReactShadowNode<*>>> =
-        mutableListOf()
+        mutableListOf(BaseOwnIdFragmentManager(reactContext))
 }

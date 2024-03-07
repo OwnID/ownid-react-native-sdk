@@ -7,10 +7,8 @@ import com.facebook.yoga.YogaMeasureFunction
 import com.facebook.yoga.YogaMeasureMode
 import com.facebook.yoga.YogaMeasureOutput
 import com.facebook.yoga.YogaNode
-import com.ownid.sdk.InternalOwnIdAPI
 import java.util.*
 
-@androidx.annotation.OptIn(InternalOwnIdAPI::class)
 public class OwnIdLayoutShadowNode : LayoutShadowNode(), YogaMeasureFunction {
     private var requestedWidth: Float = 0f
     private var requestedWidthMode: YogaMeasureMode = YogaMeasureMode.UNDEFINED
@@ -22,16 +20,16 @@ public class OwnIdLayoutShadowNode : LayoutShadowNode(), YogaMeasureFunction {
 
     internal interface MeasureListener {
         @WorkerThread
-        public fun onMeasure()
+        public fun onMeasure() // Don't forget to call updateSize() after native view measurements
     }
 
     private val measureListenerSet = Collections.synchronizedSet(mutableSetOf<MeasureListener>())
 
-    internal fun registerStringsSetListener(listener: MeasureListener) {
+    internal fun registerMeasureListener(listener: MeasureListener) {
         measureListenerSet.add(listener)
     }
 
-    internal fun unregisterStringsSetListener(listener: MeasureListener) {
+    internal fun unregisterMeasureListener(listener: MeasureListener) {
         measureListenerSet.remove(listener)
     }
 
