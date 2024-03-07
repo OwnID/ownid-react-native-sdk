@@ -2,48 +2,57 @@
 <br>
 <br>
 [![React Native Core SDK version](https://img.shields.io/npm/v/@ownid/react-native-core?label=React%20Native%20Core%20SDK)](https://www.npmjs.com/package/@ownid/react-native-core) [![React Native Gigya SDK version](https://img.shields.io/npm/v/@ownid/react-native-gigya?label=React%20Native%20Gigya%20SDK)](https://www.npmjs.com/package/@ownid/react-native-gigya)
-
 ## OwnID React Native SDK
 
-The [OwnID](https://ownid.com/) React Native SDK is a client library that provides a passwordless login alternative for your React Native application by using cryptographic keys to replace the traditional password. The SDK allows the user to perform Registration and Login flows in a React Native application.
+The [OwnID](https://ownid.com/) React Native SDK is a client library offering a secure and passwordless login alternative for your React Native applications. It leverages [Passkeys](https://www.passkeys.com/) to replace conventional passwords, fostering enhanced authentication methods and empowers users to seamlessly execute Registration and Login flows within their React Native applications.
 
-The OwnID React Native SDK consists of a Core module along with modules that are specific to an identity platform.
+### Key components of the OwnID React Native SDK:
 
-The React Native Core module wraps native  [Android Core](https://github.com/OwnID/ownid-android-sdk) and [iOS Core](https://github.com/OwnID/ownid-ios-sdk) modules that provide core functionality like setting up an OwnID configuration, performing network calls to the OwnID server, interacting with a browser, handling a redirect URI, and checking and returning results to the  application.
+- **OwnID React Native Core** - Wraps native [Android Core](https://github.com/OwnID/ownid-android-sdk) and [iOS Core](https://github.com/OwnID/ownid-ios-sdk) modules and facilitates fundamental functionality such as SDK configuration, UI widgets, interaction with the Android or iOS system, and the return of OwnID flow results to the React Native application.
 
-- **[OwnID Gigya React Native SDK](docs/sdk-react-navive-gigya-doc.md)** - Extends Native Core SDK functionality by providing integration with Email/Password-based Gigya Authentication. Gigya React Native module is based on native [Android Gigya SDK](https://github.com/OwnID/ownid-android-sdk/blob/master/docs/sdk-gigya-doc.md) and [iOS Gigya SDK](https://github.com/OwnID/ownid-ios-sdk/blob/master/Docs/sdk-gigya-doc.md) modules.
+- **OwnID React Native Integration Component** - An optional extension of the React Native Core SDK, designed for seamless integration with identity platforms on the native side. When present, it executes the actual registration and login processes into the identity platform.
 
-## Custom Integration
+### To integrate OwnID with your identity platform, you have two pathways:
 
-You can use **[OwnID Core React Native SDK](docs/sdk-react-navive-core-doc.md)** to gain all of the benefits of OwnID with custom identity platform. Check **[OwnID React Native Core SDK - Custom Integration](docs/sdk-react-navive-core-doc.md)** for detailed steps.
+- **[Direct Integration](docs/sdk-react-navive-integration.md)** - Handle OwnID Response data directly in React Native without using the Integration component.
+
+- **Prebuilt Integration** - Utilize the existing OwnID SDK with a prebuilt Integration component. Options include:
+
+   - **[OwnID Gigya](docs/sdk-react-navive-gigya.md)** - Expands React Native Core SDK functionality by offering a prebuilt Gigya Integration, supporting Email/Password-based [Gigya Android Authentication](https://github.com/SAP/gigya-android-sdk) and [Gigya iOS Authentication](https://github.com/SAP/gigya-swift-sdk). SDK is based on native [OwnID Android Gigya SDK](https://github.com/OwnID/ownid-android-sdk) and [OwnID iOS Gigya SDK](https://github.com/OwnID/ownid-ios-sdk) modules.
+
+### Advanced Configuration
+
+Explore advanced configuration options in OwnID React Native Core SDK by referring to the [Advanced Configuration](docs/sdk-advanced-configuration.md) documentation.
 
 ## Demo applications
 
-This repository contains OwnID Demo application sources for different types of integrations:
- - Custom integration demo - `demo-custom`.
- - Gigya integration demo - `demo-gigya`.
+This repository hosts various OwnID Demo applications, each showcasing integration scenarios:
+
+- **Direct Integration**: `demo-integration` module exemplifies the integration process by directly handling OwnID Response in React Native application.
+
+- **Gigya Prebuilt Integration**: `demo-gigya` module exemplifies the integration process of Gigya Email/Password-based Authentication.
 
 You can run these demo apps on a physical Android/iOS device or an emulator.
 
 ## Supported Languages
+
 The OwnID SDK has built-in support for multiple languages. The SDK loads translations in runtime and selects the best language available. The list of currently supported languages can be found [here](https://i18n.prod.ownid.com/langs.json).
 
 The SDK will also make the RTL adjustments if needed. If the user's mobile device uses a language that is not supported, the SDK displays the Skip Password feature in English.
 
 ## Data Safety
-The OwnID SDK does not store any user data on the user's device.
-
 The OwnID SDK collects data and information about events inside the SDK using Log Data. This Log Data does not include any personal data that can be used to identify the user such as username, email, and password. It does include general information like the device Internet Protocol (“IP”) address, device model, operating system version, time and date of events, and other statistics.
 
 Log Data is sent to the OwnID server using an encrypted process so it can be used to collect OwnID service statistics and improve service quality. OwnID does not share Log Data with any third party services.
 
 ## Feedback
+
 We'd love to hear from you! If you have any questions or suggestions, feel free to reach out by creating a GitHub issue.
 
 ## License
 
 ```
-Copyright 2022 OwnID INC.
+Copyright 2023 OwnID INC.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

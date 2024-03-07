@@ -5,7 +5,7 @@ import Gigya
 import OwnIDGigyaSDK
 
 struct GenericError: Error {
-    static let genericErrorCode = "323332323232323"
+    static let genericErrorCode = "configurationError"
 }
 
 @objc(OwnIdGigyaModule)
@@ -14,17 +14,27 @@ final class OwnIdGigyaModule: NSObject {
     @objc func createInstance(_ params: [String: Any],
                               resolve: @escaping RCTPromiseResolveBlock,
                               reject: @escaping RCTPromiseRejectBlock) {
-        if let isLoggingEnabled = params["enable_logging"] as? Int, isLoggingEnabled == 1 {
-            OwnID.startDebugConsoleLogger()
+        if let isLoggingEnabled = params["enableLogging"] as? Bool {
+            OwnID.CoreSDK.logger.isEnabled = isLoggingEnabled
         }
-        let redirect = params["redirection_uri_ios"] ?? params["redirection_uri"]
-        if let appId = params["app_id"] as? String, let redirectionUrl = redirect as? String {
-            let env = params["env"] as? String
-            OwnID.ReactGigyaSDK.configure(GigyaAccount.self, appID: appId, redirectionURL: redirectionUrl, environment: env)
+        if let appId = params["appId"] as? String {
+            let redirectionURL = (params["redirectUrlIos"] ?? params["redirectUrl"]) as? String
+            let environment = params["env"] as? String
+            
+            OwnID.ReactGigyaSDK.configure(GigyaAccount.self, appID: appId, redirectionURL: redirectionURL, environment: environment)
             resolve(nil)
         } else {
-            reject(GenericError.genericErrorCode, "app_id and redirection_url has not been provided", GenericError())
+            reject(GenericError.genericErrorCode, "appId has not been provided", GenericError())
         }
+    }
+    
+    @objc func register(_ loginId: String,
+                        registrationParameters: [String: Any],
+                        resolve: @escaping RCTPromiseResolveBlock,
+                        reject: @escaping RCTPromiseRejectBlock) {
+        let params = OwnID.GigyaSDK.Registration.Parameters(parameters: registrationParameters)
+        CreationInformation.shared.registerViewModel?.register(registerParameters: params)
+        resolve(nil)
     }
     
     @objc

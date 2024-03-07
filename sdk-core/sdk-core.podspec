@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'sdk-core'
-  s.version          = '2.1.0'
+  s.version          = '3.1.0'
   s.summary          = 'sdk-core'
 
   s.description      = <<-DESC
@@ -13,10 +13,10 @@ sdk-core pod library. Used in autolinking alongside of react libraries.
   s.source           = { :git => 'https://github.com/OwnID/ownid-react-native-sdk.git' }
 
   s.module_name   = 'SDKCore'
-  s.ios.deployment_target = '13.0'
+  s.ios.deployment_target = '14.0'
   s.swift_version = '5.1.1'
 
-  s.dependency 'ownid-core-ios-sdk', '2.1.0'
+  s.dependency 'ownid-core-ios-sdk', '3.1.0'
   s.dependency 'React'
 
   s.source_files = 'ios/**/*'

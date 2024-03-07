@@ -2,18 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Text, View, TouchableOpacity } from "react-native";
 import { StackActions, useTheme } from '@react-navigation/native';
 
-import auth from '../services/auth.service';
 import styles from '../styles';
 
-export const AccountPage = ({ navigation }: any) => {
+export const AccountPage = ({ navigation, route }: any) => {
   const [profile, setProfile] = useState({ name: '', email: '' });
 
   useEffect(() => {
-    (async () => setProfile(await auth.getProfile()))();
+    route.params.auth.getProfile().then((profile: any) => setProfile(profile));
   }, []);
 
   const onLogout = async () => {
-    await auth.logout();
+    await route.params.auth.logout();
     navigation.dispatch(StackActions.replace('Login'));
   }
 

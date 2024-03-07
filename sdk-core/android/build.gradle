@@ -4,41 +4,42 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.21")
+        classpath("com.android.tools.build:gradle:8.2.2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22")
+        classpath("com.facebook.react:react-native-gradle-plugin")
     }
 }
 
-apply plugin: "com.android.library"
-apply plugin: "kotlin-android"
+plugins {
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
+    id("com.facebook.react")
+}
 
 ext {
     name = "OwnID React Native Core SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-core"
-    versionName = "2.1.0"
+    versionName = "3.1.0"
 }
 
+group = ext.groupId
+
 android {
-    compileSdkVersion 33
-    buildToolsVersion "33.0.0"
+    namespace = "com.ownid.sdk.reactnative"
+    compileSdk = 34
+    buildToolsVersion = "34.0.0"
 
     defaultConfig {
-        minSdkVersion 23
-        targetSdkVersion 33
+        minSdk = 23
+        targetSdk = 34
 
         gradle.projectsEvaluated {
             preBuild.dependsOn(setVersionProperties)
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
         freeCompilerArgs += ["-module-name", "com.ownid.sdk.reactnative.core"]
         freeCompilerArgs += "-Xexplicit-api=strict"
     }
@@ -93,17 +94,15 @@ repositories {
 }
 
 dependencies {
-    //noinspection GradleDynamicVersion
-    api "com.facebook.react:react-native:+"
-    api "com.ownid.android-sdk:core:2.1.0"
+    // The version of react-native is set by the React Native Gradle Plugin
+    api("com.facebook.react:react-android")
+    api("com.ownid.android-sdk:core:3.1.0")
 }
 
 def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-core.properties"
-
-task setVersionProperties(type: org.gradle.api.tasks.WriteProperties) {
+clean { delete propertiesFileName }
+tasks.register("setVersionProperties", WriteProperties) {
     outputFile file(propertiesFileName)
     property "name", "OwnIDReactNativeCore"
     property "version", project.ext.versionName
 }
-
-clean { delete propertiesFileName }

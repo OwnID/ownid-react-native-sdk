@@ -1,0 +1,72 @@
+import Foundation
+import Gigya
+import OwnIDCoreSDK
+import SwiftUI
+
+class GigyaAuthIntegration<T: GigyaAccountProtocol>: AuthIntegration {
+    func createOwnIDRegisterButton(for viewModel: OwnID.FlowsSDK.RegisterView.ViewModel) -> UIHostingController<OwnID.FlowsSDK.RegisterView> {
+        let headerView = OwnID.ReactGigyaSDK.createRegisterView(viewModel: viewModel)
+        let headerVC = UIHostingController(rootView: headerView)
+        headerVC.view.backgroundColor = .clear
+        return headerVC
+    }
+    
+    func createOwnIDLoginButton(for viewModel: OwnID.FlowsSDK.LoginView.ViewModel) -> UIHostingController<OwnID.FlowsSDK.LoginView> {
+        let headerView = OwnID.ReactGigyaSDK.createLoginView(viewModel: viewModel)
+        let headerVC = UIHostingController(rootView: headerView)
+        headerVC.view.backgroundColor = .clear
+        return headerVC
+    }
+    
+    func createRegisterViewModel(loginIdPublisher: OwnIDCoreSDK.OwnID.CoreSDK.LoginIdPublisher) -> OwnID.FlowsSDK.RegisterView.ViewModel {
+        OwnID.ReactGigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(T.self), loginIdPublisher: loginIdPublisher)
+    }
+    
+    func createLoginViewModel(loginIdPublisher: OwnIDCoreSDK.OwnID.CoreSDK.LoginIdPublisher) -> OwnID.FlowsSDK.LoginView.ViewModel {
+        OwnID.ReactGigyaSDK.loginViewModel(instance: Gigya.sharedInstance(T.self), loginIdPublisher: loginIdPublisher)
+    }
+    
+    func errorDictionary(_ error: OwnID.CoreSDK.Error) -> [String: Any] {
+        var code = ""
+        var callId = ""
+        var gigyaDataString = ""
+        var errorCode = ""
+        var localizedMessage = ""
+        switch error {
+        case .userError(let errorModel):
+            code = errorModel.code.rawValue
+        case .integrationError(let error):
+            if let error = error as? OwnID.GigyaSDK.IntegrationError {
+                switch error {
+                case .gigyaSDKError(let gigyaError, let dataDictionary): 
+                    if let data = try? JSONSerialization.data(withJSONObject: dataDictionary ?? [:]) {
+                        gigyaDataString = String(data: data, encoding: .utf8) ?? ""
+                    }
+                    
+                    switch gigyaError {
+                    case .gigyaError(let model):
+                        callId = model.callId
+                        errorCode = "\(model.errorCode)"
+                        localizedMessage = model.errorMessage ?? ""
+                    default:
+                        break
+                    }
+                }
+            }
+        default:
+            break
+        }
+        
+        var errorDictionary: [String: Any] = ["className": String(describing: Self.self),
+                                              "code": code,
+                                              "message": error.localizedDescription,
+                                              "stackTrace": ""]
+        if !callId.isEmpty, !gigyaDataString.isEmpty, !errorCode.isEmpty, !localizedMessage.isEmpty {
+            errorDictionary["gigyaError"] = ["callId": callId,
+                                             "data": gigyaDataString,
+                                             "erorCode": errorCode,
+                                             "localizedMessage": localizedMessage]
+        }
+        return errorDictionary
+    }
+}

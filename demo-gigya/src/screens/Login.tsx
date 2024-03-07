@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, GestureResponderEvent, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { GestureResponderEvent, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { StackActions, useTheme } from '@react-navigation/native';
 
-import auth from '../services/auth.service';
 import styles from '../styles';
 
-import { OwnIdButton, OwnIdButtonType, OwnIdEvent, OwnIdLoginEvent } from '@ownid/react-native-gigya';
+import { OwnIdButton, OwnIdButtonType, OwnIdResponse, OwnIdError } from '@ownid/react-native-gigya';
 
-export const LoginPage = ({ navigation }: any) => {
+export const LoginPage = ({ navigation, route }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const onSubmit = async (event: GestureResponderEvent) => {
     event.preventDefault();
 
     setError('');
 
-    if (email === "" || password === "") {
+    if (email === '' || password === '') {
       setError('Please, fill in the fields');
       return;
     }
 
-    const resp = await auth.login(email, password);
+    const resp = await route.params.auth.login(email, password);
 
     if (resp.error) {
       setError(resp.error.message);
@@ -32,7 +30,7 @@ export const LoginPage = ({ navigation }: any) => {
 
     setEmail('');
     setPassword('');
-    navigation.dispatch(StackActions.replace('Account'));
+    navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth }));
   }
 
   const processError = () => {
@@ -40,21 +38,11 @@ export const LoginPage = ({ navigation }: any) => {
     return (<Text style={styles.errors}>{error}</Text>);
   }
 
-  const onOwnIdEvent = (event: OwnIdEvent) => {
-    console.log("onOwnIdEvent:", event);
+  const onLogin = (response: OwnIdResponse) => {
+    navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth }));
+  }
 
-    switch (event.eventType) {
-      case OwnIdLoginEvent.Busy:
-        setLoading(event.isBusy!);
-        break;
-      case OwnIdLoginEvent.LoggedIn:
-        navigation.dispatch(StackActions.replace('Account'));
-        break;
-      case OwnIdLoginEvent.Error:
-        setError(event.cause!.message);
-        break;
-    }
-  };
+  const onError = (error: OwnIdError) => setError(error.message);
 
   const { colors } = useTheme();
 
@@ -72,20 +60,16 @@ export const LoginPage = ({ navigation }: any) => {
         </View>
 
         <View>
-          <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background }} value={email} onChangeText={setEmail} placeholder="Email" keyboardType="email-address" />
+          <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background }} value={email} onChangeText={setEmail} placeholder='Email' keyboardType='email-address' />
 
           <View style={styles.row}>
-            <OwnIdButton type={OwnIdButtonType.Login} loginId={email} onOwnIdEvent={onOwnIdEvent} />
-            <TextInput style={{ ...styles.ownInput, marginStart: 8, backgroundColor: colors.background, flex: 1 }} value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry={true} />
+            <OwnIdButton type={OwnIdButtonType.Login} loginId={email} onLogin={onLogin} onError={onError} />
+            <TextInput style={{ ...styles.ownInput, marginStart: 8, backgroundColor: colors.background, flex: 1 }} value={password} onChangeText={setPassword} placeholder='Password' secureTextEntry={true} />
           </View>
 
           <TouchableOpacity onPress={onSubmit} style={styles.buttonContainer}>
             <Text style={styles.buttonText}>Log In</Text>
           </TouchableOpacity>
-
-          {
-            loading && <View style={styles.loader}><ActivityIndicator size="large" color="#0070F2" /></View>
-          }
 
           {processError()}
         </View>

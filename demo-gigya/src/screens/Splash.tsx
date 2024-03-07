@@ -1,25 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { View } from "react-native";
+import { View } from 'react-native';
 import { StackActions } from '@react-navigation/native';
 
-import auth from '../services/auth.service';
-
-export const SplashPage = ({ navigation }) => {
-    const [isLoggedIn, setLoggedIn] = useState(null);
+export const SplashPage = ({ navigation, route }) => {
+    const [isLoggedIn, setLoggedIn] = useState<Boolean | null>(null);
 
     useEffect(() => {
-        (async () => setLoggedIn(await auth.isLoggedIn()))();
+        route.params.auth.isLoggedIn().then((isLoggedIn: Boolean) => setLoggedIn(isLoggedIn));
     }, []);
 
     if (isLoggedIn == true) {
-        setTimeout(() => navigation.dispatch(StackActions.replace('Account')));
+        setTimeout(() => navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth })), 300);
         return null;
     }
 
     if (isLoggedIn == false) {
-        setTimeout(() => navigation.dispatch(StackActions.replace('Login')));
+        setTimeout(() => navigation.dispatch(StackActions.replace('Login', { auth: route.params.auth })), 300);
         return null;
     }
 
-    return (<View></View>);
+    return (<View />);
 };

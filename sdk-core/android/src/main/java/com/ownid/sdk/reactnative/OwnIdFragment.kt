@@ -4,68 +4,87 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RestrictTo
 import androidx.fragment.app.Fragment
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.ownid.sdk.InternalOwnIdAPI
-import com.ownid.sdk.OwnIdCore
+import com.ownid.sdk.OwnIdInstance
 import com.ownid.sdk.RegistrationParameters
 import com.ownid.sdk.event.OwnIdEvent
-import com.ownid.sdk.event.OwnIdLoginEvent
-import com.ownid.sdk.event.OwnIdRegisterEvent
 import com.ownid.sdk.exception.OwnIdException
 import com.ownid.sdk.getOwnIdViewModel
+import com.ownid.sdk.view.AbstractOwnIdWidget
 import com.ownid.sdk.viewmodel.OwnIdBaseViewModel
 import com.ownid.sdk.viewmodel.OwnIdLoginViewModel
 import com.ownid.sdk.viewmodel.OwnIdRegisterViewModel
 
-
-@androidx.annotation.OptIn(InternalOwnIdAPI::class)
+@OptIn(InternalOwnIdAPI::class)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class OwnIdFragment(
-    private val ownId: OwnIdCore,
+    private val ownIdInstance: OwnIdInstance,
     private val fragmentType: Type,
-    private val buttonProperties: OwnIdButtonReact.Properties,
+    private val widgetProperties: OwnIdWidget.Properties,
     private val shadowNode: OwnIdLayoutShadowNode,
     private val eventEmitter: DeviceEventManagerModule.RCTDeviceEventEmitter,
-    internal var loginId: String? = null
+    private val loginId: String?
 ) : Fragment() {
 
-    public enum class Type(internal val viewModelClass: Class<out OwnIdBaseViewModel<out OwnIdEvent>>) {
+    public enum class Type(internal val viewModelClass: Class<out OwnIdBaseViewModel<out OwnIdEvent, out OwnIdEvent>>) {
         REGISTER(OwnIdRegisterViewModel::class.java),
         LOGIN(OwnIdLoginViewModel::class.java)
     }
 
-    private lateinit var ownIdViewModel: OwnIdBaseViewModel<out OwnIdEvent>
+    private val ownIdViewModel: OwnIdBaseViewModel<out OwnIdEvent, out OwnIdEvent> by lazy(LazyThreadSafetyMode.NONE) {
+        getOwnIdViewModel(this@OwnIdFragment, fragmentType.viewModelClass, ownIdInstance)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        OwnIdButtonReact(requireContext(), buttonProperties, shadowNode)
+        when (widgetProperties.widgetType) {
+            OwnIdWidget.Type.OwnIdButton -> OwnIdButtonReact(requireContext(), widgetProperties, shadowNode)
+            OwnIdWidget.Type.OwnIdAuthButton -> OwnIdAuthButtonReact(requireContext(), widgetProperties, shadowNode)
+        }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val viewModel = getOwnIdViewModel(this, fragmentType.viewModelClass, ownId)
-
-        when (viewModel) {
-            is OwnIdLoginViewModel -> viewModel.events.observe(viewLifecycleOwner) { ownIdEvent: OwnIdLoginEvent? ->
-                if (ownIdEvent != null) eventEmitter.emit("OwnIdEvent", ownIdEvent.toWritableMap())
+        when (val viewModel = ownIdViewModel) {
+            is OwnIdLoginViewModel -> {
+                viewModel.flowEvents.observe(viewLifecycleOwner) { it?.emitToReact(eventEmitter) }
+                viewModel.integrationEvents.observe(viewLifecycleOwner) { it?.emitToReact(eventEmitter) }
             }
 
-            is OwnIdRegisterViewModel -> viewModel.events.observe(viewLifecycleOwner) { ownIdEvent: OwnIdRegisterEvent? ->
-                if (ownIdEvent != null) eventEmitter.emit("OwnIdEvent", ownIdEvent.toWritableMap())
+            is OwnIdRegisterViewModel -> {
+                viewModel.flowEvents.observe(viewLifecycleOwner) { it?.emitToReact(eventEmitter) }
+                viewModel.integrationEvents.observe(viewLifecycleOwner) { it?.emitToReact(eventEmitter) }
             }
         }
 
-        with(view as OwnIdButtonReact) {
-            setViewModel(viewModel, viewLifecycleOwner)
-            setEmailProducer { loginId ?: "" }
-        }
+        view.postDelayed(::setViewModel, 500)
+    }
 
-        ownIdViewModel = viewModel
+    override fun onDestroyView() {
+        view?.removeCallbacks(::setViewModel)
+        super.onDestroyView()
     }
 
     public fun register(loginId: String, params: RegistrationParameters? = null) {
-        when (ownIdViewModel) {
+        when (val vm = ownIdViewModel) {
             is OwnIdLoginViewModel -> throw OwnIdException("Cannot call register for login")
-            is OwnIdRegisterViewModel -> (ownIdViewModel as OwnIdRegisterViewModel).register(loginId, params)
+            is OwnIdRegisterViewModel -> vm.register(loginId, params)
         }
+    }
+
+    private fun setViewModel() {
+        (view as? AbstractOwnIdWidget)?.let {
+            when (val vm = ownIdViewModel) {
+                is OwnIdLoginViewModel -> vm.attachToView(it, viewLifecycleOwner)
+                is OwnIdRegisterViewModel -> vm.attachToView(it, viewLifecycleOwner)
+            }
+            it.setLoginId(loginId)
+        }
+    }
+
+    internal fun setLoginId(loginId: String?) {
+        (view as? AbstractOwnIdWidget)?.setLoginId(loginId)
     }
 }

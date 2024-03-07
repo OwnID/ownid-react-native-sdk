@@ -9,10 +9,12 @@ import com.ownid.sdk.OwnIdGigya
 import com.ownid.sdk.reactnative.BaseOwnIdFragmentManager
 import com.ownid.sdk.reactnative.OwnIdFragment
 
-@androidx.annotation.OptIn(InternalOwnIdAPI::class)
+@OptIn(InternalOwnIdAPI::class)
 public class OwnIdGigyaFragmentManager(reactContext: ReactApplicationContext) : BaseOwnIdFragmentManager(reactContext) {
 
     override var instanceName: InstanceName = OwnIdGigya.DEFAULT_INSTANCE_NAME
+
+    override fun getName(): String = "OwnIdGigyaButtonManager"
 
     protected override fun register(ownIdFragment: OwnIdFragment, args: ReadableArray?) {
         val loginId = args?.getString(0) ?: ""

@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, GestureResponderEvent, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { GestureResponderEvent, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { StackActions, useTheme } from '@react-navigation/native';
 
-import auth from '../services/auth.service';
 import styles from '../styles';
 
-import { OwnIdButton, OwnIdButtonType, OwnIdEvent, OwnIdRegister, OwnIdRegisterEvent } from '@ownid/react-native-gigya';
+import { OwnIdButton, OwnIdButtonType, OwnIdRegister, OwnIdResponse, OwnIdError } from '@ownid/react-native-gigya';
 
-export const RegistrationPage = ({ navigation }: any) => {
+export const RegistrationPage = ({ navigation, route }: any) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const [ownIdReadyToRegister, setOwnIdReadyToRegister] = useState(false);
 
@@ -27,12 +25,12 @@ export const RegistrationPage = ({ navigation }: any) => {
       return;
     }
 
-    if (email === "" || password === "") {
+    if (email === '' || password === '') {
       setError('Please, fill in the fields');
       return;
     }
 
-    const resp = await auth.register(email, password, name);
+    const resp = await route.params.auth.register(email, password, name);
 
     if (resp.error) {
       setError(resp.error.message);
@@ -42,7 +40,7 @@ export const RegistrationPage = ({ navigation }: any) => {
     setName('');
     setEmail('');
     setPassword('');
-    navigation.dispatch(StackActions.replace('Account'));
+    navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth }));
   }
 
   const processError = () => {
@@ -50,29 +48,19 @@ export const RegistrationPage = ({ navigation }: any) => {
     return (<Text style={styles.errors}>{error}</Text>);
   }
 
-  const onOwnIdEvent = (event: OwnIdEvent) => {
-    console.log("onOwnIdEvent:", event);
+  const onLogin = (response: OwnIdResponse) => {
+    setOwnIdReadyToRegister(false);
+    navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth }));
+  }
 
-    switch (event.eventType) {
-      case OwnIdRegisterEvent.Busy:
-        setLoading(event.isBusy);
-        break;
-      case OwnIdRegisterEvent.ReadyToRegister:
-        setOwnIdReadyToRegister(true);
-        setEmail(event.loginId);
-        break;
-      case OwnIdRegisterEvent.Undo:
-        setOwnIdReadyToRegister(false);
-        break;
-      case OwnIdRegisterEvent.LoggedIn:
-        setOwnIdReadyToRegister(false);
-        navigation.dispatch(StackActions.replace('Account'));
-        break;
-      case OwnIdRegisterEvent.Error:
-        setError(event.cause.message);
-        break;
-    }
-  };
+  const onRegister = (response: OwnIdResponse) => {
+    setOwnIdReadyToRegister(true);
+    setEmail(response.loginId!);
+  }
+
+  const onUndo = () => setOwnIdReadyToRegister(false);
+
+  const onError = (error: OwnIdError) => setError(error.message);
 
   const { colors } = useTheme();
 
@@ -90,22 +78,18 @@ export const RegistrationPage = ({ navigation }: any) => {
         </View>
 
         <View style={styles.ownForm}>
-          <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background }} value={name} onChangeText={setName} placeholder="First Name" />
+          <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background }} value={name} onChangeText={setName} placeholder='First Name' />
 
-          <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background }} value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="Email" />
+          <TextInput style={{ ...styles.ownInput, backgroundColor: colors.background }} value={email} onChangeText={setEmail} keyboardType='email-address' placeholder='Email' />
 
           <View style={styles.row}>
-            <OwnIdButton type={OwnIdButtonType.Register} loginId={email} onOwnIdEvent={onOwnIdEvent} />
-            <TextInput style={{ ...styles.ownInput, marginStart: 8, backgroundColor: colors.background, flex: 1 }} value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry={true} />
+            <OwnIdButton type={OwnIdButtonType.Register} loginId={email} onRegister={onRegister} onLogin={onLogin} onUndo={onUndo} onError={onError} />
+            <TextInput style={{ ...styles.ownInput, marginStart: 8, backgroundColor: colors.background, flex: 1 }} value={password} onChangeText={setPassword} placeholder='Password' secureTextEntry={true} />
           </View>
 
           <TouchableOpacity onPress={onSubmit} style={styles.buttonContainer}>
             <Text style={styles.buttonText}>Create Account</Text>
           </TouchableOpacity>
-
-          {
-            loading && <View style={styles.loader}><ActivityIndicator size="large" color="#0070F2" /></View>
-          }
 
           {processError()}
         </View>
