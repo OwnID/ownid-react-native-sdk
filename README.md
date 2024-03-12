@@ -14,11 +14,11 @@ The [OwnID](https://ownid.com/) React Native SDK is a client library offering a 
 
 ### To integrate OwnID with your identity platform, you have two pathways:
 
-- **[Direct Integration](docs/sdk-react-navive-integration.md)** - Handle OwnID Response data directly in React Native without using the Integration component.
+- **[Direct Integration](docs/sdk-react-native-integration.md)** - Handle OwnID Response data directly in React Native without using the Integration component.
 
 - **Prebuilt Integration** - Utilize the existing OwnID SDK with a prebuilt Integration component. Options include:
 
-   - **[OwnID Gigya](docs/sdk-react-navive-gigya.md)** - Expands React Native Core SDK functionality by offering a prebuilt Gigya Integration, supporting Email/Password-based [Gigya Android Authentication](https://github.com/SAP/gigya-android-sdk) and [Gigya iOS Authentication](https://github.com/SAP/gigya-swift-sdk). SDK is based on native [OwnID Android Gigya SDK](https://github.com/OwnID/ownid-android-sdk) and [OwnID iOS Gigya SDK](https://github.com/OwnID/ownid-ios-sdk) modules.
+   - **[OwnID Gigya](docs/sdk-react-native-gigya.md)** - Expands React Native Core SDK functionality by offering a prebuilt Gigya Integration, supporting Email/Password-based [Gigya Android Authentication](https://github.com/SAP/gigya-android-sdk) and [Gigya iOS Authentication](https://github.com/SAP/gigya-swift-sdk). SDK is based on native [OwnID Android Gigya SDK](https://github.com/OwnID/ownid-android-sdk) and [OwnID iOS Gigya SDK](https://github.com/OwnID/ownid-ios-sdk) modules.
 
 ### Advanced Configuration
 
