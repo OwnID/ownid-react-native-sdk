@@ -112,7 +112,7 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
         iconColor, backgroundColor, borderColor, textColor, tooltipPosition, tooltipBackgroundColor, tooltipBorderColor, tooltipTextColor, spinnerColor, spinnerBackgroundColor,
         width, height, ...styles
     }: OwnIdButtonProps['style'] = {
-        height: 48, tooltipPosition: OwnIdTooltipPosition.Bottom, ...selectedColorScheme, ...style
+        height: 48, tooltipPosition: OwnIdTooltipPosition.None, ...selectedColorScheme, ...style
     }
 
     const ref = useRef(null);

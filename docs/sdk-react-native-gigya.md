@@ -11,11 +11,13 @@ For more general information about OwnID React Native SDKs, see [OwnID React Nat
 * [Before You Begin](#before-you-begin)
 * [Add Dependency to your project](#add-dependency-to-your-project)
 * [Enable passkey authentication](#enable-passkey-authentication)
-* [Integrate OwnID with your React Native App](#integrate-ownid-with-your-react-native-app)
-   + [Create OwnID Gigya instance](#create-ownid-gigya-instance)
-   + [Implement the Registration Screen](#implement-the-registration-screen)
-   + [Implement the Login Screen](#implement-the-login-screen)
-* [Error and Exception Handling](#error-and-exception-handling)   
+* [Create OwnID Gigya instance](#create-ownid-gigya-instance)
+* [Add OwnID UI to application](#add-ownid-ui-to-application)
+   + [Gigya with Web Screen-Sets](#gigya-with-web-screen-sets)
+   + [Gigya with react native UI](#gigya-with-react-native-ui)
+     * [Implement the Registration Screen](#implement-the-registration-screen)
+     * [Implement the Login Screen](#implement-the-login-screen)
+     * [Error and Exception Handling](#error-and-exception-handling)   
 * [Additional Configuration](#additional-configuration)   
 
 ## Before You Begin
@@ -41,9 +43,7 @@ The OwnID SDK uses [Passkeys](https://www.passkeys.com) to authenticate users.
 >
 > To enable passkey support for your iOS app,  associate your app with a website that your app owns using Associated Domains by following this guide: [Supporting associated domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains).
 
-## Integrate OwnID with your React Native App
-
-### Create OwnID Gigya instance
+## Create OwnID Gigya instance
 
 Before incorporating OwnID UI on your screens in React Native, you need to create the OwnID Gigya instance.
 
@@ -67,7 +67,76 @@ await OwnIdGigya.init({ appId: "gephu342dnff2v" }); // Replace with your App Id
 
 For additional configuration options refer to [Advanced Configuration](sdk-advanced-configuration.md).
 
-### Implement the Registration Screen
+## Add OwnID UI to application
+
+The process of integrating OwnID into your Registration or Login screens varies depending on the type of UI utilized in your application.
+
+If your application utilizes Gigya with Web Screen-Sets, then OwnID integration can be achieved through [OwnID WebSDK](https://docs.ownid.com/) and OwnID SDK WebView Bridge.
+
+If your application employs react native UI with Gigya, please follow the instructions provided under [Gigya with react native UI](#gigya-with-native-views).
+
+### Gigya with Web Screen-Sets
+
+The OwnID WebView Bridge, an integral part of the OwnID Core SDK, empowers the [OwnID WebSDK](https://docs.ownid.com/) to leverage the native capabilities of the OwnID SDK. The bridge facilitates the injection of JavaScript code, enabling communication between the [OwnID WebSDK](https://docs.ownid.com/) and the native OwnID SDK.
+
+If you're running Gigya with Web Screen-Sets and want to utilize OwnID WebView Bridge, then here's how you can integrate with OwnID WebView Bridge on each platform:
+
+**Android**
+
+Add `OwnId.configureGigyaWebBridge()` **before** initializing Gigya SDK:
+
+See [complete example](../demo-gigya-screens/android/app/src/main/java/com/ownid/demo/gigya/screens/MainApplication.kt)
+
+```kotlin
+class MyApplication : Application() {
+   override fun onCreate() {
+      super.onCreate()
+      SoLoader.init(this, false)
+
+      // Configure Gigya SDK to use OwnId Gigya WebBridge
+      OwnId.configureGigyaWebBridge()
+      
+      GigyaSdkModule.setSchema(this, GigyaAccount::class.java)
+   }
+}
+```
+
+**iOS**
+
+Add `[gigya configureWebBridge]` after the Gigya extension initialization.
+
+See [complete example](../demo-gigya-screens/ios/OwnIDReactNativeGigyaDemo/App/AppDelegate.mm)
+
+```objc
+GigyaExtension * gigya = [[GigyaExtension alloc] init];
+[gigya setMySchema];
+
+[gigya configureWebBridge];
+
+```
+
+Add `OwnID.GigyaSDK.configureWebBridge(accountType: HostModel.self)` to `GigyaExtension`:
+
+See [complete example](../demo-gigya-screens/ios/OwnIDReactNativeGigyaDemo/App/GigyaExtenstion.swift)
+
+```swift
+@objc public class GigyaExtension: NSObject {
+  @objc public func configureWebBridge() {
+    // Configure Gigya SDK to use OwnId Gigya WebBridge
+    OwnID.GigyaSDK.configureWebBridge(accountType: HostModel.self)
+  }
+  
+  @objc public func setMySchema() {
+    GigyaSdk.setSchema(HostModel.self)
+  }
+}
+```
+
+Next, add [OwnID WebSDK](https://docs.ownid.com/) to Gigya Web Screen-Sets.
+
+### Gigya with react native UI
+
+#### Implement the Registration Screen
 
 Using the OwnID SDK to implement passwordless authentication starts by adding an `OwnIdButton` view with type `OwnIdButtonType.Register` to your Registration screen. Your app then waits for callbacks while the user interacts with OwnID.
 
@@ -164,7 +233,7 @@ The OwnID `OwnIdRegister` function calls the standard Gigya SDK function `regist
 
 For more configuration options, refer to the [OwnID React Native SDK - Advanced Configuration](sdk-advanced-configuration.md)
 
-### Implement the Login Screen
+#### Implement the Login Screen
 
 The process of implementing your Login screen is very similar to the one used to implement the Registration screen - add an OwnId UI to your Login screen.
 
@@ -254,7 +323,7 @@ and optional callbacks:
 
 For more configuration options, refer to the [OwnID React Native SDK - Advanced Configuration](sdk-advanced-configuration.md)
 
-## Error and Exception Handling
+#### Error and Exception Handling
 
 The `OwnIdError` object described in [Error and Exception Handling](sdk-advanced-configuration.md#error-and-exception-handling) may contain `gigyaError` property with Gigya error data if error is Gigya Error.
 

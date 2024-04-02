@@ -20,7 +20,7 @@ ext {
     name = "OwnID React Native Core SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-core"
-    versionName = "3.1.0"
+    versionName = "3.2.0"
 }
 
 group = ext.groupId
@@ -96,7 +96,7 @@ repositories {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     api("com.facebook.react:react-android")
-    api("com.ownid.android-sdk:core:3.1.0")
+    api("com.ownid.android-sdk:core:3.2.0")
 }
 
 def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-core.properties"

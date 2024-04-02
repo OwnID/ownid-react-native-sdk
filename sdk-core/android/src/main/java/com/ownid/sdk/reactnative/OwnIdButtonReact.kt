@@ -102,6 +102,6 @@ public class OwnIdButtonReact(
         tooltipProperties = Tooltip.Properties(
             null, properties.tooltipTextColor, properties.tooltipBackgroundColor, properties.tooltipBorderColor, properties.tooltipPosition
         )
-        ownIdViewModel?.let { createTooltip(it) }
+        if (ownIdViewModel != null) createTooltip()
     }
 }

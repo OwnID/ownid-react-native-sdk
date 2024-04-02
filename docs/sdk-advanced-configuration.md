@@ -128,12 +128,12 @@ Here's an example on how you can change these parameters:
 
 ## Tooltip
 
-The OwnID SDK's `OwnIdButton` by default shows a Tooltip with text "Sign in with Fingerprint" / "Register with Fingerprint" on Android and "Sign in with FaceID" / "Register with Face ID" on iOS. For Login the Tooltip appears/hides every time the `OwnIdButton` is shown/hides. For Registration the Tooltip appears when login id input contains valid login id, and follows the same `OwnIdButton` shown/hides logic.
+The OwnID SDK's `OwnIdButton` can show a Tooltip with text "Sign in with Fingerprint" / "Register with Fingerprint" on Android and "Sign in with FaceID" / "Register with Face ID" on iOS. For Login the Tooltip appears/hides every time the `OwnIdButton` is shown/hides. For Registration the Tooltip appears when login id input contains valid login id, and follows the same `OwnIdButton` shown/hides logic.
 
 ![OwnID Tooltip UI Example](tooltip_example.png) ![OwnID Tooltip Dark UI Example](tooltip_example_dark.png)
 
 OwnIdButton has parameters to specify Tooltip parameters:
-* `tooltipPosition` - tooltip position `top`/`bottom`/`start`/`end`/`none` (default `top`)
+* `tooltipPosition` - tooltip position `top`/`bottom`/`start`/`end`/`none` (default `none`)
 * `tooltipTextColor` - tooltip text color (default value `#354A5F`, default value-night: `#CED1CC`)
 * `tooltipBackgroundColor` - tooltip background color (default value `#FFFFFF`, default value-night: `#2A3743`)
 * `tooltipBorderColor` - tooltip border color (default value `#D0D0D0`, default value-night: `#2A3743`) 

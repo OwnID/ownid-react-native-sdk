@@ -18,14 +18,16 @@ public extension OwnID {
         public static func underlying() -> [OwnID.CoreSDK.SDKInformation] { [GigyaSDK.info()] }
         
         /// Standard configuration, searches for default .plist file
-        public static func configure<T: GigyaAccountProtocol>(_ dataType: T.Type, supportedLanguages: OwnID.CoreSDK.Languages = .init(rawValue: Locale.preferredLanguages)) {
-            OwnID.CoreSDK.shared.configure(userFacingSDK: info(), underlyingSDKs: underlying(), supportedLanguages: supportedLanguages)
+        public static func configure<T: GigyaAccountProtocol>(_ dataType: T.Type, supportedLanguages: [String] = Locale.preferredLanguages) {
+            OwnID.CoreSDK.configure(userFacingSDK: info(), underlyingSDKs: underlying(), supportedLanguages: supportedLanguages)
             CreationInformation.shared.authIntegration = GigyaAuthIntegration<T>()
         }
         
         /// Configures SDK from plist path URL
-        public static func configure<T: GigyaAccountProtocol>(_ dataType: T.Type, plistUrl: URL, supportedLanguages: OwnID.CoreSDK.Languages = .init(rawValue: Locale.preferredLanguages)) {
-            OwnID.CoreSDK.shared.configureFor(plistUrl: plistUrl, userFacingSDK: info(), underlyingSDKs: underlying(), supportedLanguages: supportedLanguages)
+        public static func configure<T: GigyaAccountProtocol>(_ dataType: T.Type, 
+                                                              plistUrl: URL,
+                                                              supportedLanguages: [String] = Locale.preferredLanguages) {
+            OwnID.CoreSDK.configure(plistUrl: plistUrl, userFacingSDK: info(), underlyingSDKs: underlying(), supportedLanguages: supportedLanguages)
             CreationInformation.shared.authIntegration = GigyaAuthIntegration<T>()
         }
         
@@ -33,43 +35,43 @@ public extension OwnID {
                                                               appID: OwnID.CoreSDK.AppID,
                                                               redirectionURL: OwnID.CoreSDK.RedirectionURLString? = nil,
                                                               environment: String? = nil,
-                                                              supportedLanguages: OwnID.CoreSDK.Languages = .init(rawValue: Locale.preferredLanguages)) {
-            OwnID.CoreSDK.shared.configure(appID: appID,
-                                           redirectionURL: redirectionURL,
-                                           userFacingSDK: info(),
-                                           underlyingSDKs: underlying(),
-                                           environment: environment,
-                                           supportedLanguages: supportedLanguages)
+                                                              supportedLanguages: [String] = Locale.preferredLanguages) {
+            OwnID.CoreSDK.configure(appID: appID,
+                                    redirectionURL: redirectionURL,
+                                    userFacingSDK: info(),
+                                    underlyingSDKs: underlying(),
+                                    environment: environment,
+                                    supportedLanguages: supportedLanguages)
             CreationInformation.shared.authIntegration = GigyaAuthIntegration<T>()
         }
         
         /// Standard configuration, searches for default .plist file
-        public static func configure(supportedLanguages: OwnID.CoreSDK.Languages = .init(rawValue: Locale.preferredLanguages)) {
-            OwnID.CoreSDK.shared.configure(userFacingSDK: info(),
-                                           underlyingSDKs: underlying(),
-                                           supportedLanguages: supportedLanguages)
+        public static func configure(supportedLanguages: [String] = Locale.preferredLanguages) {
+            OwnID.CoreSDK.configure(userFacingSDK: info(),
+                                    underlyingSDKs: underlying(),
+                                    supportedLanguages: supportedLanguages)
             CreationInformation.shared.authIntegration = GigyaAuthIntegration<GigyaAccount>()
         }
         
         /// Configures SDK from plist path URL
-        public static func configure(plistUrl: URL, supportedLanguages: OwnID.CoreSDK.Languages = .init(rawValue: Locale.preferredLanguages)) {
-            OwnID.CoreSDK.shared.configureFor(plistUrl: plistUrl,
-                                              userFacingSDK: info(),
-                                              underlyingSDKs: underlying(),
-                                              supportedLanguages: supportedLanguages)
+        public static func configure(plistUrl: URL, supportedLanguages: [String] = Locale.preferredLanguages) {
+            OwnID.CoreSDK.configure(plistUrl: plistUrl,
+                                    userFacingSDK: info(),
+                                    underlyingSDKs: underlying(),
+                                    supportedLanguages: supportedLanguages)
             CreationInformation.shared.authIntegration = GigyaAuthIntegration<GigyaAccount>()
         }
         
         public static func configure(appID: OwnID.CoreSDK.AppID,
                                      redirectionURL: OwnID.CoreSDK.RedirectionURLString? = nil,
                                      environment: String? = nil,
-                                     supportedLanguages: OwnID.CoreSDK.Languages = .init(rawValue: Locale.preferredLanguages)) {
-            OwnID.CoreSDK.shared.configure(appID: appID,
-                                           redirectionURL: redirectionURL,
-                                           userFacingSDK: info(),
-                                           underlyingSDKs: underlying(),
-                                           environment: environment,
-                                           supportedLanguages: supportedLanguages)
+                                     supportedLanguages: [String] = Locale.preferredLanguages) {
+            OwnID.CoreSDK.configure(appID: appID,
+                                    redirectionURL: redirectionURL,
+                                    userFacingSDK: info(),
+                                    underlyingSDKs: underlying(),
+                                    environment: environment,
+                                    supportedLanguages: supportedLanguages)
             CreationInformation.shared.authIntegration = GigyaAuthIntegration<GigyaAccount>()
         }
         

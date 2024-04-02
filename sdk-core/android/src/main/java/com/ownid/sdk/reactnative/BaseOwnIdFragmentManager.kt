@@ -62,7 +62,7 @@ public open class BaseOwnIdFragmentManager(private val reactContext: ReactApplic
         when (commandId.toInt()) {
             CREATE -> createFragment(view, args)
             REGISTER -> register(viewFragmentMap[view]!!, args)
-            else -> OwnIdInternalLogger.logE(this, "receiveCommand", "Unknown command: $commandId")
+            else -> OwnIdInternalLogger.logW(this, "receiveCommand", "Unknown command: $commandId")
         }
     }
 
