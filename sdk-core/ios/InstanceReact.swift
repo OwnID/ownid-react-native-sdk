@@ -23,11 +23,10 @@ extension OwnID {
             
             let sdkName = productName.components(separatedBy: "/").first ?? productName
             let sdkVersion = productName.components(separatedBy: "/").last ?? ""
-            OwnID.CoreSDK.shared.configure(appID: appId,
-                                           redirectionURL: redirectionURL,
-                                           userFacingSDK: (sdkName, sdkVersion),
-                                           environment: environment,
-                                           supportedLanguages: .init(rawValue: Locale.preferredLanguages))
+            OwnID.CoreSDK.configure(appID: appId,
+                                    redirectionURL: redirectionURL,
+                                    userFacingSDK: (sdkName, sdkVersion),
+                                    environment: environment)
             resolve(nil)
         } else {
             reject(GenericError.genericErrorCode, "appId has not been provided", GenericError())

@@ -81,12 +81,12 @@ public fun OwnId.createInstanceReact(
                     promise.resolve(null)
                 } catch (cause: Throwable) {
                     promise.reject("Fail to create OwnID instance: ${cause.message}", cause)
-                    OwnIdInternalLogger.logE(this, "createInstanceReact", "Fail to create OwnID instance: ${cause.message}", cause)
+                    OwnIdInternalLogger.logW(this, "createInstanceReact", "Fail to create OwnID instance: ${cause.message}", cause)
                 }
             }
         }
     } catch (cause: Throwable) {
         promise.reject("Fail to create OwnID instance: ${cause.message}", cause)
-        OwnIdInternalLogger.logE(this, "createInstanceReact", "Fail to create OwnID instance: ${cause.message}", cause)
+        OwnIdInternalLogger.logW(this, "createInstanceReact", "Fail to create OwnID instance: ${cause.message}", cause)
     }
 }

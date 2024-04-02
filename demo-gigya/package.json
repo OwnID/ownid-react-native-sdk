@@ -1,6 +1,6 @@
 {
   "name": "ownid-demo-gigya-rn",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "private": true,
   "description": "OwnID Gigya Demo RN",
   "license": "Apache-2.0",
@@ -9,8 +9,8 @@
     "ios": "react-native run-ios"
   },
   "dependencies": {
-    "@ownid/react-native-core": "3.1.0",
-    "@ownid/react-native-gigya": "3.1.0",
+    "@ownid/react-native-core": "3.2.0",
+    "@ownid/react-native-gigya": "3.2.0",
     "@react-navigation/native": "^6.0.0",
     "@react-navigation/stack": "^6.3.0",
     "react": "^18.2.0",

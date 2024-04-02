@@ -10,7 +10,6 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.ownid.sdk.InternalOwnIdAPI
 import com.ownid.sdk.OwnIdInstance
 import com.ownid.sdk.RegistrationParameters
-import com.ownid.sdk.event.OwnIdEvent
 import com.ownid.sdk.exception.OwnIdException
 import com.ownid.sdk.getOwnIdViewModel
 import com.ownid.sdk.view.AbstractOwnIdWidget
@@ -29,12 +28,12 @@ public class OwnIdFragment(
     private val loginId: String?
 ) : Fragment() {
 
-    public enum class Type(internal val viewModelClass: Class<out OwnIdBaseViewModel<out OwnIdEvent, out OwnIdEvent>>) {
+    public enum class Type(internal val viewModelClass: Class<out OwnIdBaseViewModel>) {
         REGISTER(OwnIdRegisterViewModel::class.java),
         LOGIN(OwnIdLoginViewModel::class.java)
     }
 
-    private val ownIdViewModel: OwnIdBaseViewModel<out OwnIdEvent, out OwnIdEvent> by lazy(LazyThreadSafetyMode.NONE) {
+    private val ownIdViewModel: OwnIdBaseViewModel by lazy(LazyThreadSafetyMode.NONE) {
         getOwnIdViewModel(this@OwnIdFragment, fragmentType.viewModelClass, ownIdInstance)
     }
 

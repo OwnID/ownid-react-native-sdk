@@ -115,28 +115,26 @@ open class OwnIDButtonViewController: UIViewController {
             subscribeRegister(to: vm.flowEventPublisher)
             vm.subscribe(to: resultPublisher.eraseToAnyPublisher())
             
-            //TODO: change it to shouldShowTooltip when fix the tooltip logic
-            ownIDRegisterModel?.shouldShowTooltip = false
-            ownIdRegisterButton.rootView.visualConfig.tooltipVisualLookConfig.isNativePlatform = false
-            ownIdRegisterButton.rootView.visualConfig.buttonViewConfig.widgetType = widgetType
-            ownIdRegisterButton.rootView.visualConfig.widgetPosition = widgetPosition
-            ownIdRegisterButton.rootView.visualConfig.orViewConfig.isEnabled = showOr
-            ownIdRegisterButton.rootView.visualConfig.buttonViewConfig.iconColor = Color(iconColor)
-            ownIdRegisterButton.rootView.visualConfig.buttonViewConfig.iconHeight = height - Constants.buttonHeightOffset
-            ownIdRegisterButton.rootView.visualConfig.buttonViewConfig.borderColor = Color(buttonBorderColor)
-            ownIdRegisterButton.rootView.visualConfig.buttonViewConfig.backgroundColor = Color(buttonBackgroundColor)
+            ownIdRegisterButton.rootView.visualConfig.widgetType = widgetType
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.widgetPosition = widgetPosition
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.orViewConfig.isEnabled = showOr
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.iconColor = Color(iconColor)
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.height = height
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.borderColor = Color(buttonBorderColor)
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.backgroundColor = Color(buttonBackgroundColor)
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.orViewConfig.textColor = Color(buttonTextColor)
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.isEnabled = shouldShowTooltip
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.tooltipPosition = tooltipPosition
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.borderColor = Color(tooltipBorderColor)
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.backgroundColor = Color(tooltipBackgroundColor)
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.textColor = Color(tooltipTextColor)
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.isEnabled = showSpinner
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
+            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
             ownIdRegisterButton.rootView.visualConfig.authButtonConfig.backgroundColor = Color(buttonBackgroundColor)
-            ownIdRegisterButton.rootView.visualConfig.orViewConfig.textColor = Color(buttonTextColor)
             ownIdRegisterButton.rootView.visualConfig.authButtonConfig.textColor = Color(buttonTextColor)
-            ownIdRegisterButton.rootView.visualConfig.tooltipVisualLookConfig.tooltipPosition = tooltipPosition
-            ownIdRegisterButton.rootView.visualConfig.tooltipVisualLookConfig.borderColor = Color(tooltipBorderColor)
-            ownIdRegisterButton.rootView.visualConfig.tooltipVisualLookConfig.backgroundColor = Color(tooltipBackgroundColor)
-            ownIdRegisterButton.rootView.visualConfig.tooltipVisualLookConfig.textColor = Color(tooltipTextColor)
-            ownIdRegisterButton.rootView.visualConfig.loaderViewConfig.isEnabled = showSpinner
-            ownIdRegisterButton.rootView.visualConfig.loaderViewConfig.color = Color(spinnerColor)
-            ownIdRegisterButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.color = Color(spinnerColor)
-            ownIdRegisterButton.rootView.visualConfig.loaderViewConfig.backgroundColor = Color(spinnerBackgroundColor)
-            ownIdRegisterButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.backgroundColor = Color(spinnerBackgroundColor)
+            ownIdRegisterButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
+            ownIdRegisterButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
             
         case .login:
             let vm = authIntegration.createLoginViewModel(loginIdPublisher: $loginId.eraseToAnyPublisher())
@@ -150,27 +148,26 @@ open class OwnIDButtonViewController: UIViewController {
             subscribeLogin(to: vm.flowEventPublisher)
             vm.subscribe(to: resultPublisher.eraseToAnyPublisher())
             
-            ownIDLoginViewModel?.shouldShowTooltip = shouldShowTooltip
-            ownIdLoginButton.rootView.visualConfig.tooltipVisualLookConfig.isNativePlatform = false
-            ownIdLoginButton.rootView.visualConfig.buttonViewConfig.widgetType = widgetType
-            ownIdLoginButton.rootView.visualConfig.widgetPosition = widgetPosition
-            ownIdLoginButton.rootView.visualConfig.orViewConfig.isEnabled = showOr
-            ownIdLoginButton.rootView.visualConfig.buttonViewConfig.iconColor = Color(iconColor)
-            ownIdLoginButton.rootView.visualConfig.buttonViewConfig.iconHeight = height - Constants.buttonHeightOffset
-            ownIdLoginButton.rootView.visualConfig.buttonViewConfig.borderColor = Color(buttonBorderColor)
-            ownIdLoginButton.rootView.visualConfig.buttonViewConfig.backgroundColor = Color(buttonBackgroundColor)
+            ownIdLoginButton.rootView.visualConfig.widgetType = widgetType
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.widgetPosition = widgetPosition
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.orViewConfig.isEnabled = showOr
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.iconColor = Color(iconColor)
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.height = height
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.borderColor = Color(buttonBorderColor)
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.backgroundColor = Color(buttonBackgroundColor)
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.orViewConfig.textColor = Color(buttonTextColor)
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.isEnabled = shouldShowTooltip
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.tooltipPosition = tooltipPosition
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.borderColor = Color(tooltipBorderColor)
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.backgroundColor = Color(tooltipBackgroundColor)
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.textColor = Color(tooltipTextColor)
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.isEnabled = showSpinner
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
+            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
             ownIdLoginButton.rootView.visualConfig.authButtonConfig.backgroundColor = Color(buttonBackgroundColor)
-            ownIdLoginButton.rootView.visualConfig.orViewConfig.textColor = Color(buttonTextColor)
             ownIdLoginButton.rootView.visualConfig.authButtonConfig.textColor = Color(buttonTextColor)
-            ownIdLoginButton.rootView.visualConfig.tooltipVisualLookConfig.tooltipPosition = tooltipPosition
-            ownIdLoginButton.rootView.visualConfig.tooltipVisualLookConfig.borderColor = Color(tooltipBorderColor)
-            ownIdLoginButton.rootView.visualConfig.tooltipVisualLookConfig.backgroundColor = Color(tooltipBackgroundColor)
-            ownIdLoginButton.rootView.visualConfig.tooltipVisualLookConfig.textColor = Color(tooltipTextColor)
-            ownIdLoginButton.rootView.visualConfig.loaderViewConfig.isEnabled = showSpinner
-            ownIdLoginButton.rootView.visualConfig.loaderViewConfig.color = Color(spinnerColor)
-            ownIdLoginButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.color = Color(spinnerColor)
-            ownIdLoginButton.rootView.visualConfig.loaderViewConfig.backgroundColor = Color(spinnerBackgroundColor)
-            ownIdLoginButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.backgroundColor = Color(spinnerBackgroundColor)
+            ownIdLoginButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
+            ownIdLoginButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
         }
         
         addChild(resultingController)

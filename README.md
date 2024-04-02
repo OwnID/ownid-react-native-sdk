@@ -20,6 +20,8 @@ The [OwnID](https://ownid.com/) React Native SDK is a client library offering a 
 
    - **[OwnID Gigya](docs/sdk-react-native-gigya.md)** - Expands React Native Core SDK functionality by offering a prebuilt Gigya Integration, supporting Email/Password-based [Gigya Android Authentication](https://github.com/SAP/gigya-android-sdk) and [Gigya iOS Authentication](https://github.com/SAP/gigya-swift-sdk). SDK is based on native [OwnID Android Gigya SDK](https://github.com/OwnID/ownid-android-sdk) and [OwnID iOS Gigya SDK](https://github.com/OwnID/ownid-ios-sdk) modules.
 
+      It also includes the [OwnID WebView Bridge](/docs/sdk-react-native-gigya.md#gigya-with-web-screen-sets), enabling native Passkeys functionality for Gigya Web Screen-Sets with OwnID Web SDK.
+
 ### Advanced Configuration
 
 Explore advanced configuration options in OwnID React Native Core SDK by referring to the [Advanced Configuration](docs/sdk-advanced-configuration.md) documentation.
@@ -30,7 +32,9 @@ This repository hosts various OwnID Demo applications, each showcasing integrati
 
 - **Direct Integration**: `demo-integration` module exemplifies the integration process by directly handling OwnID Response in React Native application.
 
-- **Gigya Prebuilt Integration**: `demo-gigya` module exemplifies the integration process of Gigya Email/Password-based Authentication.
+- **Gigya Integration**: `demo-gigya` module exemplifies the integration process of Gigya Email/Password-based Authentication.
+
+- **Gigya Screen-Sets Integration**: `demo-gigya-screens` module exemplifies the integration process of Gigya Web Screen-Sets with [OwnID WebView Bridge](/docs/sdk-react-native-gigya.md#gigya-with-web-screen-sets) for OwnID Web SDK.
 
 You can run these demo apps on a physical Android/iOS device or an emulator.
 

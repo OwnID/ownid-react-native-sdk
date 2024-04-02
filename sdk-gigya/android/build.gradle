@@ -20,7 +20,7 @@ ext {
     name = "OwnID React Native Gigya SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-gigya"
-    versionName = "3.1.0"
+    versionName = "3.2.0"
 }
 
 group = ext.groupId
@@ -91,12 +91,13 @@ repositories {
 
     mavenCentral { content { excludeGroup "com.facebook.react" } }
     google()
-    maven { url "https://www.jitpack.io" }
 }
 
 dependencies {
     api(project(":ownid_react-native-core"))
-    api("com.ownid.android-sdk:gigya:3.1.0")
+
+    api("com.ownid.android-sdk:gigya:3.2.0")
+    compileOnly("com.sap.oss.gigya-android-sdk:sdk-core:7.0.9")
 }
 
 def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-gigya.properties"

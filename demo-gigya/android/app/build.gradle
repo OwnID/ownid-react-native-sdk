@@ -12,8 +12,8 @@ android {
         applicationId = "com.ownid.demo.gigya"
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
-        versionCode = 30100
-        versionName = "3.1.0"
+        versionCode = 30200
+        versionName = "3.2.0"
     }
 
     signingConfigs {
@@ -42,6 +42,9 @@ dependencies {
     implementation("com.facebook.react:react-android")
     //noinspection GradleDynamicVersion
     implementation("org.webkit:android-jsc:+")
+
+    implementation("com.sap.oss.gigya-android-sdk:sdk-core:7.0.9")
+    implementation("com.google.code.gson:gson:2.10.1")
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")

@@ -1,0 +1,51 @@
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+
+android {
+    namespace = "com.ownid.demo.gigya.screens"
+    compileSdk = rootProject.ext.compileSdkVersion
+    buildToolsVersion = rootProject.ext.buildToolsVersion
+    ndkVersion = rootProject.ext.ndkVersion
+
+    defaultConfig {
+        applicationId = "com.ownid.demo.gigya.screens"
+        minSdk = rootProject.ext.minSdkVersion
+        targetSdk = rootProject.ext.targetSdkVersion
+        versionCode = 30200
+        versionName = "3.2.0"
+    }
+
+    signingConfigs {
+        demosign {
+            storeFile file("../OwnID-Demo-Key.jks")
+            storePassword "OwnID-Demo-Key"
+            keyAlias "ownid-demo-key-alias"
+            keyPassword "OwnID-Demo-Key"
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.demosign
+        }
+        release {
+            signingConfig signingConfigs.demosign
+            minifyEnabled = false
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+}
+
+dependencies {
+    // The version of react-native is set by the React Native Gradle Plugin
+    implementation("com.facebook.react:react-android")
+    //noinspection GradleDynamicVersion
+    implementation("org.webkit:android-jsc:+")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("com.sap.oss.gigya-android-sdk:sdk-core:7.0.9")
+    implementation("com.google.code.gson:gson:2.10.1")
+}
+
+apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+applyNativeModulesAppBuildGradle(project)

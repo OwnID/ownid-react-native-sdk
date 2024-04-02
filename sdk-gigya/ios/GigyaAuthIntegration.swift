@@ -36,21 +36,14 @@ class GigyaAuthIntegration<T: GigyaAccountProtocol>: AuthIntegration {
         case .userError(let errorModel):
             code = errorModel.code.rawValue
         case .integrationError(let error):
-            if let error = error as? OwnID.GigyaSDK.IntegrationError {
+            if let error = error as? NetworkError {
                 switch error {
-                case .gigyaSDKError(let gigyaError, let dataDictionary): 
-                    if let data = try? JSONSerialization.data(withJSONObject: dataDictionary ?? [:]) {
-                        gigyaDataString = String(data: data, encoding: .utf8) ?? ""
-                    }
-                    
-                    switch gigyaError {
-                    case .gigyaError(let model):
-                        callId = model.callId
-                        errorCode = "\(model.errorCode)"
-                        localizedMessage = model.errorMessage ?? ""
-                    default:
-                        break
-                    }
+                case .gigyaError(let model):
+                    callId = model.callId
+                    errorCode = "\(model.errorCode)"
+                    localizedMessage = model.errorMessage ?? ""
+                default:
+                    break
                 }
             }
         default:
