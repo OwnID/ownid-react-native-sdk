@@ -12,7 +12,7 @@ import { AccountPage } from './screens/account';
 
 const Stack = createStackNavigator();
 
-const App = (auth) => () => {
+const App = () => () => {
   const AppLightTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: '#F5F6F7', textColor: '#354A5F', contentBackground: '#FFFFFF', linkNonActive: '#5B738B' } };
   const AppDarkTheme = { ...DarkTheme, colors: { ...DarkTheme.colors, background: '#18191B', textColor: '#CED1CC', contentBackground: '#222325', linkNonActive: '#CED1CC' } };
 
@@ -28,10 +28,10 @@ const App = (auth) => () => {
 
       <NavigationContainer theme={scheme === 'dark' ? AppDarkTheme : AppLightTheme}>
         <Stack.Navigator initialRouteName='Splash' screenOptions={{ headerShown: false }}>
-          <Stack.Screen name='Splash' component={SplashPage} initialParams={{ auth: auth }} />
-          <Stack.Screen name='Login' component={LoginPage} initialParams={{ auth: auth }} />
-          <Stack.Screen name='Register' component={RegistrationPage} initialParams={{ auth: auth }} />
-          <Stack.Screen name='Account' component={AccountPage} initialParams={{ auth: auth }} />
+          <Stack.Screen name='Splash' component={SplashPage} />
+          <Stack.Screen name='Login' component={LoginPage} />
+          <Stack.Screen name='Register' component={RegistrationPage} />
+          <Stack.Screen name='Account' component={AccountPage} />
         </Stack.Navigator>
       </NavigationContainer>
 

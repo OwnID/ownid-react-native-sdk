@@ -9,15 +9,15 @@ import com.facebook.react.ReactPackage
 import com.facebook.react.defaults.DefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.soloader.SoLoader
+import com.gigya.android.sdk.account.models.GigyaAccount
+import com.sap.gigya_rn_plugin.GigyaSdkModule
 
 class MainApplication : Application(), ReactApplication {
 
     override val reactNativeHost: ReactNativeHost =
         object : DefaultReactNativeHost(this) {
             override fun getPackages(): List<ReactPackage> {
-                return PackageList(this).packages.apply {
-                    add(GigyaPackage())
-                }
+                return PackageList(this).packages
             }
 
             override fun getJSMainModuleName(): String = "index"
@@ -34,5 +34,7 @@ class MainApplication : Application(), ReactApplication {
     override fun onCreate() {
         super.onCreate()
         SoLoader.init(this, false)
+
+        GigyaSdkModule.setSchema(this, GigyaAccount::class.java)
     }
 }

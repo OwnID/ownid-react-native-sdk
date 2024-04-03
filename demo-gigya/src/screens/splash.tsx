@@ -1,22 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { StackActions } from '@react-navigation/native';
 
-export const SplashPage = ({ navigation, route }) => {
-    const [isLoggedIn, setLoggedIn] = useState<Boolean | null>(null);
+import { Gigya } from '@sap_oss/gigya-react-native-plugin-for-sap-customer-data-cloud';
 
-    useEffect(() => {
-        route.params.auth.isLoggedIn().then((isLoggedIn: Boolean) => setLoggedIn(isLoggedIn));
-    }, []);
+export const SplashPage = ({ navigation }: any) => {
 
-    if (isLoggedIn == true) {
-        setTimeout(() => navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth })), 300);
-        return null;
-    }
-
-    if (isLoggedIn == false) {
-        setTimeout(() => navigation.dispatch(StackActions.replace('Login', { auth: route.params.auth })), 300);
-        return null;
+    if (Gigya.isLoggedIn()) {
+        setTimeout(() => navigation.dispatch(StackActions.replace('Account')), 300);
+    } else {
+        setTimeout(() => navigation.dispatch(StackActions.replace('Login')), 300);
     }
 
     return (<View />);
