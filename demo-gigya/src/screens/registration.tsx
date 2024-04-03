@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { GestureResponderEvent, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { StackActions, useTheme } from '@react-navigation/native';
 
+import { Gigya } from '@sap_oss/gigya-react-native-plugin-for-sap-customer-data-cloud';
+
 import styles from '../styles';
 
 import { OwnIdButton, OwnIdButtonType, OwnIdRegister, OwnIdResponse, OwnIdError } from '@ownid/react-native-gigya';
 
-export const RegistrationPage = ({ navigation, route }: any) => {
+export const RegistrationPage = ({ navigation }: any) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +32,7 @@ export const RegistrationPage = ({ navigation, route }: any) => {
       return;
     }
 
-    const resp = await route.params.auth.register(email, password, name);
+    const resp = await Gigya.register(email, password, { firstName: name });
 
     if (resp.error) {
       setError(resp.error.message);
@@ -40,7 +42,7 @@ export const RegistrationPage = ({ navigation, route }: any) => {
     setName('');
     setEmail('');
     setPassword('');
-    navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth }));
+    navigation.dispatch(StackActions.replace('Account'));
   }
 
   const processError = () => {
@@ -50,7 +52,7 @@ export const RegistrationPage = ({ navigation, route }: any) => {
 
   const onLogin = (response: OwnIdResponse) => {
     setOwnIdReadyToRegister(false);
-    navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth }));
+    navigation.dispatch(StackActions.replace('Account'));
   }
 
   const onRegister = (response: OwnIdResponse) => {

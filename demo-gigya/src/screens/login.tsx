@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { GestureResponderEvent, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { StackActions, useTheme } from '@react-navigation/native';
 
+import { Gigya } from '@sap_oss/gigya-react-native-plugin-for-sap-customer-data-cloud';
+
 import styles from '../styles';
 
 import { OwnIdButton, OwnIdButtonType, OwnIdResponse, OwnIdError } from '@ownid/react-native-gigya';
 
-export const LoginPage = ({ navigation, route }: any) => {
+export const LoginPage = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,7 +23,7 @@ export const LoginPage = ({ navigation, route }: any) => {
       return;
     }
 
-    const resp = await route.params.auth.login(email, password);
+    const resp = await Gigya.login(email, password);
 
     if (resp.error) {
       setError(resp.error.message);
@@ -30,7 +32,7 @@ export const LoginPage = ({ navigation, route }: any) => {
 
     setEmail('');
     setPassword('');
-    navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth }));
+    navigation.dispatch(StackActions.replace('Account'));
   }
 
   const processError = () => {
@@ -39,7 +41,7 @@ export const LoginPage = ({ navigation, route }: any) => {
   }
 
   const onLogin = (response: OwnIdResponse) => {
-    navigation.dispatch(StackActions.replace('Account', { auth: route.params.auth }));
+    navigation.dispatch(StackActions.replace('Account'));
   }
 
   const onError = (error: OwnIdError) => setError(error.message);

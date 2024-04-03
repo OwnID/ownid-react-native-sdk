@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1646A3A0280E72890073E9BA /* GigyaModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1646A39F280E72890073E9BA /* GigyaModule.swift */; };
-		1646A3A2280E72F00073E9BA /* GigyaModuleObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 1646A3A1280E72F00073E9BA /* GigyaModuleObjC.m */; };
+		1646A3A0280E72890073E9BA /* GigyaExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1646A39F280E72890073E9BA /* GigyaExtension.swift */; };
 		1667F9622931D33300CCAC4A /* PrefModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1667F9612931D33300CCAC4A /* PrefModule.swift */; };
 		1667F9642931D38100CCAC4A /* PrefModuleObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 1667F9632931D38100CCAC4A /* PrefModuleObjC.m */; };
 		16742694280581B50005582D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1674268E280581B50005582D /* LaunchScreen.storyboard */; };
@@ -34,8 +33,7 @@
 /* Begin PBXFileReference section */
 		113BEC71389AB6CBC699F1D0 /* Pods-OwnIDReactNativeGigyaDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OwnIDReactNativeGigyaDemo.release.xcconfig"; path = "Target Support Files/Pods-OwnIDReactNativeGigyaDemo/Pods-OwnIDReactNativeGigyaDemo.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* RNGigya.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RNGigya.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1646A39F280E72890073E9BA /* GigyaModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigyaModule.swift; sourceTree = "<group>"; };
-		1646A3A1280E72F00073E9BA /* GigyaModuleObjC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GigyaModuleObjC.m; sourceTree = "<group>"; };
+		1646A39F280E72890073E9BA /* GigyaExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigyaExtension.swift; sourceTree = "<group>"; };
 		1667F9612931D33300CCAC4A /* PrefModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefModule.swift; sourceTree = "<group>"; };
 		1667F9632931D38100CCAC4A /* PrefModuleObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrefModuleObjC.m; sourceTree = "<group>"; };
 		1674268E280581B50005582D /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -135,8 +133,7 @@
 		CEFBA7052B626EE000A8F673 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				1646A3A1280E72F00073E9BA /* GigyaModuleObjC.m */,
-				1646A39F280E72890073E9BA /* GigyaModule.swift */,
+				1646A39F280E72890073E9BA /* GigyaExtension.swift */,
 				1667F9632931D38100CCAC4A /* PrefModuleObjC.m */,
 				1667F9612931D33300CCAC4A /* PrefModule.swift */,
 			);
@@ -346,10 +343,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1646A3A2280E72F00073E9BA /* GigyaModuleObjC.m in Sources */,
 				16742699280581BE0005582D /* AppDelegate.mm in Sources */,
 				16742695280581B50005582D /* main.m in Sources */,
-				1646A3A0280E72890073E9BA /* GigyaModule.swift in Sources */,
+				1646A3A0280E72890073E9BA /* GigyaExtension.swift in Sources */,
 				1667F9642931D38100CCAC4A /* PrefModuleObjC.m in Sources */,
 				1667F9622931D33300CCAC4A /* PrefModule.swift in Sources */,
 			);

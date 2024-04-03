@@ -11,6 +11,7 @@
   "dependencies": {
     "@ownid/react-native-core": "3.2.0",
     "@ownid/react-native-gigya": "3.2.0",
+    "@sap_oss/gigya-react-native-plugin-for-sap-customer-data-cloud": "^0.3.0",
     "@react-navigation/native": "^6.0.0",
     "@react-navigation/stack": "^6.3.0",
     "react": "^18.2.0",
