@@ -31,6 +31,9 @@
 {
   self.moduleName = @"OwnIDReactNativeGigyaDemo";
   
+  GigyaExtension * gigya = [[GigyaExtension alloc] init];
+  [gigya setMySchema];
+  
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
