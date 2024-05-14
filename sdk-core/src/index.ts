@@ -32,6 +32,20 @@ export default {
    */
   async init(configuration: OwnIdConfiguration, productName: string, instanceName?: string) {
     return await OwnIdModule.createInstance(configuration, productName, instanceName);
+  },
+
+  /**
+   * Enrolls a credential with OwnID.
+   * 
+   * @param {string} loginId - The user's login ID.
+   * @param {string} authToken - The user's authentication token.
+   * @param {boolean} force - (optional) if set to true, the enrollment will be forced even if the enrollment request timeout (7 days) has not passed. Defaults to false.
+   * @param {string} instanceName - (optional) The name of the OwnID instance.
+   * 
+   * @returns {Promise<string>} A promise indicating the completion of the initialization.
+   */
+  async enrollCredential(loginId: string, authToken: string, force: boolean = false, instanceName?: string) {
+    return await OwnIdModule.enrollCredential(loginId, authToken, force, instanceName);
   }
 }
 

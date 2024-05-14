@@ -1,4 +1,4 @@
-package com.ownid.demo.integration
+package com.ownid.demo.custom
 
 import android.app.Application
 import com.facebook.react.PackageList
