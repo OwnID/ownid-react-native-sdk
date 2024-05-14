@@ -15,6 +15,7 @@
 		16742696280581B50005582D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16742691280581B50005582D /* Images.xcassets */; };
 		16742699280581BE0005582D /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 16742692280581B50005582D /* AppDelegate.mm */; };
 		16D2F8AF7FAD62DB9D01C44A /* libPods-OwnIDReactNativeGigyaDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F22DA2E49C3FAA14436D5CF /* libPods-OwnIDReactNativeGigyaDemo.a */; };
+		32C9855AE957C0CEABCE77E4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 60D64CEFAD4D1625BA719581 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -44,6 +45,7 @@
 		16742693280581B50005582D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3F22DA2E49C3FAA14436D5CF /* libPods-OwnIDReactNativeGigyaDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-OwnIDReactNativeGigyaDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		45CABC78574330B79881CC48 /* Pods-OwnIDReactNativeGigyaDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OwnIDReactNativeGigyaDemo.debug.xcconfig"; path = "Target Support Files/Pods-OwnIDReactNativeGigyaDemo/Pods-OwnIDReactNativeGigyaDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		60D64CEFAD4D1625BA719581 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		CE2172642B4474D3008F13EA /* OwnIDReactNativeGigyaDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OwnIDReactNativeGigyaDemo.entitlements; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -69,6 +71,7 @@
 				1674268E280581B50005582D /* LaunchScreen.storyboard */,
 				16742691280581B50005582D /* Images.xcassets */,
 				16742693280581B50005582D /* Info.plist */,
+				60D64CEFAD4D1625BA719581 /* PrivacyInfo.xcprivacy */,
 			);
 			path = OwnIDReactNativeGigyaDemo;
 			sourceTree = "<group>";
@@ -241,6 +244,7 @@
 			files = (
 				16742694280581B50005582D /* LaunchScreen.storyboard in Resources */,
 				16742696280581B50005582D /* Images.xcassets in Resources */,
+				32C9855AE957C0CEABCE77E4 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -430,6 +434,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CC = "";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -457,6 +462,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				CXX = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
@@ -476,6 +482,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD = "";
+				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -505,6 +513,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CC = "";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -532,6 +541,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				CXX = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
@@ -544,6 +554,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD = "";
+				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",

@@ -12,7 +12,7 @@ import com.ownid.sdk.OwnId
 import com.ownid.sdk.OwnIdCore
 import com.ownid.sdk.OwnIdIntegration
 import com.ownid.sdk.ProductName
-import com.ownid.sdk.internal.OwnIdInternalLogger
+import com.ownid.sdk.internal.component.OwnIdInternalLogger
 import org.json.JSONObject
 
 /**

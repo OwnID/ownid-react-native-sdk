@@ -3,17 +3,17 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 android {
-    namespace = "com.ownid.demo.integration"
+    namespace = "com.ownid.demo.custom"
     compileSdk = rootProject.ext.compileSdkVersion
     buildToolsVersion = rootProject.ext.buildToolsVersion
     ndkVersion = rootProject.ext.ndkVersion
 
     defaultConfig {
-        applicationId = "com.ownid.demo.integration"
+        applicationId = "com.ownid.demo.custom"
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
-        versionCode = 30200
-        versionName = "3.2.0"
+        versionCode = 30300
+        versionName = "3.3.0"
     }
 
     signingConfigs {

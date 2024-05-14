@@ -17,7 +17,8 @@ For more general information about OwnID React Native SDKs, see [OwnID React Nat
    + [Gigya with react native UI](#gigya-with-react-native-ui)
      * [Implement the Registration Screen](#implement-the-registration-screen)
      * [Implement the Login Screen](#implement-the-login-screen)
-     * [Error and Exception Handling](#error-and-exception-handling)   
+     * [Error and Exception Handling](#error-and-exception-handling)
+* [Credential enrollment](#credential-enrollment)     
 * [Additional Configuration](#additional-configuration)   
 
 ## Before You Begin
@@ -336,6 +337,33 @@ Example:
     "localizedMessage": "Account Pending Verification"
 }
 ```
+
+## Credential enrollment
+
+The credential enrollment feature enables users to enroll credentials outside of the login/registration flows. You can trigger credential enrollment on demand, for example, after the user registers with a password.
+
+To trigger credential enrollment, import `OwnId` from `@ownid/react-native-core` and invoke the `enrollCredential` function:
+
+```typescript
+import OwnId from '@ownid/react-native-core';
+
+const runEnrollment = async () => {
+    try {
+      const account = await Gigya.getAccount();
+      const token = await Gigya.send("accounts.getJWT");
+      await OwnId.enrollCredential(account.profile.email, token.id_token);
+    } catch (error) {
+      // Handle error
+    };
+}
+```
+
+The `enrollCredential` function requires two parameters:
+
+- `loginId`: The user's login ID.
+- `authToken`: The user's authentication token.
+
+It returns either an error or a string with a successful message.
 
 ## Additional Configuration
 

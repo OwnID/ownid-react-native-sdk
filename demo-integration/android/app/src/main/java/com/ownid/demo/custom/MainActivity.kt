@@ -1,4 +1,4 @@
-package com.ownid.demo.integration
+package com.ownid.demo.custom
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

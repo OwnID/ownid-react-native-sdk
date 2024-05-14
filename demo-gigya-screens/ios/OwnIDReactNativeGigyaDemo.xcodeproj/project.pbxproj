@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06D95DCEC23589B2A2F1246E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 95D13A0C9010E4DFD5F52CC9 /* PrivacyInfo.xcprivacy */; };
 		16742694280581B50005582D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1674268E280581B50005582D /* LaunchScreen.storyboard */; };
 		16742695280581B50005582D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 16742690280581B50005582D /* main.m */; };
 		16742696280581B50005582D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16742691280581B50005582D /* Images.xcassets */; };
@@ -39,6 +40,7 @@
 		16F8D420349E14A17651A7EB /* Pods-OwnIDReactNativeGigyaDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OwnIDReactNativeGigyaDemo.debug.xcconfig"; path = "Target Support Files/Pods-OwnIDReactNativeGigyaDemo/Pods-OwnIDReactNativeGigyaDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		2FE921C8013E81B17DD13D9F /* libPods-OwnIDReactNativeGigyaDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-OwnIDReactNativeGigyaDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		50C54AA29264062B92C89F67 /* Pods-OwnIDReactNativeGigyaDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OwnIDReactNativeGigyaDemo.release.xcconfig"; path = "Target Support Files/Pods-OwnIDReactNativeGigyaDemo/Pods-OwnIDReactNativeGigyaDemo.release.xcconfig"; sourceTree = "<group>"; };
+		95D13A0C9010E4DFD5F52CC9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		CE2172642B4474D3008F13EA /* OwnIDReactNativeGigyaDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OwnIDReactNativeGigyaDemo.entitlements; sourceTree = "<group>"; };
 		CE8D19102BAB544900ADCD08 /* GigyaExtenstion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigyaExtenstion.swift; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -64,6 +66,7 @@
 				1674268E280581B50005582D /* LaunchScreen.storyboard */,
 				16742691280581B50005582D /* Images.xcassets */,
 				16742693280581B50005582D /* Info.plist */,
+				95D13A0C9010E4DFD5F52CC9 /* PrivacyInfo.xcprivacy */,
 			);
 			path = OwnIDReactNativeGigyaDemo;
 			sourceTree = "<group>";
@@ -227,6 +230,7 @@
 			files = (
 				16742694280581B50005582D /* LaunchScreen.storyboard in Resources */,
 				16742696280581B50005582D /* Images.xcassets in Resources */,
+				06D95DCEC23589B2A2F1246E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -412,6 +416,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CC = "";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -439,6 +444,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				CXX = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
@@ -458,6 +464,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD = "";
+				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -487,6 +495,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CC = "";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -514,6 +523,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				CXX = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
@@ -526,6 +536,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD = "";
+				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",

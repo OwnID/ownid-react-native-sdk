@@ -3,6 +3,7 @@ import { Text, View, TouchableOpacity } from "react-native";
 import { StackActions, useTheme } from '@react-navigation/native';
 
 import { Gigya } from '@sap_oss/gigya-react-native-plugin-for-sap-customer-data-cloud';
+import OwnId from '@ownid/react-native-core';
 
 import styles from '../styles';
 
@@ -26,6 +27,16 @@ export const AccountPage = ({ navigation }: any) => {
     navigation.dispatch(StackActions.replace('Login'));
   }
 
+  const runEnrollment = async () => {
+    try {
+      const account = await Gigya.getAccount();
+      const token = await Gigya.send("accounts.getJWT");
+      await OwnId.enrollCredential(account.profile.email, token.id_token, true);
+    } catch (error) {
+      console.log("runEnrollment:" + error);
+    };
+  }
+
   const { colors } = useTheme();
 
   return (
@@ -38,6 +49,10 @@ export const AccountPage = ({ navigation }: any) => {
 
         <TouchableOpacity onPress={onLogout} style={{ ...styles.buttonContainer, marginTop: 16 }}>
           <Text style={styles.buttonText}>Log out</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={runEnrollment} style={{ ...styles.buttonContainer, marginTop: 16 }}>
+          <Text style={styles.buttonText}>Trigger credential enrollment</Text>
         </TouchableOpacity>
       </View>
     </View>

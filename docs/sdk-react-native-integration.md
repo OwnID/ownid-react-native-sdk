@@ -15,6 +15,7 @@ For more general information about OwnID React Native SDKs, see [OwnID React Nat
    + [Create OwnID instance](#create-ownid-instance)
    + [Implement the Registration Screen](#implement-the-registration-screen)
    + [Implement the Login Screen](#implement-the-login-screen)
+* [Credential enrollment](#credential-enrollment)   
 * [Additional Configuration](#additional-configuration)   
 
 ## Before You Begin
@@ -249,6 +250,33 @@ and optional callbacks:
  * `onError` - Called when error happened in OwnID flow.
 
 For more configuration options, refer to the [OwnID React Native SDK - Advanced Configuration](sdk-advanced-configuration.md) 
+
+## Credential enrollment
+
+The credential enrollment feature enables users to enroll credentials outside of the login/registration flows. You can trigger credential enrollment on demand, for example, after the user registers with a password.
+
+To trigger credential enrollment, import `OwnId` from `@ownid/react-native-core` and invoke the `enrollCredential` function:
+
+```typescript
+import OwnId from '@ownid/react-native-core';
+
+const runEnrollment = async () => {
+    try {
+      const loginId = ...;
+      const authToken = ...;
+      await OwnId.enrollCredential(loginId, token.id_token);
+    } catch (error) {
+      // Handle error
+    };
+}
+```
+
+The `enrollCredential` function requires two parameters:
+
+- `loginId`: The user's login ID.
+- `authToken`: The user's authentication token.
+
+It returns either an error or a string with a successful message.
 
 ## Additional Configuration
 

@@ -20,7 +20,7 @@ import com.ownid.sdk.event.OwnIdLoginFlow
 import com.ownid.sdk.event.OwnIdRegisterEvent
 import com.ownid.sdk.event.OwnIdRegisterFlow
 import com.ownid.sdk.exception.OwnIdException
-import com.ownid.sdk.internal.OwnIdInternalLogger
+import com.ownid.sdk.internal.component.OwnIdInternalLogger
 import com.ownid.sdk.view.OwnIdButton
 import com.ownid.sdk.view.popup.Popup
 import java.util.Locale
