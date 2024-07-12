@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, TouchableOpacity } from "react-native";
+import { Text, View, TouchableOpacity } from 'react-native';
 import { StackActions, useTheme } from '@react-navigation/native';
 
 import { Gigya } from '@sap_oss/gigya-react-native-plugin-for-sap-customer-data-cloud';
@@ -24,7 +24,7 @@ export const AccountPage = ({ navigation }: any) => {
 
   const onLogout = async () => {
     await Gigya.logout();
-    navigation.dispatch(StackActions.replace('Login'));
+    navigation.dispatch(StackActions.replace('Splash'));
   }
 
   const runEnrollment = async () => {
@@ -41,6 +41,7 @@ export const AccountPage = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
+
       <View style={{ ...styles.content, backgroundColor: colors.contentBackground }}>
 
         <Text style={{ ...styles.profileTitle, color: colors.textColor }}>Welcome {profile.firstName}!</Text>

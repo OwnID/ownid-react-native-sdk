@@ -11,8 +11,8 @@ export const AccountPage = ({ navigation, route }: any) => {
     setProfile(route.params.auth.profile());
   }, []);
 
-  const onLogout = async () => {
-    await route.params.auth.logout();
+  const onLogout = () => {
+    route.params.auth.logout();
     navigation.dispatch(StackActions.replace('Splash', { auth: route.params.auth }));
   }
 
