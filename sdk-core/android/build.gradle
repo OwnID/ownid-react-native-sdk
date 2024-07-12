@@ -20,7 +20,7 @@ ext {
     name = "OwnID React Native Core SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-core"
-    versionName = "3.3.0"
+    versionName = "3.3.1"
 }
 
 group = ext.groupId
