@@ -70,7 +70,7 @@ public open class BaseOwnIdFragmentManager(private val reactContext: ReactApplic
     @Suppress("UNUSED_PARAMETER")
     public fun setWidgetType(view: View?, value: String?) {
         if (value == null) return
-        val widgetType = OwnIdWidget.Type.entries.firstOrNull { it.name.equals(value, true) } ?: OwnIdWidget.Type.OwnIdButton
+        val widgetType = OwnIdWidget.Type.values().firstOrNull { it.name.equals(value, true) } ?: OwnIdWidget.Type.OwnIdButton
         widgetProperties = widgetProperties.copy(widgetType = widgetType)
     }
 
@@ -84,7 +84,7 @@ public open class BaseOwnIdFragmentManager(private val reactContext: ReactApplic
     @Suppress("UNUSED_PARAMETER")
     public fun setWidgetPosition(view: View?, value: String?) {
         if (value == null) return
-        val widgetPosition = OwnIdButton.Position.entries.firstOrNull { it.name.equals(value, true) } ?: OwnIdButton.Position.START
+        val widgetPosition = OwnIdButton.Position.values().firstOrNull { it.name.equals(value, true) } ?: OwnIdButton.Position.START
         widgetProperties = widgetProperties.copy(widgetPosition = widgetPosition)
     }
 
@@ -141,7 +141,7 @@ public open class BaseOwnIdFragmentManager(private val reactContext: ReactApplic
     public fun setTooltipPosition(view: View?, value: String?) {
         if (value == null) return
         val valueUppercase = value.uppercase(Locale.ENGLISH)
-        val tooltipPosition = Popup.Position.entries.firstOrNull { it.name == valueUppercase } // Null as None
+        val tooltipPosition = Popup.Position.values().firstOrNull { it.name == valueUppercase } // Null as None
         widgetProperties = widgetProperties.copy(tooltipPosition = tooltipPosition)
     }
 

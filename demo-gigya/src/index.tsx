@@ -20,7 +20,7 @@ const App = () => () => {
 
   return (
     <SafeAreaProvider>
-      <StatusBar backgroundColor='#354A5F' />
+      <StatusBar backgroundColor="#354A5F" />
 
       <View style={{ backgroundColor: '#354A5F', height: 140 }}>
         <Image style={{ alignSelf: 'center', position: 'absolute', bottom: 24 }} source={require('./ownid_logo.png')} />
