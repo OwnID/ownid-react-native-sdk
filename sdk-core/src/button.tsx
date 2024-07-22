@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Appearance, ColorSchemeName, UIManager, findNodeHandle, DeviceEventEmitter, NativeEventEmitter, NativeModules, Platform, EmitterSubscription, View, DimensionValue } from 'react-native';
 import { OwnIdNativeViewManager, OwnIdButtonType, OwnIdResponse, OwnIdPayloadType, OwnIdError, _setViewId } from './common';
-import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdRegisterFlow, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdRegisterEvent, OwnIdLoginEvent } from './internal';
+import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdRegisterFlow, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdRegisterEvent, OwnIdLoginEvent, parsePayload } from './internal';
 
 export const OwnIdButtonColorSchemeLight = {
     iconColor: '#0070F2',
@@ -130,16 +130,16 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
                 case OwnIdRegisterFlow.Response:
                     if (flowEvent.payload.type === OwnIdPayloadType.Registration) {
                         const { loginId, payload, authType } = flowEvent;
-                        onRegister({ loginId, payload, authType });
+                        onRegister(parsePayload(loginId, payload, authType));
                     }
                     if (flowEvent.payload.type === OwnIdPayloadType.Login) {
                         const { loginId, payload, authType } = flowEvent;
-                        onLogin({ loginId, payload, authType });
+                        onLogin(parsePayload(loginId, payload, authType));
                     }
                     break;
                 case OwnIdLoginFlow.Response:
                     const { loginId, payload, authType } = flowEvent;
-                    onLogin({ loginId, payload, authType });
+                    onLogin(parsePayload(loginId, payload, authType));
                     break;
                 case OwnIdRegisterFlow.Undo:
                     onUndo();

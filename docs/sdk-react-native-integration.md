@@ -55,7 +55,7 @@ See [complete example](../demo-integration/index.js)
 ```js
 import OwnId from '@ownid/react-native-core';
 
-await OwnId.init({ appId: "gephu342dnff2v" }, "OwnIDIntegration/3.1.0"); // Replace with your App Id
+await OwnId.init({ appId: "gephu342dnff2v" }, "OwnIDIntegration/3.3.2"); // Replace with your App Id
 ```
 
 > [!NOTE]
@@ -69,11 +69,11 @@ Using the OwnID SDK to implement passwordless authentication starts by adding an
 See [complete example](../demo-integration/src/screens/registration.tsx)
 
 ```ts
-import { OwnIdButton, OwnIdButtonType, OwnIdButtonPosition, OwnIdResponse, OwnIdError } from '@ownid/react-native-core';
+import OwnId, { OwnIdButton, OwnIdButtonType, OwnIdButtonPosition, OwnIdResponse, OwnIdError } from '@ownid/react-native-core';
 
 const [name, setName] = useState('');
 const [email, setEmail] = useState('');
-const [ownIdData, setOwnIdData] = useState('');
+const [ownIdData, setOwnIdData] = useState<any>(null);
 
 const loginWithToken = async (token: string) => {
   // Login to your identity platform 
@@ -83,8 +83,9 @@ const onSubmit = async (event) => {
   event.preventDefault();
   ...
 
-  if (ownIdData !== '') {
+  if (ownIdData) {
     // Implement registration within your identity platform with ownIdData
+    // Use OwnId.generatePassword(16) to generate random password
   } else {
     // Standard registration logic without OwnID
   }
@@ -107,7 +108,7 @@ const onRegister = (response: OwnIdResponse) => {
  
 const onUndo = () => {
   // Called when the user selects the "Undo" option
-  setOwnIdData('');
+  setOwnIdData(null);
 };  
 
 const onError = (error: OwnIdError) => {

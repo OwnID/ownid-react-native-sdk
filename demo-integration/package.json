@@ -1,6 +1,6 @@
 {
   "name": "ownid-demo-integration-rn",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "private": true,
   "description": "OwnID Integration Demo RN",
   "license": "Apache-2.0",
@@ -12,7 +12,7 @@
     "start": "npx react-native start"
   },
   "dependencies": {
-    "@ownid/react-native-core": "3.3.1",
+    "@ownid/react-native-core": "3.3.2",
     "@react-navigation/native": "^6.0.0",
     "@react-navigation/stack": "^6.3.0",
     "@rneui/themed": "^4.0.0-rc.8",

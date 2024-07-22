@@ -1,6 +1,6 @@
 {
   "name": "@ownid/react-native-gigya",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "OwnID React Native Gigya SDK",
   "license": "Apache-2.0",
   "homepage": "https://ownid.com",
@@ -30,7 +30,7 @@
     "react-native": "*"
   },
   "dependencies": {
-    "@ownid/react-native-core": "3.3.1"
+    "@ownid/react-native-core": "3.3.2"
   },
   "devDependencies": {
     "@react-native/babel-preset": "^0.74.0",

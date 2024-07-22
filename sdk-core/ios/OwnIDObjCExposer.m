@@ -33,6 +33,7 @@ RCT_EXPORT_VIEW_PROPERTY(spinnerBackgroundColor, NSString)
 @interface RCT_EXTERN_MODULE (OwnIdModule, RCTViewManager)
 
 RCT_EXTERN_METHOD(createInstance:(NSDictionary *)config productName:(NSString *)productName instanceName:(NSString *)instanceName resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(setLocale:(NSString *)locale resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(enrollCredential:(NSString *)loginId authToken:(NSString *)authToken force:(BOOL)force instanceName:(NSString *)instanceName resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 
 @end

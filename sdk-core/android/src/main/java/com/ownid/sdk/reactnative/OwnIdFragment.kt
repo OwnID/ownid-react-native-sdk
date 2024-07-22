@@ -58,7 +58,8 @@ public class OwnIdFragment(
             }
         }
 
-        view.postDelayed(::setViewModel, 500)
+        setViewModel()
+        // view.postDelayed(::setViewModel, 500)
     }
 
     override fun onDestroyView() {
@@ -80,6 +81,7 @@ public class OwnIdFragment(
                 is OwnIdRegisterViewModel -> vm.attachToView(it, viewLifecycleOwner)
             }
             it.setLoginId(loginId)
+            it.onLocaleUpdated()
         }
     }
 

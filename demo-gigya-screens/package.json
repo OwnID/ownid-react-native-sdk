@@ -1,6 +1,6 @@
 {
   "name": "ownid-demo-gigya-screens-rn",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "private": true,
   "description": "OwnID Gigya Demo RN",
   "license": "Apache-2.0",
@@ -12,8 +12,8 @@
     "start": "npx react-native start"
   },
   "dependencies": {
-    "@ownid/react-native-core": "3.3.1",
-    "@ownid/react-native-gigya": "3.3.1",
+    "@ownid/react-native-core": "3.3.2",
+    "@ownid/react-native-gigya": "3.3.2",
     "@sap_oss/gigya-react-native-plugin-for-sap-customer-data-cloud": "^0.3.0",
     "react": "^18.2.0",
     "react-native": "^0.74.0",

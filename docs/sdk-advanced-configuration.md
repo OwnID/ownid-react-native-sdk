@@ -7,6 +7,7 @@ The configuration options listed here are part of OwnID React Native Core SDK.
 ## Table of contents
 
 * [Initialization Parameters](#initialization-parameters)
+* [Custom locale](#custom-locale)
 * [Error and Exception Handling](#error-and-exception-handling)
 * [Customizing the UI](#customizing-the-ui)
    + [Side-by-side button](#side-by-side-button)
@@ -33,6 +34,21 @@ Example:
 
 ```ts
 await OwnId.init({ appId: "your_app_id", env: "uat", enableLogging: true, redirectUrl: "com.ownid.demo.react://ownid" }, ...)
+```
+
+## Custom locale
+
+The OwnID SDK supports multiple languages, dynamically loading translations at runtime to select the best available language for the user based on the system locale. You can view the list of currently supported languages [here](https://i18n.prod.ownid.com/langs.json).
+
+The SDK also makes necessary adjustments for right-to-left (RTL) languages. If the user's mobile device is set to a language not supported by the SDK, it will default to English.
+
+You can request to use a custom locale. If the requested locale is supported, it will be used once it's downloaded from the server.
+
+Example:
+```ts
+import OwnId from '@ownid/react-native-core';
+...
+await OwnId.setLocale("fr");
 ```
 
 ## Error and Exception Handling

@@ -4,14 +4,14 @@ import { StackActions, useTheme } from '@react-navigation/native';
 
 import styles from '../styles';
 
-import { OwnIdButton, OwnIdButtonType, OwnIdResponse, OwnIdError } from '@ownid/react-native-core';
+import OwnId, { OwnIdButton, OwnIdButtonType, OwnIdResponse, OwnIdError } from '@ownid/react-native-core';
 
 export const RegistrationPage = ({ navigation, route }: any) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [ownIdData, setOwnIdData] = useState('');
+  const [ownIdData, setOwnIdData] = useState<any>(null);
 
   const [ownIdReadyToRegister, setOwnIdReadyToRegister] = useState(false);
 
@@ -19,7 +19,7 @@ export const RegistrationPage = ({ navigation, route }: any) => {
     setName('');
     setEmail('');
     setPassword('');
-    setOwnIdData('');
+    setOwnIdData(null);
 
     try {
       await route.params.auth.getProfile(token);
@@ -46,8 +46,8 @@ export const RegistrationPage = ({ navigation, route }: any) => {
     }
 
     try {
-      const token = ownIdData !== '' ?
-        await route.params.auth.register(email, "password", name, ownIdData)
+      const token = ownIdData ?
+        await route.params.auth.register(email, OwnId.generatePassword(16), name, ownIdData)
         :
         await route.params.auth.register(email, password, name);
 
@@ -65,7 +65,7 @@ export const RegistrationPage = ({ navigation, route }: any) => {
 
   const onLogin = async (response: OwnIdResponse) => {
     setEmail(response.loginId!);
-    await loginWithToken(JSON.parse(response.payload!.data).token);
+    await loginWithToken(response.payload!.data.token);
   }
 
   const onRegister = (response: OwnIdResponse) => {
@@ -73,7 +73,7 @@ export const RegistrationPage = ({ navigation, route }: any) => {
     setOwnIdData(response.payload!.data);
   }
 
-  const onUndo = () => setOwnIdData('');
+  const onUndo = () => setOwnIdData(null);
 
   const onError = (error: OwnIdError) => setError(error.message);
 

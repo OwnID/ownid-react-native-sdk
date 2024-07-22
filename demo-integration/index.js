@@ -9,7 +9,7 @@ import OwnId from '@ownid/react-native-core';
 const appName = "OwnIDReactNativeIntegrationDemo";
 
 AppRegistry.registerRunnable(appName, async (initialProps) => {
-    await OwnId.init({ appId: "..." }, "OwnIDIntegration/3.3.1");
+    await OwnId.init({ appId: "..." }, "OwnIDIntegration/3.3.2");
 
     AppRegistry.registerComponent(appName, () => App(auth));
     AppRegistry.runApplication(appName, initialProps);

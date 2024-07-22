@@ -19,6 +19,15 @@ final class OwnIdModule: RCTViewManager {
         OwnID.createInstanceReact(config, productName: productName, instanceName: instanceName, resolve: resolve, reject: reject)
     }
     
+    @objc func setLocale(_ locale: String?,
+                           resolve: @escaping RCTPromiseResolveBlock,
+                           reject: @escaping RCTPromiseRejectBlock) {
+        if let locale {
+            OwnID.CoreSDK.setSupportedLanguages([locale])
+        }
+        resolve(nil)
+    }
+    
     @objc func enrollCredential(_ loginId: String,
                                 authToken: String,
                                 force: Bool,

@@ -54,7 +54,7 @@ public class OwnIdAuthButtonReact(
 
     override fun setStrings() {
         super.setStrings()
-        reMeasureAndLayout()
+        reMeasureAndLayout(true)
     }
 
     private var currentWidthMeasureSpec: Int? = null

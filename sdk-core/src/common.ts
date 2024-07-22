@@ -39,12 +39,12 @@ export enum OwnIdPayloadType {
  * Represents the result of an OwnID flow.
  * 
  * @property {OwnIdPayloadType} type - The type of data in the `data` and `metadata` properties.
- * @property {string} data - A string containing OwnID Data - the OwnID authentication data object.
+ * @property {any} data - OwnID Data (OwnID authentication data object) as a parsed JSON Object or a string.
  * @property {string} metadata - A string with information on how to use the [data]. Integration-specific.
  */
 export interface OwnIdPayload {
     type: OwnIdPayloadType;
-    data: string;
+    data: any;
     metadata: string;
 }
 

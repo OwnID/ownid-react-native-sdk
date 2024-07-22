@@ -15,6 +15,7 @@ import com.facebook.react.bridge.ReadableMap
 import com.ownid.sdk.InstanceName
 import com.ownid.sdk.InternalOwnIdAPI
 import com.ownid.sdk.OwnId
+import com.ownid.sdk.OwnIdCoreImpl
 import com.ownid.sdk.OwnIdInstance
 import com.ownid.sdk.exception.OwnIdException
 import com.ownid.sdk.internal.component.OwnIdInternalLogger
@@ -38,6 +39,22 @@ public class OwnIdModule(
             OwnId.createInstanceReact(reactApplicationContext, promise, config, productName, InstanceName(instanceName))
         else
             OwnId.createInstanceReact(reactApplicationContext, promise, config, productName)
+    }
+
+    @ReactMethod
+    @OptIn(InternalOwnIdAPI::class)
+    public fun setLocale(locale: String?, promise: Promise) {
+        val ownIdInstance = OwnId.firstInstanceOrNull<OwnIdInstance>()
+
+        if (ownIdInstance == null) {
+            promise.reject(OwnIdException("No OwnID instance found"))
+        } else {
+            (ownIdInstance.ownIdCore as OwnIdCoreImpl).apply {
+                localeService.setLanguageTags(locale)
+                localeService.updateCurrentOwnIdLocale(reactApplicationContext)
+            }
+            promise.resolve(null)
+        }
     }
 
     @ReactMethod

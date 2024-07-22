@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Appearance, ColorSchemeName, UIManager, findNodeHandle, DeviceEventEmitter, NativeEventEmitter, NativeModules, Platform, EmitterSubscription, View, DimensionValue } from 'react-native';
 import { OwnIdNativeViewManager, OwnIdButtonType, OwnIdResponse, OwnIdError, _setViewId } from './common';
-import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdLoginEvent } from './internal';
+import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdLoginEvent, parsePayload } from './internal';
 
 export const OwnIdAuthButtonColorSchemeLight = {
     backgroundColor: '#0070F2',
@@ -73,7 +73,7 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
                     break;
                 case OwnIdLoginFlow.Response:
                     const { loginId, payload, authType } = flowEvent;
-                    onLogin({ loginId, payload, authType });
+                    onLogin(parsePayload(loginId, payload, authType));
                     break;
                 case OwnIdLoginFlow.Error:
                     onError(flowEvent.error);

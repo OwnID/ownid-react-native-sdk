@@ -50,7 +50,7 @@ export const LoginPage = ({ navigation, route }: any) => {
 
   const onLogin = async (response: OwnIdResponse) => {
     setEmail(response.loginId!);
-    await loginWithToken(JSON.parse(response.payload!.data).token);
+    await loginWithToken(response.payload!.data.token);
   }
 
   const onError = (cause: OwnIdError) => setError(cause.message);

@@ -22,7 +22,7 @@ public class OwnIdButtonReact(
     private val measureListener = object : OwnIdLayoutShadowNode.MeasureListener {
         @WorkerThread
         override fun onMeasure() {
-            post { reMeasureAndLayout() }
+            // post { reMeasureAndLayout() }
             postDelayed({ onMeasureDone() }, 150)
         }
     }
@@ -71,7 +71,7 @@ public class OwnIdButtonReact(
 
     override fun setStrings() {
         super.setStrings()
-        reMeasureAndLayout()
+        reMeasureAndLayout(true)
     }
 
     private var currentWidthMeasureSpec: Int? = null

@@ -18,6 +18,7 @@ export interface OwnIdConfiguration {
 }
 
 import { NativeModules } from 'react-native';
+import { generatePassword } from './internal';
 const { OwnIdModule } = NativeModules;
 
 export default {
@@ -25,13 +26,29 @@ export default {
    * Creates an OwnID instance without the Integration component.
    * 
    * @param {OwnIdConfiguration} configuration - (mandatory) Configuration for the OwnID SDK.
-   * @param {string} productName - (mandatory) Used in network calls as part of the `User Agent` string. Example: "DirectIntegration/3.1.0".
+   * @param {string} productName - (mandatory) Used in network calls as part of the `User Agent` string. Example: "DirectIntegration/3.3.2".
    * @param {string} instanceName - (optional) The name of the OwnID instance.
    * 
    * @returns {Promise<void>} A promise indicating the completion of the initialization.
    */
   async init(configuration: OwnIdConfiguration, productName: string, instanceName?: string) {
-    return await OwnIdModule.createInstance(configuration, productName, instanceName);
+    return OwnIdModule.createInstance(configuration, productName, instanceName);
+  },
+
+  /**
+   * Sets the locale for the OwnID SDK.
+   *
+   * Use a valid IETF BCP 47 language tag (e.g., "en-US", "fr") to set a specific locale. 
+   * See [IETF BCP 47 language tag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language) for more information.
+   *
+   * To use the device's default locale settings, pass `null`.
+   *
+   * @param locale - The locale tag string or `null` to use the platform's locale.
+   * 
+   * @returns {Promise<void>} A promise that resolves when the locale is set.
+   */
+  async setLocale(locale?: string): Promise<void> {
+    return OwnIdModule.setLocale(locale);
   },
 
   /**
@@ -45,7 +62,27 @@ export default {
    * @returns {Promise<string>} A promise indicating the completion of the initialization.
    */
   async enrollCredential(loginId: string, authToken: string, force: boolean = false, instanceName?: string) {
-    return await OwnIdModule.enrollCredential(loginId, authToken, force, instanceName);
+    return OwnIdModule.enrollCredential(loginId, authToken, force, instanceName);
+  },
+
+  /**
+  * Generates a random password with a specified length, containing a mix of
+  * lowercase letters, uppercase letters, numbers, and special characters.
+  *
+  * @param {number} length - The total length of the generated password.
+  * @param {number} [numberCapitalised=1] - The number of uppercase letters to include in the password.
+  * @param {number} [numberNumbers=1] - The number of numerical digits to include in the password.
+  * @param {number} [numberSpecial=1] - The number of special characters to include in the password.
+  * 
+  * @returns {string} - The generated password.
+  */
+  generatePassword(
+    length: number,
+    numberCapitalised = 1,
+    numberNumbers = 1,
+    numberSpecial = 1,
+  ): string {
+    return generatePassword(length, numberCapitalised, numberNumbers, numberSpecial);
   }
 }
 
