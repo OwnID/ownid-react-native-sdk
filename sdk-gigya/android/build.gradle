@@ -20,7 +20,7 @@ ext {
     name = "OwnID React Native Gigya SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-gigya"
-    versionName = "3.3.0"
+    versionName = "3.4.0"
 }
 
 group = ext.groupId
@@ -96,8 +96,8 @@ repositories {
 dependencies {
     api(project(":ownid_react-native-core"))
 
-    api("com.ownid.android-sdk:gigya:3.3.0")
-    compileOnly("com.sap.oss.gigya-android-sdk:sdk-core:7.0.10")
+    api("com.ownid.android-sdk:gigya:3.4.0")
+    compileOnly("com.sap.oss.gigya-android-sdk:sdk-core:7.1.1")
 }
 
 def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-gigya.properties"

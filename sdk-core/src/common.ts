@@ -49,20 +49,39 @@ export interface OwnIdPayload {
 }
 
 /**
- * Represents an OwnID error.
+ * Interface representing an error with additional metadata specific to OwnID.
  * 
  * @property {string} className - The class name where the error occurred.
  * @property {string | null} code - The error code, or null if unavailable.
  * @property {string} message - A user-friendly localized text message describing the error if `code` is present, otherwise the error message.
- * @property {OwnIdError | null} cause - The original exception that is wrapped in, or null if none.
+ * @property {IOwnIdError | null} cause - The original exception that is wrapped in, or null if none.
  * @property {string} stackTrace - The stack trace for the error.
  */
-export interface OwnIdError {
-    className: string;
-    code: string | null;
+export interface IOwnIdError {
+    className?: string;
+    code?: string | null;
     message: string;
-    cause: OwnIdError | null;
-    stackTrace: string;
+    cause?: IOwnIdError | null;
+    stackTrace?: string;
+}
+
+/**
+ * Represents an error with additional metadata specific to OwnID.
+ */
+export class OwnIdError implements IOwnIdError {
+    className?: string;
+    code?: string | null;
+    message: string;
+    cause?: IOwnIdError | null;
+    stackTrace?: string;
+
+    constructor({ className, code, message, cause, stackTrace }: IOwnIdError) {
+        this.className = className;
+        this.code = code;
+        this.message = message;
+        this.cause = cause;
+        this.stackTrace = stackTrace;
+    }
 }
 
 const ownIdButtonIds: { [index: string]: number | null } = {};

@@ -29,7 +29,7 @@ class GigyaAuthIntegration<T: GigyaAccountProtocol>: AuthIntegration {
     func errorDictionary(_ error: OwnID.CoreSDK.Error) -> [String: Any] {
         var code = ""
         var callId = ""
-        var gigyaDataString = ""
+        let gigyaDataString = ""
         var errorCode = ""
         var localizedMessage = ""
         switch error {

@@ -1,6 +1,6 @@
 {
   "name": "ownid-demo-gigya-rn",
-  "version": "3.3.2",
+  "version": "3.4.0",
   "private": true,
   "description": "OwnID Gigya Demo RN",
   "license": "Apache-2.0",
@@ -12,8 +12,8 @@
     "start": "npx react-native start"
   },
   "dependencies": {
-    "@ownid/react-native-core": "3.3.2",
-    "@ownid/react-native-gigya": "3.3.2",
+    "@ownid/react-native-core": "3.4.0",
+    "@ownid/react-native-gigya": "3.4.0",
     "@sap_oss/gigya-react-native-plugin-for-sap-customer-data-cloud": "^0.3.0",
     "@react-navigation/native": "^6.0.0",
     "@react-navigation/stack": "^6.3.0",
@@ -24,7 +24,7 @@
     "react-native-material-menu": "^2.0.0",
     "react-native-safe-area-context": "^4.0.0",
     "react-native-screens": "^3.0.0",
-    "react-native-vector-icons": "^10.0.0"
+    "react-native-vector-icons": "^10.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

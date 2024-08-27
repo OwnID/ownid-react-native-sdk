@@ -83,7 +83,7 @@ public class OwnIdModule(
         activity: ComponentActivity, loginId: String, authToken: String, force: Boolean, instanceName: String?, promise: Promise
     ) {
         runCatching {
-            val ownIdInstance: OwnIdInstance = if (instanceName == null) OwnId.firstInstanceOrThrow()
+            val ownIdInstance: OwnIdInstance = if (instanceName == null) OwnId.instance
             else OwnId.getInstanceOrThrow(InstanceName(instanceName))
 
             val factory = OwnIdEnrollmentViewModel.Factory(ownIdInstance)

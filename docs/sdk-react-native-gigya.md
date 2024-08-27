@@ -36,13 +36,16 @@ The OwnID React Native Core & Gigya SDKs supports [autolinking](https://github.c
 
 ## Enable passkey authentication
 
-The OwnID SDK uses [Passkeys](https://www.passkeys.com) to authenticate users. 
+The OwnID SDK uses [Passkeys](https://www.passkeys.com) to authenticate users. To enable passkey support for your app, you need to:
 
-> [!IMPORTANT]
->
-> To enable passkey support for your Android app, associate your app with a website that your app owns using [Digital Asset Links](https://developers.google.com/digital-asset-links) by following this guide: [Add support for Digital Asset Links](https://developer.android.com/training/sign-in/passkeys#add-support-dal).
->
-> To enable passkey support for your iOS app,  associate your app with a website that your app owns using Associated Domains by following this guide: [Supporting associated domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains).
+For Android:
+
+1. Set the Android package name and signing certificate SHA-256 hash for your OwnID application in the [OwnID Console](https://console.ownid.com) in the Integration > Native Apps section.
+2. Associate your application with a website that your application owns using [Digital Asset Links](https://developers.google.com/digital-asset-links) by following this guide: [Add support for Digital Asset Links](https://developer.android.com/training/sign-in/passkeys#add-support-dal).
+
+For iOS:
+1. Set the iOS bundle name for your OwnID application in the [OwnID Console](https://console.ownid.com) in the Integration > Native Apps section.
+2. Associate your app with a website that your app owns using Associated Domains and add the associated domains entitlement to your app by following this guide: [Supporting associated domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains).
 
 ## Create OwnID Gigya instance
 

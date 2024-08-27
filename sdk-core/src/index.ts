@@ -26,10 +26,10 @@ export default {
    * Creates an OwnID instance without the Integration component.
    * 
    * @param {OwnIdConfiguration} configuration - (mandatory) Configuration for the OwnID SDK.
-   * @param {string} productName - (mandatory) Used in network calls as part of the `User Agent` string. Example: "DirectIntegration/3.3.2".
+   * @param {string} productName - (mandatory) Used in network calls as part of the `User Agent` string. Example: "DirectIntegration/3.4.0".
    * @param {string} instanceName - (optional) The name of the OwnID instance.
    * 
-   * @returns {Promise<void>} A promise indicating the completion of the initialization.
+   * @returns {Promise<void>} - A promise indicating the completion of the initialization.
    */
   async init(configuration: OwnIdConfiguration, productName: string, instanceName?: string) {
     return OwnIdModule.createInstance(configuration, productName, instanceName);
@@ -59,7 +59,7 @@ export default {
    * @param {boolean} force - (optional) if set to true, the enrollment will be forced even if the enrollment request timeout (7 days) has not passed. Defaults to false.
    * @param {string} instanceName - (optional) The name of the OwnID instance.
    * 
-   * @returns {Promise<string>} A promise indicating the completion of the initialization.
+   * @returns {Promise<string>} - A promise with enrollment result.
    */
   async enrollCredential(loginId: string, authToken: string, force: boolean = false, instanceName?: string) {
     return OwnIdModule.enrollCredential(loginId, authToken, force, instanceName);
@@ -86,7 +86,7 @@ export default {
   }
 }
 
-export type { OwnIdResponse, OwnIdPayload, OwnIdError } from './common';
-export { OwnIdButtonType, OwnIdPayloadType, _setOwnIdNativeViewManager, _getViewId } from './common';
+export type { OwnIdResponse, OwnIdPayload } from './common';
+export { OwnIdButtonType, OwnIdPayloadType, OwnIdError, _setOwnIdNativeViewManager, _getViewId } from './common';
 export * from './button';
 export * from './authButton';

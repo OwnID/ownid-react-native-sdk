@@ -1,10 +1,28 @@
 import { NativeModules, requireNativeComponent, UIManager, Platform } from "react-native";
-import { OwnIdConfiguration, _setOwnIdNativeViewManager, _getViewId, OwnIdButtonType } from "@ownid/react-native-core";
+import { OwnIdConfiguration, _setOwnIdNativeViewManager, _getViewId, OwnIdButtonType, OwnIdError } from "@ownid/react-native-core";
 
 const { OwnIdGigyaModule } = NativeModules;
 
 if (Platform.OS === 'android') {
     _setOwnIdNativeViewManager(requireNativeComponent('OwnIdGigyaButtonManager'));
+}
+
+/**
+ * Represents Gigya session info.
+ */
+export interface SessionInfo {
+    sessionToken: string;
+    sessionSecret: string;
+    expirationTime: number;
+}
+
+/**
+ * Class wrapper for GigyaError - [message] contains error json data.
+ */
+export class GigyaException extends OwnIdError {
+    constructor({ className, code, message, cause, stackTrace }: OwnIdError) {
+        super({ className, code, message, cause, stackTrace });
+    }
 }
 
 export default {
@@ -17,11 +35,11 @@ export default {
      * 
      * @param {OwnIdConfiguration} configuration - (mandatory) OwnID SDK configuration.
      * 
-     * @returns {Promise<void>} A promise indicating the completion of the initialization.
+     * @returns {Promise<void>} - A promise indicating the completion of the initialization.
      */
     async init(configuration: OwnIdConfiguration) {
-        return await OwnIdGigyaModule.createInstance(configuration);
-    }
+        return OwnIdGigyaModule.createInstance(configuration);
+    },
 }
 
 export * from "@ownid/react-native-core";

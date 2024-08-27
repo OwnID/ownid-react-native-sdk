@@ -36,7 +36,6 @@ final class OwnIdModule: RCTViewManager {
                                 reject: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async {
             OwnID.CoreSDK.enrollCredential(loginId: loginId, authToken: authToken, force: force)
-            OwnID.CoreSDK.enrollEventPublisher
                 .receive(on: DispatchQueue.main)
                 .sink { event in
                     switch event {
@@ -56,7 +55,7 @@ final class OwnIdModule: RCTViewManager {
                 .store(in: &self.bag)
         }
     }
-
+    
     @objc
     override class func requiresMainQueueSetup() -> Bool { true }
 }
