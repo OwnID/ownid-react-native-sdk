@@ -88,18 +88,7 @@ final class OwnIDButtonViewControllerWrapperView: UIView {
 private extension OwnIDButtonViewControllerWrapperView {
     func createButtonControllerIfNeeded() {
         guard controller == nil else { return }
-        if !OwnID.CoreSDK.shared.isSDKConfigured {
-            let loadingEventDictionary = ["eventType": "OwnIdRegisterEvent.Error", 
-                                          "error": ["className": String(describing: Self.self),
-                                                    "type": "",
-                                                    "message": "SDK is not initialized. Please initalize it before using it's code.",
-                                                    "stackTrace": ""]] as [String : Any]
-            
-            let hasIntegration = CreationInformation.shared.hasIntegration
-            let eventType: ButtonEventsEventEmitter.EventType = hasIntegration ? .ownIdIntegrationEvent : .ownIdFlowEvent
-            ButtonEventsEventEmitter.shared?.sendEvent(withName: eventType.rawValue, body: loadingEventDictionary)
-            return
-        }
+        
         controller = OwnIDButtonViewController()
         controller.authIntegration = CreationInformation.shared.authIntegration
     }
