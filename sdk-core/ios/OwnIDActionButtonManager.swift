@@ -59,7 +59,12 @@ final class OwnIDActionButtonManager: RCTViewManager {
             }
         }
         RCTExecuteOnUIManagerQueue({
-            self.bridge.uiManager.shadowView(forReactTag: CreationInformation.shared.viewInstance!.reactTag).setLocalData(LocalDataSize(size: size, shouldIgnoreParentSize: shouldIgnoreParentSize))
+            if let viewInstance = CreationInformation.shared.viewInstance {
+                let view = self.bridge.uiManager.shadowView(forReactTag: viewInstance.reactTag)
+                view?.setLocalData(LocalDataSize(size: size, shouldIgnoreParentSize: shouldIgnoreParentSize))
+            } else {
+                OwnID.CoreSDK.logger.log(level: .warning, message: "RN: OwnID view instance is nil.", type: Self.self)
+            }
         })
     }
 }

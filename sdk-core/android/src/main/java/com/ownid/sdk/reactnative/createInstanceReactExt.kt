@@ -63,7 +63,7 @@ public fun OwnId.createInstanceReact(
     createInstance: (String) -> Unit
 ) {
     try {
-        val configurationJson = JSONObject(config.toHashMap())
+        val configurationJson = JSONObject(config.toHashMap() as Map<String, Any>)
 
         configurationJson.optString(Configuration.KEY.REDIRECT_URL_ANDROID).let { redirectionUriAndroid ->
             if (redirectionUriAndroid.isNotBlank()) configurationJson.put(Configuration.KEY.REDIRECT_URL, redirectionUriAndroid)

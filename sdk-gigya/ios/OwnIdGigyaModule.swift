@@ -20,8 +20,13 @@ final class OwnIdGigyaModule: NSObject {
         if let appId = params["appId"] as? String {
             let redirectionURL = (params["redirectUrlIos"] ?? params["redirectUrl"]) as? String
             let environment = params["env"] as? String
+            let region = params["region"] as? String
             
-            OwnID.ReactGigyaSDK.configure(GigyaAccount.self, appID: appId, redirectionURL: redirectionURL, environment: environment)
+            OwnID.ReactGigyaSDK.configure(GigyaAccount.self,
+                                          appID: appId,
+                                          redirectionURL: redirectionURL,
+                                          environment: environment,
+                                          region: region)
             resolve(nil)
         } else {
             reject(GenericError.genericErrorCode, "appId has not been provided", GenericError())

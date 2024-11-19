@@ -3,6 +3,7 @@
  * 
  * @property {string} appId - (mandatory) Unique identifier for your OwnID application, obtained from the [OwnID Console](https://console.ownid.com).
  * @property {string} env - (optional) OwnID App environment. Defaults to production. Possible options include: `uat`, `staging`.
+ * @property {string} region - (optional) OwnID App datacenter region. Defaults to `us`. Possible options include: `us`, `eu`.
  * @property {boolean} enableLogging - (optional) Enable OwnID logger. Logging is disabled by default.
  * @property {string} redirectionUri - (optional) Determines the user's destination after interacting with the OwnID Web App in their browser. Required for OwnID Web App flow.
  * @property {string} redirectionUriAndroid - (optional) Redirection URI for Android platform.
@@ -11,6 +12,7 @@
 export interface OwnIdConfiguration {
   appId: string;
   env?: string;
+  region?: string;
   enableLogging?: boolean;
   redirectionUri?: string;
   redirectionUriAndroid?: string;

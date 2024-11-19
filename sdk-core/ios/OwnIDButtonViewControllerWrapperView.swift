@@ -69,8 +69,18 @@ final class OwnIDButtonViewControllerWrapperView: UIView {
     override func reactSetFrame(_ frame: CGRect) {
         super.reactSetFrame(frame)
         
-        if controller != nil, let height = superview?.bounds.height {
+        if controller != nil, let height = superview?.bounds.height, height != controller.height {
+            update(height: height)
+        }
+        
+        func update(height: CGFloat) {
+            OwnID.CoreSDK.logger.log(level: .debug, message: "RN: superview height: \(height)", type: Self.self)
+            
+            removeButtonController()
+            createButtonControllerIfNeeded()
             controller.height = height
+            applyControllerFields()
+            addButtonController()
         }
     }
     
@@ -91,6 +101,12 @@ private extension OwnIDButtonViewControllerWrapperView {
         
         controller = OwnIDButtonViewController()
         controller.authIntegration = CreationInformation.shared.authIntegration
+    }
+    
+    func removeButtonController() {
+        controller?.view.removeFromSuperview()
+        controller?.removeFromParent()
+        controller = nil
     }
     
     func applyControllerFields() {
