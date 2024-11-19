@@ -12,8 +12,8 @@ open class OwnIDButtonViewController: UIViewController {
     private let resultPublisher = PassthroughSubject<Void, Never>()
     private var bag = Set<AnyCancellable>()
     
-    private var ownIdRegisterButton: UIHostingController<OwnID.FlowsSDK.RegisterView>?
-    private var ownIdLoginButton: UIHostingController<OwnID.FlowsSDK.LoginView>?
+    private var ownIdRegisterButton: AutoSizingHostingController<OwnID.FlowsSDK.RegisterView>?
+    private var ownIdLoginButton: AutoSizingHostingController<OwnID.FlowsSDK.LoginView>?
     
     public var ownIDLoginViewModel: OwnID.FlowsSDK.LoginView.ViewModel?
     public var ownIDRegisterModel: OwnID.FlowsSDK.RegisterView.ViewModel?
@@ -83,11 +83,21 @@ open class OwnIDButtonViewController: UIViewController {
                                                                      shouldIgnoreParentSize: widgetType.shouldIgnoreParentSize)
     }
     
+    open override var shouldAutomaticallyForwardAppearanceMethods: Bool {
+        return false
+    }
+
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
+        ownIdRegisterButton?.beginAppearanceTransition(true, animated: animated)
+        ownIdLoginButton?.beginAppearanceTransition(true, animated: animated)
+        
         addTapGestureRecognizer()
         createButtonViewForButton(type: type)
+        
+        ownIdRegisterButton?.endAppearanceTransition()
+        ownIdLoginButton?.endAppearanceTransition()
     }
     
     private func addTapGestureRecognizer() {
@@ -379,5 +389,13 @@ extension OwnIDButtonViewController: UIGestureRecognizerDelegate {
         ownIDRegisterModel?.shouldShowTooltip = false
         ownIDLoginViewModel?.shouldShowTooltip = false
         return false
+    }
+}
+
+public class AutoSizingHostingController<Content>: UIHostingController<Content> where Content: View {
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        view.frame = CGRect(x: 0, y: 0, width: view.intrinsicContentSize.width, height: view.intrinsicContentSize.height)
     }
 }

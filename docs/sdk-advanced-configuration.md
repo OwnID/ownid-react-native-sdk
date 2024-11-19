@@ -20,6 +20,7 @@ During the initialization of the OwnID instance, you can specify additional para
 
 - `appId` (mandatory): OwnID App Id - a unique identifier for your OwnID application, obtainable from the [OwnID Console](https://console.ownid.com).
 - `env` (optional): OwnID App environment - By default, OwnID uses the production environment. You can set a different environment, with possible options being: `uat`, `staging`.
+- `region` (optional): OwnID datacenter region - By default, OwnID uses the datacenter in `us` region. You can set a different region, with possible options being: `us`, `eu`.
 - `enableLogging` (optional): Enable OwnID logger - Logging is disabled by default. To enable logging, set `enableLogging:true`.
 - `redirectionUri`, `redirectionUriIos`, `redirectionUriAndroid` (optional): Set Redirection URI - The redirection URI determines the user's destination after interacting with the OwnID Web App in their browser. You can specify a value for both platforms or individually per platform.
 
@@ -33,7 +34,7 @@ All parameters are eventually sent to the native OwnID SDKs. For more details, r
 Example:
 
 ```ts
-await OwnId.init({ appId: "your_app_id", env: "uat", enableLogging: true, redirectUrl: "com.ownid.demo.react://ownid" }, ...)
+await OwnId.init({ appId: "your_app_id", env: "uat", region: "eu", enableLogging: true, redirectUrl: "com.ownid.demo.react://ownid" }, ...)
 ```
 
 ## Custom locale

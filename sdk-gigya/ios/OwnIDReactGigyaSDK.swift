@@ -6,7 +6,7 @@ import SwiftUI
 
 extension OwnID.ReactGigyaSDK {
     static let sdkName = "React"
-    static let version = "3.1.0"
+    static let version = "3.6.0"
 }
 
 public extension OwnID {
@@ -35,12 +35,14 @@ public extension OwnID {
                                                               appID: OwnID.CoreSDK.AppID,
                                                               redirectionURL: OwnID.CoreSDK.RedirectionURLString? = nil,
                                                               environment: String? = nil,
+                                                              region: String? = nil,
                                                               supportedLanguages: [String] = Locale.preferredLanguages) {
             OwnID.CoreSDK.configure(appID: appID,
                                     redirectionURL: redirectionURL,
                                     userFacingSDK: info(),
                                     underlyingSDKs: underlying(),
                                     environment: environment,
+                                    region: region,
                                     supportedLanguages: supportedLanguages)
             CreationInformation.shared.authIntegration = GigyaAuthIntegration<T>()
         }

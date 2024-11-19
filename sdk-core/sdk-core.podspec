@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'sdk-core'
-  s.version          = '3.4.1'
+  s.version          = '3.6.1'
   s.summary          = 'sdk-core'
 
   s.description      = <<-DESC
@@ -16,7 +16,7 @@ sdk-core pod library. Used in autolinking alongside of react libraries.
   s.ios.deployment_target = '14.0'
   s.swift_version = '5.1.1'
 
-  s.dependency 'ownid-core-ios-sdk', '3.4.0'
+  s.dependency 'ownid-core-ios-sdk', '3.6.1'
   s.dependency 'React'
 
   s.source_files = 'ios/**/*'

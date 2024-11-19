@@ -3,16 +3,16 @@ import SwiftUI
 import OwnIDCoreSDK
 
 class CoreAuthIntegration: AuthIntegration {
-    func createOwnIDRegisterButton(for viewModel: OwnID.FlowsSDK.RegisterView.ViewModel) -> UIHostingController<OwnID.FlowsSDK.RegisterView> {
+    func createOwnIDRegisterButton(for viewModel: OwnID.FlowsSDK.RegisterView.ViewModel) -> AutoSizingHostingController<OwnID.FlowsSDK.RegisterView> {
         let headerView = OwnID.FlowsSDK.RegisterView(viewModel: viewModel, visualConfig: .init())
-        let headerVC = UIHostingController(rootView: headerView)
+        let headerVC = AutoSizingHostingController(rootView: headerView)
         headerVC.view.backgroundColor = .clear
         return headerVC
     }
     
-    func createOwnIDLoginButton(for viewModel: OwnID.FlowsSDK.LoginView.ViewModel) -> UIHostingController<OwnID.FlowsSDK.LoginView> {
+    func createOwnIDLoginButton(for viewModel: OwnID.FlowsSDK.LoginView.ViewModel) -> AutoSizingHostingController<OwnID.FlowsSDK.LoginView> {
         let headerView = OwnID.FlowsSDK.LoginView(viewModel: viewModel, visualConfig: .init())
-        let headerVC = UIHostingController(rootView: headerView)
+        let headerVC = AutoSizingHostingController(rootView: headerView)
         headerVC.view.backgroundColor = .clear
         return headerVC
     }
