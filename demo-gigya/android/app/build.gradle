@@ -2,6 +2,10 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
+react {
+    autolinkLibrariesWithApp()
+}
+
 android {
     namespace = "com.ownid.demo.gigya"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -12,8 +16,8 @@ android {
         applicationId = "com.ownid.demo.gigya"
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
-        versionCode = 30601
-        versionName = "3.6.1"
+        versionCode = 30801
+        versionName = "3.8.1"
     }
 
     signingConfigs {
@@ -38,11 +42,11 @@ android {
 }
 
 dependencies {
-    // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    //noinspection GradleDynamicVersion
-    implementation("org.webkit:android-jsc:+")
-}
 
-apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
-applyNativeModulesAppBuildGradle(project)
+    if (hermesEnabled.toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    } else {
+        implementation('io.github.react-native-community:jsc-android:2026004.+')
+    }
+}

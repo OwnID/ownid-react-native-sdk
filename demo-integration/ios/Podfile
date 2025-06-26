@@ -35,5 +35,13 @@ target 'OwnIDReactNativeIntegrationDemo' do
       :mac_catalyst_enabled => false,
     # :cache_enabled => true
     )
+    # --- RN 0.80: 'folly/coro/Coroutine.h' file not found
+    system("chmod -R u+w Pods/RCT-Folly")
+    Dir.glob("Pods/RCT-Folly/folly/Portability.h").each do |file|
+      text = File.read(file)
+      new_contents = text.gsub('#define FOLLY_HAS_COROUTINES 1', '#define FOLLY_HAS_COROUTINES 0')
+      File.open(file, "w") { |file| file.puts new_contents }
+    end
+    # --- RN 0.80: 'folly/coro/Coroutine.h' file not found
   end
 end

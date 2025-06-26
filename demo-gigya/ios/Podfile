@@ -5,9 +5,11 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, '14.0'
+platform :ios, '15.1'
 
 prepare_react_native_project!
+
+ENV['RCT_NEW_ARCH_ENABLED'] = '0'
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -32,5 +34,13 @@ target 'OwnIDReactNativeGigyaDemo' do
       :mac_catalyst_enabled => false,
     # :cache_enabled => true
     )
+    # --- RN 0.80: 'folly/coro/Coroutine.h' file not found
+    system("chmod -R u+w Pods/RCT-Folly")
+    Dir.glob("Pods/RCT-Folly/folly/Portability.h").each do |file|
+      text = File.read(file)
+      new_contents = text.gsub('#define FOLLY_HAS_COROUTINES 1', '#define FOLLY_HAS_COROUTINES 0')
+      File.open(file, "w") { |file| file.puts new_contents }
+    end
+    # --- RN 0.80: 'folly/coro/Coroutine.h' file not found
   end
 end

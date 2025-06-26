@@ -247,3 +247,8 @@ eval "set -- $(
     )" '"$@"'
 
 exec "$JAVACMD" "$@"
+ ' s~[^-[:alnum:]+,./:=@_]~\\&~g; ' |
+        tr '\n' ' '
+    )" '"$@"'
+
+exec "$JAVACMD" "$@"

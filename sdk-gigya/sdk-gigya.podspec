@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'sdk-gigya'
-  s.version          = '3.6.2'
+  s.version          = '3.8.1'
   s.summary          = 'sdk-gigya'
 
   s.description      = <<-DESC
@@ -17,7 +17,7 @@ sdk-gigya pod library. Used in autolinking alongside of react libraries.
   s.swift_version = '5.1.1'
 
   s.dependency 'sdk-core'
-  s.dependency 'ownid-gigya-ios-sdk', '3.6.2'
+  s.dependency 'ownid-gigya-ios-sdk', '3.8.1'
   s.dependency 'Gigya'
 
   s.source_files = 'ios/**/*'
