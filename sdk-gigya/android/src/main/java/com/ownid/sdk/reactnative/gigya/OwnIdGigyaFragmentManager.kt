@@ -18,7 +18,8 @@ public class OwnIdGigyaFragmentManager(reactContext: ReactApplicationContext) : 
 
     protected override fun register(ownIdFragment: OwnIdFragment, args: ReadableArray?) {
         val loginId = args?.getString(0) ?: ""
-        val params = GigyaRegistrationParameters(args?.getMap(1)?.toHashMap() ?: emptyMap())
+        val paramsMap = (args?.getMap(1)?.toHashMap() ?: emptyMap()).filterValues { it != null } as Map<String, Any>
+        val params = GigyaRegistrationParameters(paramsMap)
         ownIdFragment.register(loginId, params)
     }
 }
