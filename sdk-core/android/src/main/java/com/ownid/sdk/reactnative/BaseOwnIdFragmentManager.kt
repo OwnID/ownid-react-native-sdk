@@ -175,12 +175,19 @@ public open class BaseOwnIdFragmentManager(private val reactContext: ReactApplic
 
         val ownIdFragment = OwnIdFragment(ownId, fragmentType, widgetProperties, shadowNode!!, eventEmitter, loginId)
 
-        (reactContext.currentActivity as FragmentActivity).supportFragmentManager
-            .beginTransaction()
-            .replace(reactNativeViewId, ownIdFragment, reactNativeViewId.toString())
-            .commit()
+        view.post {
+            val activity = reactContext.currentActivity
+            if (activity == null || activity.isFinishing || activity.isDestroyed) {
+                return@post
+            }
 
-        viewFragmentMap[view] = ownIdFragment
+            (activity as FragmentActivity).supportFragmentManager
+                .beginTransaction()
+                .replace(view.id, ownIdFragment, view.id.toString())
+                .commitAllowingStateLoss()
+
+            viewFragmentMap[view] = ownIdFragment
+        }
 
         widgetProperties = OwnIdWidget.Properties()
         shadowNode = null
@@ -190,10 +197,14 @@ public open class BaseOwnIdFragmentManager(private val reactContext: ReactApplic
     override fun onDropViewInstance(view: FrameLayout) {
         super.onDropViewInstance(view)
         viewFragmentMap.remove(view)?.let {
-            (reactContext.currentActivity as FragmentActivity).supportFragmentManager
+            val activity = reactContext.currentActivity
+            if (activity == null || activity.isFinishing || activity.isDestroyed) {
+                return
+            }
+            (activity as FragmentActivity).supportFragmentManager
                 .beginTransaction()
                 .remove(it)
-                .commit()
+                .commitAllowingStateLoss()
         }
     }
 }

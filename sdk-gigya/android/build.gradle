@@ -20,7 +20,7 @@ ext {
     name = "OwnID React Native Gigya SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-gigya"
-    versionName = "3.8.1"
+    versionName = "3.8.3"
 }
 
 group = ext.groupId
@@ -52,7 +52,7 @@ android {
 dependencies {
     api(project(":ownid_react-native-core"))
 
-    api("com.ownid.android-sdk:gigya:3.8.1")
+    api("com.ownid.android-sdk:gigya:3.8.3")
     compileOnly("com.sap.oss.gigya-android-sdk:sdk-core:7.1.5")
 }
 

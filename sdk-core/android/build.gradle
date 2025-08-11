@@ -20,7 +20,7 @@ ext {
     name = "OwnID React Native Core SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-core"
-    versionName = "3.8.1"
+    versionName = "3.8.3"
 }
 
 group = ext.groupId
@@ -51,7 +51,7 @@ android {
 
 dependencies {
     api("com.facebook.react:react-android")
-    api("com.ownid.android-sdk:core:3.8.1")
+    api("com.ownid.android-sdk:core:3.8.3")
 }
 
 def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-core.properties"
