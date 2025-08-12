@@ -20,11 +20,13 @@ export enum OwnIdButtonType {
  * @property {string} authType - Type of authentication used in the OwnID flow.
  * @property {string} loginId - (optional) User login ID used in the OwnID flow. Unavailable in `onLogin` callback for OwnID with Integration component.
  * @property {OwnIdPayload} payload - (optional) Result of the OwnID flow. Only available for OwnID without the Integration component.
+ * @property {string} authToken - (optional) A token that can be used to refresh a session.
  */
 export interface OwnIdResponse {
     authType: string;
     loginId?: string;
     payload?: OwnIdPayload;
+    authToken?: string;
 }
 
 /**

@@ -44,6 +44,7 @@ internal fun OwnIdEvent.toWritableMap(): WritableMap = when (this) {
                     putString("metadata", payload.metadata)
                 })
                 arguments.putString("authType", authType)
+                authToken?.let { arguments.putString("authToken", it) }
             }
 
             OwnIdRegisterFlow.Undo -> Unit
@@ -69,6 +70,7 @@ internal fun OwnIdEvent.toWritableMap(): WritableMap = when (this) {
                     putString("metadata", payload.metadata)
                 })
                 arguments.putString("authType", authType)
+                authToken?.let { arguments.putString("authToken", it) }
             }
 
             is OwnIdLoginFlow.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toMap()))
@@ -90,7 +92,10 @@ internal fun OwnIdEvent.toWritableMap(): WritableMap = when (this) {
             }
 
             OwnIdRegisterEvent.Undo -> Unit
-            is OwnIdRegisterEvent.LoggedIn -> arguments.putString("authType", authType)
+            is OwnIdRegisterEvent.LoggedIn -> {
+                arguments.putString("authType", authType)
+                authToken?.let { arguments.putString("authToken", it) }
+            }
             is OwnIdRegisterEvent.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toMap()))
         }
 
@@ -104,7 +109,10 @@ internal fun OwnIdEvent.toWritableMap(): WritableMap = when (this) {
 
         when (this) {
             is OwnIdLoginEvent.Busy -> arguments.putBoolean("isBusy", isBusy)
-            is OwnIdLoginEvent.LoggedIn -> arguments.putString("authType", authType)
+            is OwnIdLoginEvent.LoggedIn -> {
+                arguments.putString("authType", authType)
+                authToken?.let { arguments.putString("authToken", it) }
+            }
             is OwnIdLoginEvent.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toMap()))
         }
 

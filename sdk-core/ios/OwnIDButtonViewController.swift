@@ -211,11 +211,14 @@ open class OwnIDButtonViewController: UIViewController {
                         }
                         eventDictionary["eventType"] = "OwnIdRegisterEvent.ReadyToRegister"
                         
-                    case .userRegisteredAndLoggedIn(_, let authType):
+                    case .userRegisteredAndLoggedIn(_, let authType, let authToken):
                         isBusy = false
                         eventDictionary = ["eventType": "OwnIdRegisterEvent.LoggedIn"]
                         if let authType {
                             eventDictionary["authType"] = authType
+                        }
+                        if let authToken {
+                            eventDictionary["authToken"] = authToken
                         }
                         
                     case .loading:
@@ -249,11 +252,14 @@ open class OwnIDButtonViewController: UIViewController {
                 switch event {
                 case .success(let flow):
                     switch flow {
-                    case .response(let loginId, let payload, let authType):
+                    case .response(let loginId, let payload, let authType, let authToken):
                         isBusy = false
                         eventDictionary = ["eventType": "OwnIdRegisterFlow.Response"]
                         eventDictionary["loginId"] = loginId
                         eventDictionary["authType"] = authType
+                        if let authToken {
+                            eventDictionary["authToken"] = authToken
+                        }
                         
                         let type: String
                         switch payload.responseType {
@@ -297,11 +303,14 @@ open class OwnIDButtonViewController: UIViewController {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .loggedIn(_, let authType):
+                    case .loggedIn(_, let authType, let authToken):
                         isBusy = false
                         eventDictionary = ["eventType": "OwnIdLoginEvent.LoggedIn"]
                         if let authType = authType {
                             eventDictionary["authType"] = authType as Any
+                        }
+                        if let authToken {
+                            eventDictionary["authToken"] = authToken
                         }
                         
                     case .loading:
@@ -335,11 +344,14 @@ open class OwnIDButtonViewController: UIViewController {
                     switch flow {
                     case .loading:
                         isBusy = true
-                    case .response(let loginId, let payload, let authType):
+                    case .response(let loginId, let payload, let authType, let authToken):
                         isBusy = false
                         eventDictionary = ["eventType": "OwnIdLoginFlow.Response"]
                         eventDictionary["loginId"] = loginId
                         eventDictionary["authType"] = authType
+                        if let authToken {
+                            eventDictionary["authToken"] = authToken
+                        }
                         
                         let type: String
                         switch payload.responseType {

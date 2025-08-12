@@ -72,8 +72,8 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
                     onBusy(flowEvent.isBusy);
                     break;
                 case OwnIdLoginFlow.Response:
-                    const { loginId, payload, authType } = flowEvent;
-                    onLogin(parsePayload(loginId, payload, authType));
+                    const { loginId, payload, authType, authToken } = flowEvent;
+                    onLogin(parsePayload(loginId, payload, authType, authToken));
                     break;
                 case OwnIdLoginFlow.Error:
                     onError(flowEvent.error);
@@ -87,7 +87,7 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
                     onBusy(integrationEvent.isBusy);
                     break;
                 case OwnIdLoginEvent.LoggedIn:
-                    onLogin({ authType: integrationEvent.authType });
+                    onLogin({ authType: integrationEvent.authType, authToken: integrationEvent.authToken });
                     break;
                 case OwnIdLoginEvent.Error:
                     onError(integrationEvent.error);

@@ -37,6 +37,7 @@ export type OwnIdFlowEvent =
         loginId: string;
         payload: OwnIdPayload;
         authType: string;
+        authToken?: string;
     } |
     {
         eventType: OwnIdRegisterFlow.Undo;
@@ -73,17 +74,18 @@ export type OwnIdIntegrationEvent =
     {
         eventType: OwnIdRegisterEvent.LoggedIn | OwnIdLoginEvent.LoggedIn;
         authType: string;
+        authToken?: string;
     } |
     {
         eventType: OwnIdRegisterEvent.Undo;
     };
 
-export function parsePayload(loginId: string, ownIdPayload: OwnIdPayload, authType: string) {
+export function parsePayload(loginId: string, ownIdPayload: OwnIdPayload, authType: string, authToken?: string) {
     let payload = { ...ownIdPayload };
     try {
         payload.data = JSON.parse(ownIdPayload.data);
     } catch { };
-    return { loginId, payload, authType };
+    return { loginId, payload, authType, authToken };
 }
 
 export function generatePassword(

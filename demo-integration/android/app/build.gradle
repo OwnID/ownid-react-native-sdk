@@ -16,8 +16,8 @@ android {
         applicationId = "com.ownid.demo.custom"
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
-        versionCode = 30801
-        versionName = "3.8.1"
+        versionCode = 30804
+        versionName = "3.8.4"
     }
 
     signingConfigs {

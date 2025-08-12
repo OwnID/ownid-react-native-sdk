@@ -129,17 +129,17 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
                     break;
                 case OwnIdRegisterFlow.Response:
                     if (flowEvent.payload.type === OwnIdPayloadType.Registration) {
-                        const { loginId, payload, authType } = flowEvent;
-                        onRegister(parsePayload(loginId, payload, authType));
+                        const { loginId, payload, authType, authToken } = flowEvent;
+                        onRegister(parsePayload(loginId, payload, authType, authToken));
                     }
                     if (flowEvent.payload.type === OwnIdPayloadType.Login) {
-                        const { loginId, payload, authType } = flowEvent;
-                        onLogin(parsePayload(loginId, payload, authType));
+                        const { loginId, payload, authType, authToken } = flowEvent;
+                        onLogin(parsePayload(loginId, payload, authType, authToken));
                     }
                     break;
                 case OwnIdLoginFlow.Response:
-                    const { loginId, payload, authType } = flowEvent;
-                    onLogin(parsePayload(loginId, payload, authType));
+                    const { loginId, payload, authType, authToken } = flowEvent;
+                    onLogin(parsePayload(loginId, payload, authType, authToken));
                     break;
                 case OwnIdRegisterFlow.Undo:
                     onUndo();
@@ -165,7 +165,7 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
                     break;
                 case OwnIdRegisterEvent.LoggedIn:
                 case OwnIdLoginEvent.LoggedIn:
-                    onLogin({ authType: integrationEvent.authType });
+                    onLogin({ authType: integrationEvent.authType, authToken: integrationEvent.authToken });
                     break;
                 case OwnIdRegisterEvent.Error:
                 case OwnIdLoginEvent.Error:
