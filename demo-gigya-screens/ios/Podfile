@@ -42,5 +42,15 @@ target 'OwnIDReactNativeGigyaDemo' do
       File.open(file, "w") { |file| file.puts new_contents }
     end
     # --- RN 0.80: 'folly/coro/Coroutine.h' file not found
+
+    # fmt 11.0.2 fails to compile with Apple clang from Xcode 26 in C++20 mode.
+    # Keep the workaround scoped to fmt; React Native pods still use their default C++ standard.
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'fmt'
+
+      target.build_configurations.each do |build_configuration|
+        build_configuration.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+      end
+    end
   end
 end

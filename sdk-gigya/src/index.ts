@@ -1,10 +1,21 @@
 import { NativeModules, requireNativeComponent, UIManager, Platform } from "react-native";
 import { OwnIdConfiguration, _setOwnIdNativeViewManager, _getViewId, OwnIdButtonType, OwnIdError } from "@ownid/react-native-core";
 
-const { OwnIdGigyaModule } = NativeModules;
+import NativeOwnIdGigyaModule from './specs/NativeOwnIdGigyaModule';
+import NativeGigyaButton from './specs/NativeOwnIdGigyaButtonNativeComponent';
+
+const OwnIdGigyaModule = NativeOwnIdGigyaModule ?? (NativeModules as any).OwnIdGigyaModule;
+
+function isFabric(): boolean {
+    try { return !!(global as any)?.nativeFabricUIManager; } catch { return false; }
+}
 
 if (Platform.OS === 'android') {
-    _setOwnIdNativeViewManager(requireNativeComponent('OwnIdGigyaButtonManager'));
+    if (isFabric()) {
+        _setOwnIdNativeViewManager(NativeGigyaButton as any);
+    } else {
+        _setOwnIdNativeViewManager(requireNativeComponent('OwnIdGigyaButtonManager'));
+    }
 }
 
 /**
@@ -48,10 +59,18 @@ export type RegistrationParameters = any;
 
 export const OwnIdRegister = (loginId: string, registrationParameters?: RegistrationParameters) => {
     if (Platform.OS === 'android') {
-        // @ts-ignore
-        UIManager.dispatchViewManagerCommand(_getViewId(OwnIdButtonType.Register), UIManager.OwnIdGigyaButtonManager.Commands.register.toString(), [loginId, registrationParameters]);
+        if (isFabric()) {
+            OwnIdGigyaModule.registerAtViewTag(_getViewId(OwnIdButtonType.Register), loginId, registrationParameters);
+        } else {
+            // @ts-ignore
+            UIManager.dispatchViewManagerCommand(_getViewId(OwnIdButtonType.Register), UIManager.OwnIdGigyaButtonManager.Commands.register.toString(), [loginId, registrationParameters]);
+        }
     }
     if (Platform.OS === 'ios') {
-        OwnIdGigyaModule.register(loginId, registrationParameters);
+        if (isFabric()) {
+            OwnIdGigyaModule.register(loginId, registrationParameters);
+        } else {
+            OwnIdGigyaModule.register(loginId, registrationParameters);
+        }
     }
 };

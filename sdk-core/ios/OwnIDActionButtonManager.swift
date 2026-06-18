@@ -1,14 +1,14 @@
 import Foundation
+import OwnIDCoreSDK
 import React
 import UIKit
-import OwnIDCoreSDK
 
 final class LocalDataSize: NSObject {
     init(size: CGSize, shouldIgnoreParentSize: Bool) {
         self.size = size
         self.shouldIgnoreParentSize = shouldIgnoreParentSize
     }
-    
+
     let size: CGSize
     let shouldIgnoreParentSize: Bool
 }
@@ -25,11 +25,11 @@ final class OwnIDShadowView: RCTShadowView {
             super.layout(with: layoutMetrics, layoutContext: layoutContext)
         }
     }
-    
+
     var localData = LocalDataSize(size: .zero, shouldIgnoreParentSize: true)
-    
+
     override func canHaveSubviews() -> Bool { false }
-    
+
     override func setLocalData(_ localData: NSObject!) {
         guard let data = localData as? LocalDataSize else { return }
         self.localData = data
@@ -40,18 +40,18 @@ final class OwnIDShadowView: RCTShadowView {
 
 @objc(OwnIDActionButtonManager)
 final class OwnIDActionButtonManager: RCTViewManager {
-    
+
     override func view() -> UIView! {
         let instance = OwnIDButtonViewControllerWrapperView()
         CreationInformation.shared.viewInstance = instance
         CreationInformation.shared.managerInstance = self
         return instance
     }
-    
+
     override class func requiresMainQueueSetup() -> Bool { true }
     override func shadowView() -> RCTShadowView! { OwnIDShadowView() }
     override var methodQueue: DispatchQueue! { .main }
-    
+
     func updateLayoutInfo(size: CGSize, shouldIgnoreParentSize: Bool) {
         if shouldIgnoreParentSize {
             DispatchQueue.main.async {

@@ -5,7 +5,7 @@ PODS:
   - FBLazyVector (0.80.2)
   - fmt (11.0.2)
   - glog (0.3.5)
-  - ownid-core-ios-sdk (3.8.2)
+  - ownid-core-ios-sdk (3.9.0)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -2070,8 +2070,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - sdk-core (3.8.2):
-    - ownid-core-ios-sdk (= 3.8.2)
+  - sdk-core (3.9.0):
+    - ownid-core-ios-sdk (= 3.9.0)
     - React
   - SocketRocket (0.7.1)
   - Yoga (0.0.0)
@@ -2316,7 +2316,7 @@ SPEC CHECKSUMS:
   FBLazyVector: 86588b5a1547e7a417942a08f49559b184e002c8
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
-  ownid-core-ios-sdk: e7e838a50935ff2a9adfec6d6e96df84865e93da
+  ownid-core-ios-sdk: c7190fea8f2cc529f2b9d59e2572e892d6f3274d
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: 300c5eb91114d4339b0bb39505d0f4824d7299b7
   RCTRequired: e0446b01093475b7082fbeee5d1ef4ad1fe20ac4
@@ -2383,10 +2383,10 @@ SPEC CHECKSUMS:
   ReactCommon: 650c091009d523933f2d87eb7d0859721d60a1ae
   RNGestureHandler: bb4a982330d9f9313e9803efbd65ca541b0b3e9a
   RNScreens: 061a29e0166925f12965bcd69f3648b6e77ea37d
-  sdk-core: a6178fef0b72a03971b6a315b78fdfa998b8896c
+  sdk-core: 96395ccb8604f9e621a152f748b9178523f4aa84
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: a742cc68e8366fcfc681808162492bc0aa7a9498
 
-PODFILE CHECKSUM: 9912826c4495bf9561861ae5da6ebaa8e8b507cf
+PODFILE CHECKSUM: bd669f7664c533e30bd1d70a2334f1a69cc95f2d
 
 COCOAPODS: 1.16.2

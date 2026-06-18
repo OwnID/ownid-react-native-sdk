@@ -4,28 +4,28 @@ import OwnIDCoreSDK
 import SwiftUI
 
 class GigyaAuthIntegration<T: GigyaAccountProtocol>: AuthIntegration {
-    func createOwnIDRegisterButton(for viewModel: OwnID.FlowsSDK.RegisterView.ViewModel) -> AutoSizingHostingController<OwnID.FlowsSDK.RegisterView> {
+    func createOwnIDRegisterButton(for viewModel: OwnID.FlowsSDK.RegisterView.ViewModel) -> AutoSizingHostingController< OwnID.FlowsSDK.RegisterView > {
         let headerView = OwnID.ReactGigyaSDK.createRegisterView(viewModel: viewModel)
         let headerVC = AutoSizingHostingController(rootView: headerView)
         headerVC.view.backgroundColor = .clear
         return headerVC
     }
-    
+
     func createOwnIDLoginButton(for viewModel: OwnID.FlowsSDK.LoginView.ViewModel) -> AutoSizingHostingController<OwnID.FlowsSDK.LoginView> {
         let headerView = OwnID.ReactGigyaSDK.createLoginView(viewModel: viewModel)
         let headerVC = AutoSizingHostingController(rootView: headerView)
         headerVC.view.backgroundColor = .clear
         return headerVC
     }
-    
+
     func createRegisterViewModel(loginIdPublisher: OwnIDCoreSDK.OwnID.CoreSDK.LoginIdPublisher) -> OwnID.FlowsSDK.RegisterView.ViewModel {
         OwnID.ReactGigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(T.self), loginIdPublisher: loginIdPublisher)
     }
-    
+
     func createLoginViewModel(loginIdPublisher: OwnIDCoreSDK.OwnID.CoreSDK.LoginIdPublisher) -> OwnID.FlowsSDK.LoginView.ViewModel {
         OwnID.ReactGigyaSDK.loginViewModel(instance: Gigya.sharedInstance(T.self), loginIdPublisher: loginIdPublisher)
     }
-    
+
     func errorDictionary(_ error: OwnID.CoreSDK.Error) -> [String: Any] {
         var code = ""
         var callId = ""
@@ -49,17 +49,26 @@ class GigyaAuthIntegration<T: GigyaAccountProtocol>: AuthIntegration {
         default:
             break
         }
-        
-        var errorDictionary: [String: Any] = ["className": String(describing: Self.self),
-                                              "code": code,
-                                              "message": error.localizedDescription,
-                                              "stackTrace": ""]
+
+        var errorDictionary: [String: Any] = [
+            "className": String(describing: Self.self),
+            "code": code,
+            "message": error.localizedDescription,
+            "stackTrace": "",
+        ]
         if !callId.isEmpty, !gigyaDataString.isEmpty, !errorCode.isEmpty, !localizedMessage.isEmpty {
-            errorDictionary["gigyaError"] = ["callId": callId,
-                                             "data": gigyaDataString,
-                                             "erorCode": errorCode,
-                                             "localizedMessage": localizedMessage]
+            errorDictionary["gigyaError"] = [
+                "callId": callId,
+                "data": gigyaDataString,
+                "erorCode": errorCode,
+                "localizedMessage": localizedMessage,
+            ]
         }
         return errorDictionary
+    }
+
+    func registerParameters(from dict: [String: Any]?) -> RegisterParameters {
+        let parameters = dict ?? [:]
+        return OwnID.GigyaSDK.Registration.Parameters(parameters: parameters)
     }
 }

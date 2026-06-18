@@ -6,7 +6,7 @@ RCT_EXTERN_METHOD(supportedEvents)
 
 @end
 
-@interface RCT_EXTERN_REMAP_MODULE(OwnIdButtonManagerManager, OwnIDActionButtonManager, RCTViewManager)
+@interface RCT_EXTERN_REMAP_MODULE(OwnIdButton, OwnIDActionButtonManager, RCTViewManager)
 
 RCT_EXPORT_VIEW_PROPERTY(showOr, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(type, NSString)
@@ -28,14 +28,18 @@ RCT_EXPORT_VIEW_PROPERTY(showSpinner, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(spinnerColor, NSString)
 RCT_EXPORT_VIEW_PROPERTY(spinnerBackgroundColor, NSString)
 
+RCT_EXPORT_VIEW_PROPERTY(preferredHeight, NSNumber)
+RCT_EXPORT_VIEW_PROPERTY(onContentSizeChange, RCTDirectEventBlock)
+
 @end
 
+
+#if !RCT_NEW_ARCH_ENABLED
 @interface RCT_EXTERN_MODULE (OwnIdModule, RCTViewManager)
 
 RCT_EXTERN_METHOD(createInstance:(NSDictionary *)config productName:(NSString *)productName instanceName:(NSString *)instanceName resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(setLocale:(NSString *)locale resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(enrollCredential:(NSString *)loginId authToken:(NSString *)authToken force:(BOOL)force instanceName:(NSString *)instanceName resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
-RCT_EXTERN_METHOD(start:(RCTPromiseResolveBlock)resolver rejecter:(RCTPromiseRejectBlock)rejecter)
-
 
 @end
+#endif

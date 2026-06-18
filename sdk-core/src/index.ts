@@ -19,9 +19,29 @@ export interface OwnIdConfiguration {
   redirectionUriIos?: string;
 }
 
-import { NativeModules } from 'react-native';
+import { NativeModules, TurboModuleRegistry, Platform } from 'react-native';
+import type { Spec as NativeOwnIdSpec } from './specs/NativeOwnIdModule';
 import { generatePassword } from './internal';
-const { OwnIdModule } = NativeModules;
+
+function getOwnIdModule(): NativeOwnIdSpec | null {
+  try {
+    const tm = (TurboModuleRegistry as any)?.get?.('OwnIdModule');
+    if (tm) {
+      return tm as NativeOwnIdSpec;
+    }
+  } catch { }
+  const legacy = (NativeModules as any)?.OwnIdModule ?? null;
+  return legacy as NativeOwnIdSpec | null;
+}
+
+function requireOwnIdModule(): NativeOwnIdSpec {
+  const mod = getOwnIdModule();
+  if (mod) return mod;
+  const hint = Platform.OS === 'ios'
+    ? 'Ensure Pods built with RCT_NEW_ARCH_ENABLED=1; OwnIdTurboModule compiled; and getTurboModule is implemented.'
+    : 'Check the app uses New Architecture and the module is included.';
+  throw new Error(`[OwnID][Core] Native OwnIdModule not found. ${hint}`);
+}
 
 export default {
   /**
@@ -34,7 +54,8 @@ export default {
    * @returns {Promise<void>} - A promise indicating the completion of the initialization.
    */
   async init(configuration: OwnIdConfiguration, productName: string, instanceName?: string) {
-    return OwnIdModule.createInstance(configuration, productName, instanceName);
+    const M = requireOwnIdModule();
+    return (M as any).createInstance(configuration, productName, instanceName);
   },
 
   /**
@@ -50,7 +71,8 @@ export default {
    * @returns {Promise<void>} A promise that resolves when the locale is set.
    */
   async setLocale(locale?: string): Promise<void> {
-    return OwnIdModule.setLocale(locale);
+    const M = requireOwnIdModule();
+    return (M as any).setLocale(locale);
   },
 
   /**
@@ -64,7 +86,8 @@ export default {
    * @returns {Promise<string>} - A promise with enrollment result.
    */
   async enrollCredential(loginId: string, authToken: string, force: boolean = false, instanceName?: string) {
-    return OwnIdModule.enrollCredential(loginId, authToken, force, instanceName);
+    const M = requireOwnIdModule();
+    return (M as any).enrollCredential(loginId, authToken, force, instanceName);
   },
 
   /**

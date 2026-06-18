@@ -1,7 +1,6 @@
-
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Appearance, ColorSchemeName, UIManager, findNodeHandle, DeviceEventEmitter, NativeEventEmitter, NativeModules, Platform, EmitterSubscription, View, DimensionValue } from 'react-native';
-import { OwnIdNativeViewManager, OwnIdButtonType, OwnIdResponse, OwnIdPayloadType, OwnIdError, _setViewId } from './common';
+import { getNativeOwnIdButton, OwnIdNativeManagerName, OwnIdButtonType, OwnIdResponse, OwnIdPayloadType, OwnIdError, _setViewId, isFabric } from './common';
 import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdRegisterFlow, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdRegisterEvent, OwnIdLoginEvent, parsePayload } from './internal';
 
 export const OwnIdButtonColorSchemeLight = {
@@ -116,63 +115,76 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
     }
 
     const ref = useRef(null);
+    const [measuredWidth, setMeasuredWidth] = useState<number | undefined>(undefined);
 
     const flowEventsSubscription = useRef<EmitterSubscription | null>(null);
     const integrationEventsSubscription = useRef<EmitterSubscription | null>(null);
 
-    useEffect(() => {
-        const onOwnIdFlowEvent = (flowEvent: OwnIdFlowEvent) => {
-            switch (flowEvent.eventType) {
-                case OwnIdRegisterFlow.Busy:
-                case OwnIdLoginFlow.Busy:
-                    onBusy(flowEvent.isBusy);
-                    break;
-                case OwnIdRegisterFlow.Response:
-                    if (flowEvent.payload.type === OwnIdPayloadType.Registration) {
-                        const { loginId, payload, authType, authToken } = flowEvent;
-                        onRegister(parsePayload(loginId, payload, authType, authToken));
-                    }
-                    if (flowEvent.payload.type === OwnIdPayloadType.Login) {
-                        const { loginId, payload, authType, authToken } = flowEvent;
-                        onLogin(parsePayload(loginId, payload, authType, authToken));
-                    }
-                    break;
-                case OwnIdLoginFlow.Response:
+    const handleFlowEvent = useCallback((flowEvent: OwnIdFlowEvent) => {
+        switch (flowEvent.eventType) {
+            case OwnIdRegisterFlow.Busy:
+            case OwnIdLoginFlow.Busy:
+                onBusy(flowEvent.isBusy);
+                return;
+            case OwnIdRegisterFlow.Response: {
+                const { loginId, payload, authType, authToken } = flowEvent;
+                if (flowEvent.payload.type === OwnIdPayloadType.Registration) {
+                    onRegister(parsePayload(loginId, payload, authType, authToken));
+                    return;
+                }
+                if (flowEvent.payload.type === OwnIdPayloadType.Login) {
                     const { loginId, payload, authType, authToken } = flowEvent;
                     onLogin(parsePayload(loginId, payload, authType, authToken));
-                    break;
-                case OwnIdRegisterFlow.Undo:
-                    onUndo();
-                    break;
-                case OwnIdRegisterFlow.Error:
-                case OwnIdLoginFlow.Error:
-                    onError(flowEvent.error);
-                    break;
+                    return;
+                }
+                return;
             }
-        };
 
-        const onOwnIdIntegrationEvent = (integrationEvent: OwnIdIntegrationEvent) => {
-            switch (integrationEvent.eventType) {
-                case OwnIdRegisterEvent.Busy:
-                case OwnIdLoginEvent.Busy:
-                    onBusy(integrationEvent.isBusy);
-                    break;
-                case OwnIdRegisterEvent.ReadyToRegister:
-                    onRegister({ loginId: integrationEvent.loginId, authType: integrationEvent.authType });
-                    break;
-                case OwnIdRegisterEvent.Undo:
-                    onUndo();
-                    break;
-                case OwnIdRegisterEvent.LoggedIn:
-                case OwnIdLoginEvent.LoggedIn:
-                    onLogin({ authType: integrationEvent.authType, authToken: integrationEvent.authToken });
-                    break;
-                case OwnIdRegisterEvent.Error:
-                case OwnIdLoginEvent.Error:
-                    onError(integrationEvent.error);
-                    break;
+            case OwnIdLoginFlow.Response: {
+                const { loginId, payload, authType, authToken } = flowEvent;
+                onLogin(parsePayload(loginId, payload, authType, authToken));
+                return;
             }
-        };
+            case OwnIdRegisterFlow.Error:
+            case OwnIdLoginFlow.Error:
+                onError(flowEvent.error);
+                return;
+            case OwnIdRegisterFlow.Undo:
+                onUndo();
+                return;
+            default:
+                return;
+        }
+    }, [onBusy, onError, onLogin, onRegister, type]);
+
+    const handleIntegrationEvent = useCallback((integrationEvent: OwnIdIntegrationEvent) => {
+        switch (integrationEvent.eventType) {
+            case OwnIdRegisterEvent.Busy:
+            case OwnIdLoginEvent.Busy:
+                onBusy(integrationEvent.isBusy);
+                return;
+            case OwnIdRegisterEvent.ReadyToRegister:
+                onRegister({ loginId: integrationEvent.loginId, authType: integrationEvent.authType });
+                return;
+            case OwnIdRegisterEvent.Undo:
+                onUndo();
+                return;
+            case OwnIdRegisterEvent.LoggedIn:
+            case OwnIdLoginEvent.LoggedIn:
+                onLogin({ authType: integrationEvent.authType, authToken: integrationEvent.authToken });
+                return;
+            case OwnIdRegisterEvent.Error:
+            case OwnIdLoginEvent.Error:
+                onError(integrationEvent.error);
+                return;
+            default:
+                return;
+        }
+    }, [onBusy, onError, onLogin, onRegister]);
+
+    useEffect(() => {
+        const onOwnIdFlowEvent = (flowEvent: OwnIdFlowEvent) => handleFlowEvent(flowEvent);
+        const onOwnIdIntegrationEvent = (integrationEvent: OwnIdIntegrationEvent) => handleIntegrationEvent(integrationEvent);
 
         if (Platform.OS === 'android') {
             flowEventsSubscription.current = DeviceEventEmitter.addListener(OwnIdReactEventName.OwnIdFlowEvent, onOwnIdFlowEvent);
@@ -180,8 +192,10 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
 
             const viewId = findNodeHandle(ref.current);
             _setViewId(type, viewId);
-            // @ts-ignore
-            UIManager.dispatchViewManagerCommand(viewId, UIManager.OwnIdButtonManager.Commands.create.toString(), [viewId]);
+            if (!isFabric()) {
+                // @ts-ignore
+                UIManager.dispatchViewManagerCommand(viewId, UIManager[OwnIdNativeManagerName].Commands.create.toString(), [viewId]);
+            }
         }
 
         if (Platform.OS === 'ios') {
@@ -198,29 +212,103 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
         }
     }, []);
 
-    return (
-        <View style={{ width, height }}>
-            <OwnIdNativeViewManager
-                // @ts-ignore
-                widgetType={OwnIdWidgetType.OwnIdButton}
-                widgetPosition={buttonPosition}
-                style={styles}
-                showOr={showOr}
-                buttonTextColor={textColor}
-                iconColor={iconColor}
-                buttonBackgroundColor={backgroundColor}
-                buttonBorderColor={borderColor}
-                tooltipPosition={tooltipPosition}
-                tooltipTextColor={tooltipTextColor}
-                tooltipBackgroundColor={tooltipBackgroundColor}
-                tooltipBorderColor={tooltipBorderColor}
-                showSpinner={showSpinner}
-                spinnerColor={spinnerColor}
-                spinnerBackgroundColor={spinnerBackgroundColor}
-                type={type}
-                {...restProps}
-                ref={ref}
-            />
-        </View>
-    );
+    const OwnIdNativeViewManager: any = getNativeOwnIdButton();
+    if (isFabric()) {
+        if (Platform.OS === 'android') {
+            return (
+                <View style={{ width: width ?? measuredWidth, height }}>
+                    <OwnIdNativeViewManager
+                        // @ts-ignore
+                        widgetType={OwnIdWidgetType.OwnIdButton}
+                        widgetPosition={buttonPosition}
+                        style={[styles, { height }]}
+                        showOr={showOr}
+                        buttonTextColor={textColor}
+                        iconColor={iconColor}
+                        buttonBackgroundColor={backgroundColor}
+                        buttonBorderColor={borderColor}
+                        tooltipPosition={tooltipPosition}
+                        tooltipTextColor={tooltipTextColor}
+                        tooltipBackgroundColor={tooltipBackgroundColor}
+                        tooltipBorderColor={tooltipBorderColor}
+                        showSpinner={showSpinner}
+                        spinnerColor={spinnerColor}
+                        spinnerBackgroundColor={spinnerBackgroundColor}
+                        type={type}
+                        {...restProps}
+                        onContentSizeChange={(e: any) => {
+                            const w = e?.nativeEvent?.width;
+                            if (typeof w === 'number' && w > 0) { setMeasuredWidth(w); }
+                        }}
+                        ref={ref}
+                    />
+                </View>
+            );
+        }
+
+        if (Platform.OS === 'ios') {
+            return (
+                <View style={{ width: width ?? measuredWidth, height }}>
+                    <OwnIdNativeViewManager
+                        // @ts-ignore
+                        widgetType={OwnIdWidgetType.OwnIdButton}
+                        widgetPosition={buttonPosition}
+                        style={[styles, { height }]}
+                        showOr={showOr}
+                        buttonTextColor={textColor}
+                        iconColor={iconColor}
+                        buttonBackgroundColor={backgroundColor}
+                        buttonBorderColor={borderColor}
+                        tooltipTextColor={tooltipTextColor}
+                        tooltipBackgroundColor={tooltipBackgroundColor}
+                        tooltipBorderColor={tooltipBorderColor}
+                        showSpinner={showSpinner}
+                        spinnerColor={spinnerColor}
+                        spinnerBackgroundColor={spinnerBackgroundColor}
+                        type={type}
+                        preferredHeight={Math.max(48, Number(height))}
+                        onContentSizeChange={(e: any) => {
+                            const w = e?.nativeEvent?.width;
+                            if (typeof w === 'number' && w > 0) { setMeasuredWidth(w); }
+                        }}
+                        {...restProps}
+                        ref={ref}
+                    />
+                </View>
+            );
+        }
+    }
+
+    {
+        return (
+            <View style={{ width, height }}>
+                <OwnIdNativeViewManager
+                    // @ts-ignore
+                    widgetType={OwnIdWidgetType.OwnIdButton}
+                    widgetPosition={buttonPosition}
+                    style={styles}
+                    showOr={showOr}
+                    buttonTextColor={textColor}
+                    iconColor={iconColor}
+                    buttonBackgroundColor={backgroundColor}
+                    buttonBorderColor={borderColor}
+                    tooltipPosition={tooltipPosition}
+                    tooltipTextColor={tooltipTextColor}
+                    tooltipBackgroundColor={tooltipBackgroundColor}
+                    tooltipBorderColor={tooltipBorderColor}
+                    showSpinner={showSpinner}
+                    spinnerColor={spinnerColor}
+                    spinnerBackgroundColor={spinnerBackgroundColor}
+                    type={type}
+                    {...(Platform.OS === 'ios' ? { preferredHeight: Math.max(48, Number(height)) } : {})}
+                    onContentSizeChange={(e: any) => {
+                        const w = e?.nativeEvent?.width;
+                        if (typeof w === 'number' && w > 0) { setMeasuredWidth(w); }
+                    }}
+                    {...restProps}
+                    ref={ref}
+                />
+            </View>
+        );
+    }
 };

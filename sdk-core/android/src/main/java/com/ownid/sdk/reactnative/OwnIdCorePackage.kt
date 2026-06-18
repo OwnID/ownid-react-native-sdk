@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ReactShadowNode
 import com.facebook.react.uimanager.ViewManager
 import com.ownid.sdk.InternalOwnIdAPI
+import com.ownid.sdk.reactnative.fabric.OwnIdButtonFabricManager
 
 public class OwnIdCorePackage : ReactPackage {
 
@@ -15,5 +16,8 @@ public class OwnIdCorePackage : ReactPackage {
 
     @OptIn(InternalOwnIdAPI::class)
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<out View, out ReactShadowNode<*>>> =
-        mutableListOf(BaseOwnIdFragmentManager(reactContext))
+        mutableListOf(
+            BaseOwnIdFragmentManager(reactContext),
+            OwnIdButtonFabricManager(reactContext)
+        )
 }

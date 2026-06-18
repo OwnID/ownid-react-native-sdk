@@ -9,7 +9,6 @@ import androidx.lifecycle.get
 import androidx.lifecycle.lifecycleScope
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.ownid.sdk.InstanceName
@@ -29,12 +28,16 @@ import kotlinx.coroutines.launch
 
 public class OwnIdModule(
     reactContext: ReactApplicationContext
-) : ReactContextBaseJavaModule(reactContext) {
+) : NativeOwnIdModuleSpec(reactContext) {
 
     override fun getName(): String = "OwnIdModule"
 
+    override fun getConstants(): MutableMap<String, Any> = mutableMapOf(
+        "naComponents" to mapOf("core" to true)
+    )
+
     @ReactMethod
-    public fun createInstance(config: ReadableMap, productName: String, instanceName: String?, promise: Promise) {
+    public override fun createInstance(config: ReadableMap, productName: String, instanceName: String?, promise: Promise) {
         if (instanceName != null)
             OwnId.createInstanceReact(reactApplicationContext, promise, config, productName, InstanceName(instanceName))
         else
@@ -43,7 +46,7 @@ public class OwnIdModule(
 
     @ReactMethod
     @OptIn(InternalOwnIdAPI::class)
-    public fun setLocale(locale: String?, promise: Promise) {
+    public override fun setLocale(locale: String?, promise: Promise) {
         val ownIdInstance = OwnId.firstInstanceOrNull<OwnIdInstance>()
 
         if (ownIdInstance == null) {
@@ -59,7 +62,7 @@ public class OwnIdModule(
 
     @ReactMethod
     @OptIn(InternalOwnIdAPI::class)
-    public fun enrollCredential(loginId: String, authToken: String, force: Boolean, instanceName: String?, promise: Promise) {
+    public override fun enrollCredential(loginId: String, authToken: String, force: Boolean, instanceName: String?, promise: Promise) {
         val activity = currentActivity as? ComponentActivity
 
         if (activity == null) {

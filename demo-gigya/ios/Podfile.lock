@@ -12,10 +12,10 @@ PODS:
   - hermes-engine (0.80.2):
     - hermes-engine/Pre-built (= 0.80.2)
   - hermes-engine/Pre-built (0.80.2)
-  - ownid-core-ios-sdk (3.8.2)
-  - ownid-gigya-ios-sdk (3.8.2):
+  - ownid-core-ios-sdk (3.9.0)
+  - ownid-gigya-ios-sdk (3.9.0):
     - Gigya (>= 1.7.5)
-    - ownid-core-ios-sdk (= 3.8.2)
+    - ownid-core-ios-sdk (= 3.9.0)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -2191,12 +2191,12 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - sdk-core (3.8.2):
-    - ownid-core-ios-sdk (= 3.8.2)
+  - sdk-core (3.9.0):
+    - ownid-core-ios-sdk (= 3.9.0)
     - React
-  - sdk-gigya (3.8.2):
+  - sdk-gigya (3.9.0):
     - Gigya
-    - ownid-gigya-ios-sdk (= 3.8.2)
+    - ownid-gigya-ios-sdk (= 3.9.0)
     - sdk-core
   - SocketRocket (0.7.1)
   - Yoga (0.0.0)
@@ -2459,8 +2459,8 @@ SPEC CHECKSUMS:
   gigya-react-native-plugin-for-sap-customer-data-cloud: 864d27ae4a517b5756c8fc8bdd861611240f3ec6
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: bbc1152da7d2d40f9e59c28acc6576fcf5d28e2a
-  ownid-core-ios-sdk: e7e838a50935ff2a9adfec6d6e96df84865e93da
-  ownid-gigya-ios-sdk: 4d59b3fc51374534f661045c215af022af9d07d9
+  ownid-core-ios-sdk: c7190fea8f2cc529f2b9d59e2572e892d6f3274d
+  ownid-gigya-ios-sdk: 93a60e702d8d50626b4a30b4a727dffe717c0390
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: 300c5eb91114d4339b0bb39505d0f4824d7299b7
   RCTRequired: e0446b01093475b7082fbeee5d1ef4ad1fe20ac4
@@ -2528,11 +2528,11 @@ SPEC CHECKSUMS:
   ReactCommon: 592ef441605638b95e533653259254b4bd35ff4f
   RNGestureHandler: 2ca12d0756fb3b990671e0f36b65568ccb62c1b6
   RNScreens: 64b35b601916a7a61339a7cd6bd5db4ab218a1be
-  sdk-core: a6178fef0b72a03971b6a315b78fdfa998b8896c
-  sdk-gigya: 0b5dbcebc8bd409a4a67f590605952deff48ebbd
+  sdk-core: 96395ccb8604f9e621a152f748b9178523f4aa84
+  sdk-gigya: 17c7113bed155d5561ba3177404d269d43b56e3d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: a742cc68e8366fcfc681808162492bc0aa7a9498
 
-PODFILE CHECKSUM: b03375ba5166f3e1a4d407352b14acc8b9fc5431
+PODFILE CHECKSUM: 3ddbb2e0ad8eed38e94154a90747737beeab90d5
 
 COCOAPODS: 1.16.2

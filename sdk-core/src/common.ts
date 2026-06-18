@@ -1,9 +1,31 @@
-import { requireNativeComponent } from 'react-native';
+import { requireNativeComponent, Platform, UIManager } from 'react-native';
 
-export let OwnIdNativeViewManager = requireNativeComponent('OwnIdButtonManager');
+export let OwnIdNativeManagerName: string = Platform.OS === 'ios' ? 'OwnIdButton' : 'OwnIdButtonManager';
 
+export function isFabric(): boolean {
+    try { return !!(global as any)?.nativeFabricUIManager; } catch { return false; }
+}
+
+let CachedNativeOwnIdButton: any | null = null;
+export function getNativeOwnIdButton(): any {
+    if (CachedNativeOwnIdButton) { return CachedNativeOwnIdButton; }
+    if (isFabric()) {
+        try {
+            const Comp = require('./specs/NativeOwnIdButtonNativeComponent').default;
+            CachedNativeOwnIdButton = Comp;
+            return Comp;
+        } catch {
+        }
+    }
+    const candidates = Platform.OS === 'ios' ? ['OwnIdButton', 'OwnIdButtonManagerManager'] : ['OwnIdButtonManager'];
+    const name = candidates.find(n => !!UIManager?.getViewManagerConfig?.(n)) ?? candidates[0];
+    CachedNativeOwnIdButton = requireNativeComponent(name);
+    return CachedNativeOwnIdButton;
+}
+
+// Legacy setter retained for external overrides (used by Gigya Android)
 export function _setOwnIdNativeViewManager(value: any) {
-    OwnIdNativeViewManager = value
+    CachedNativeOwnIdButton = value;
 }
 
 /**

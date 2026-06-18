@@ -6,6 +6,7 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ReactShadowNode
 import com.facebook.react.uimanager.ViewManager
+import com.ownid.sdk.reactnative.gigya.fabric.OwnIdGigyaButtonFabricManager
 
 public class OwnIdGigyaPackage : ReactPackage {
 
@@ -13,5 +14,8 @@ public class OwnIdGigyaPackage : ReactPackage {
         mutableListOf(OwnIdGigyaModule(reactContext))
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<out View, out ReactShadowNode<*>>> =
-        mutableListOf(OwnIdGigyaFragmentManager(reactContext))
+        mutableListOf(
+            OwnIdGigyaFragmentManager(reactContext),
+            OwnIdGigyaButtonFabricManager(reactContext)
+        )
 }
