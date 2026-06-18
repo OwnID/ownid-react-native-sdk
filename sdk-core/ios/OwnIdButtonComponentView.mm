@@ -20,7 +20,11 @@
 #import <react/renderer/core/LayoutContext.h>
 #import <react/renderer/graphics/Color.h>
 #import <React/RCTConversions.h>
+#if __has_include(<SDKCore/SDKCore-Swift.h>)
+#import <SDKCore/SDKCore-Swift.h>
+#else
 #import "SDKCore-Swift.h"
+#endif
 
 using namespace facebook::react;
 

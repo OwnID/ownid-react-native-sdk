@@ -12,10 +12,10 @@ PODS:
   - hermes-engine (0.80.2):
     - hermes-engine/Pre-built (= 0.80.2)
   - hermes-engine/Pre-built (0.80.2)
-  - ownid-core-ios-sdk (3.8.2)
-  - ownid-gigya-ios-sdk (3.8.2):
+  - ownid-core-ios-sdk (3.10.0)
+  - ownid-gigya-ios-sdk (3.10.0):
     - Gigya (>= 1.7.5)
-    - ownid-core-ios-sdk (= 3.8.2)
+    - ownid-core-ios-sdk (= 3.10.0)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -2132,13 +2132,13 @@ PODS:
     - React-perflogger (= 0.80.2)
     - React-utils (= 0.80.2)
     - SocketRocket
-  - sdk-core (3.8.2):
-    - ownid-core-ios-sdk (= 3.8.2)
+  - sdk-core (3.10.0):
+    - ownid-core-ios-sdk (= 3.10.0)
     - React
-  - sdk-gigya (3.8.2):
+  - sdk-gigya (3.10.0):
     - Gigya
-    - ownid-gigya-ios-sdk (= 3.8.2)
-    - sdk-core
+    - ownid-gigya-ios-sdk (= 3.10.0)
+    - sdk-core (= 3.10.0)
   - SocketRocket (0.7.1)
   - Yoga (0.0.0)
 
@@ -2151,6 +2151,8 @@ DEPENDENCIES:
   - "gigya-react-native-plugin-for-sap-customer-data-cloud (from `../node_modules/@sap_oss/gigya-react-native-plugin-for-sap-customer-data-cloud`)"
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - ownid-core-ios-sdk (from `https://github.com/OwnID/ownid-ios-sdk.git`, tag `3.10.0`)
+  - ownid-gigya-ios-sdk (from `https://github.com/OwnID/ownid-ios-sdk.git`, tag `3.10.0`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
@@ -2225,8 +2227,6 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - Gigya
-    - ownid-core-ios-sdk
-    - ownid-gigya-ios-sdk
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -2247,6 +2247,12 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-07-24-RNv0.80.2-5c7dbc0a78cb2d2a8bc81c41c617c3abecf209ff
+  ownid-core-ios-sdk:
+    :git: https://github.com/OwnID/ownid-ios-sdk.git
+    :tag: 3.10.0
+  ownid-gigya-ios-sdk:
+    :git: https://github.com/OwnID/ownid-ios-sdk.git
+    :tag: 3.10.0
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTDeprecation:
@@ -2384,6 +2390,14 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
+CHECKOUT OPTIONS:
+  ownid-core-ios-sdk:
+    :git: https://github.com/OwnID/ownid-ios-sdk.git
+    :tag: 3.10.0
+  ownid-gigya-ios-sdk:
+    :git: https://github.com/OwnID/ownid-ios-sdk.git
+    :tag: 3.10.0
+
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
@@ -2394,8 +2408,8 @@ SPEC CHECKSUMS:
   gigya-react-native-plugin-for-sap-customer-data-cloud: 864d27ae4a517b5756c8fc8bdd861611240f3ec6
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: bbc1152da7d2d40f9e59c28acc6576fcf5d28e2a
-  ownid-core-ios-sdk: e7e838a50935ff2a9adfec6d6e96df84865e93da
-  ownid-gigya-ios-sdk: 4d59b3fc51374534f661045c215af022af9d07d9
+  ownid-core-ios-sdk: 9c36f48c16ddad3f72764da0e662f5581bd04a87
+  ownid-gigya-ios-sdk: 1fc5c7be9a7633f42667a522aa76cc72d7d79922
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: 300c5eb91114d4339b0bb39505d0f4824d7299b7
   RCTRequired: e0446b01093475b7082fbeee5d1ef4ad1fe20ac4
@@ -2461,11 +2475,11 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 8df342c127fd0c1e30e8b9f71ff814c22414a7c0
   ReactCodegen: 439c427ccc115d71d16cc84256e5fbdc7fcef57a
   ReactCommon: 592ef441605638b95e533653259254b4bd35ff4f
-  sdk-core: a6178fef0b72a03971b6a315b78fdfa998b8896c
-  sdk-gigya: 0b5dbcebc8bd409a4a67f590605952deff48ebbd
+  sdk-core: d4bc6e7eb73860899c7f019de441e2a3d1f17cc4
+  sdk-gigya: 2abfd5a9d606094290f170a44c8fa75a578ededc
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: a742cc68e8366fcfc681808162492bc0aa7a9498
 
-PODFILE CHECKSUM: 3ddbb2e0ad8eed38e94154a90747737beeab90d5
+PODFILE CHECKSUM: bb071a0466823e6a08c677ecce47cf5c63351755
 
 COCOAPODS: 1.16.2

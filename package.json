@@ -1,6 +1,6 @@
 {
   "name": "@ownid/react-native-demo",
-  "version": "3.9.2",
+  "version": "3.10.0",
   "description": "OwnID React Native Demo",
   "license": "Apache-2.0",
   "scripts": {

@@ -5,7 +5,11 @@
 #if RCT_NEW_ARCH_ENABLED
 
 #import <React/RCTViewManager.h>
+#if __has_include(<SDKCore/SDKCore-Swift.h>)
+#import <SDKCore/SDKCore-Swift.h>
+#else
 #import "SDKCore-Swift.h"
+#endif
 #import <ReactCodegen/OwnIdCoreSpec/OwnIdCoreSpec.h>
 
 @interface OwnIdTurboModule : NSObject <NativeOwnIdModuleSpec>

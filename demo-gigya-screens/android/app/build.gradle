@@ -16,8 +16,8 @@ android {
         applicationId = "com.ownid.demo.gigya.screens"
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
-        versionCode = 30804
-        versionName = "3.8.4"
+        versionCode = 31000
+        versionName = "3.10.0"
     }
 
     signingConfigs {

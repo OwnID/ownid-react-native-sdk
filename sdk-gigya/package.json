@@ -1,6 +1,6 @@
 {
   "name": "@ownid/react-native-gigya",
-  "version": "3.9.2",
+  "version": "3.10.0",
   "description": "OwnID React Native Gigya SDK",
   "license": "Apache-2.0",
   "homepage": "https://ownid.com",
@@ -26,14 +26,15 @@
     "build": "bob build"
   },
   "peerDependencies": {
+    "@ownid/react-native-core": ">=3.10.0",
     "react": ">=19.0.0",
-    "react-native": ">=0.78.0",
-    "@ownid/react-native-core": ">=3.9.2"
+    "react-native": ">=0.78.0"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
+    "@ownid/react-native-core": "3.10.0",
     "@react-native-community/cli": "^18.0.0",
     "@react-native/babel-preset": "~0.78.0",
     "@react-native/metro-config": "~0.78.0",
