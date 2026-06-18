@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'sdk-core'
-  s.version          = '3.9.0'
+  s.version          = '3.9.1'
   s.summary          = 'sdk-core'
 
   s.description      = <<-DESC
@@ -33,6 +33,8 @@ sdk-core pod library. Used in autolinking alongside of react libraries.
     xcconfig['OTHER_CFLAGS'] = '$(inherited) -DRCT_NEW_ARCH_ENABLED=1'
     xcconfig['OTHER_CPLUSPLUSFLAGS'] = "#{xcconfig['OTHER_CPLUSPLUSFLAGS']} -DRCT_NEW_ARCH_ENABLED=1"
     xcconfig['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) RCT_NEW_ARCH_ENABLED'
+    # Fabric pulls <yoga/style/Style.h> from the private Yoga headers; make them visible to this pod target.
+    xcconfig['HEADER_SEARCH_PATHS'] = "#{xcconfig['HEADER_SEARCH_PATHS']} \"$(PODS_ROOT)/Headers/Private/Yoga\""
   end
   s.pod_target_xcconfig = xcconfig
 

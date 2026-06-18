@@ -22,6 +22,7 @@ export interface OwnIdConfiguration {
 import { NativeModules, TurboModuleRegistry, Platform } from 'react-native';
 import type { Spec as NativeOwnIdSpec } from './specs/NativeOwnIdModule';
 import { generatePassword } from './internal';
+import { _setInitPending } from './common';
 
 function getOwnIdModule(): NativeOwnIdSpec | null {
   try {
@@ -55,7 +56,9 @@ export default {
    */
   async init(configuration: OwnIdConfiguration, productName: string, instanceName?: string) {
     const M = requireOwnIdModule();
-    return (M as any).createInstance(configuration, productName, instanceName);
+    const p: Promise<void> = (M as any).createInstance(configuration, productName, instanceName);
+    _setInitPending(p);
+    return p;
   },
 
   /**

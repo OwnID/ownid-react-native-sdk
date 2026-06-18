@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Appearance, ColorSchemeName, UIManager, findNodeHandle, DeviceEventEmitter, NativeEventEmitter, NativeModules, Platform, EmitterSubscription, View, DimensionValue } from 'react-native';
-import { getNativeOwnIdButton, OwnIdNativeManagerName, OwnIdButtonType, OwnIdResponse, OwnIdError, _setViewId, isFabric } from './common';
+import { getNativeOwnIdButton, OwnIdNativeManagerName, OwnIdButtonType, OwnIdResponse, OwnIdError, _setViewId, isFabric, _onInitReady, _isInitReady } from './common';
 import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdLoginEvent, parsePayload } from './internal';
 
 export const OwnIdAuthButtonColorSchemeLight = {
@@ -58,6 +58,7 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
     }
 
     const ref = useRef(null);
+    const [isReady, setIsReady] = useState<boolean>(_isInitReady());
     const [measuredWidth, setMeasuredWidth] = useState<number | undefined>(undefined);
 
     const flowEventsSubscription = useRef<EmitterSubscription | null>(null);
@@ -66,6 +67,12 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
     const type = OwnIdButtonType.Login;
 
     useEffect(() => {
+        const unsubscribe = _onInitReady(() => setIsReady(true));
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        if (!isReady) return;
         const handleFlow = (flowEvent: OwnIdFlowEvent) => {
             switch (flowEvent.eventType) {
                 case OwnIdLoginFlow.Busy:
@@ -121,7 +128,11 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
             flowEventsSubscription.current!.remove();
             integrationEventsSubscription.current!.remove();
         }
-    }, []);
+    }, [isReady, onBusy, onError, onLogin]);
+
+    if (!isReady) {
+        return null;
+    }
 
     const OwnIdNativeViewManager: any = getNativeOwnIdButton();
     if (Platform.OS === 'android' && isFabric()) {

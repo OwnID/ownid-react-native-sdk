@@ -6,6 +6,36 @@ export function isFabric(): boolean {
     try { return !!(global as any)?.nativeFabricUIManager; } catch { return false; }
 }
 
+let _ownIdInitReady = false;
+const _ownIdInitListeners: Array<() => void> = [];
+
+export function _setInitPending(promise: Promise<void>) {
+    _ownIdInitReady = false;
+    promise.then(() => {
+        _ownIdInitReady = true;
+        while (_ownIdInitListeners.length) {
+            try { _ownIdInitListeners.shift()?.(); } catch { }
+        }
+    }).catch(() => {
+    });
+}
+
+export function _onInitReady(cb: () => void): () => void {
+    if (_ownIdInitReady) {
+        cb();
+        return () => { };
+    }
+    _ownIdInitListeners.push(cb);
+    return () => {
+        const idx = _ownIdInitListeners.indexOf(cb);
+        if (idx >= 0) _ownIdInitListeners.splice(idx, 1);
+    };
+}
+
+export function _isInitReady(): boolean {
+    return _ownIdInitReady;
+}
+
 let CachedNativeOwnIdButton: any | null = null;
 export function getNativeOwnIdButton(): any {
     if (CachedNativeOwnIdButton) { return CachedNativeOwnIdButton; }

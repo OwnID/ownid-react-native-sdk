@@ -6,7 +6,7 @@ import SwiftUI
 
 extension OwnID.ReactGigyaSDK {
     static let sdkName = "OwnIDReactNativeGigya"
-    static let version = "3.9.0"
+    static let version = "3.9.1"
 }
 
 extension OwnID {

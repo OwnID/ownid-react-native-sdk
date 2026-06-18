@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Appearance, ColorSchemeName, UIManager, findNodeHandle, DeviceEventEmitter, NativeEventEmitter, NativeModules, Platform, EmitterSubscription, View, DimensionValue } from 'react-native';
-import { getNativeOwnIdButton, OwnIdNativeManagerName, OwnIdButtonType, OwnIdResponse, OwnIdPayloadType, OwnIdError, _setViewId, isFabric } from './common';
+import { getNativeOwnIdButton, OwnIdNativeManagerName, OwnIdButtonType, OwnIdResponse, OwnIdPayloadType, OwnIdError, _setViewId, isFabric, _onInitReady, _isInitReady } from './common';
 import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdRegisterFlow, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdRegisterEvent, OwnIdLoginEvent, parsePayload } from './internal';
 
 export const OwnIdButtonColorSchemeLight = {
@@ -115,6 +115,7 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
     }
 
     const ref = useRef(null);
+    const [isReady, setIsReady] = useState<boolean>(_isInitReady());
     const [measuredWidth, setMeasuredWidth] = useState<number | undefined>(undefined);
 
     const flowEventsSubscription = useRef<EmitterSubscription | null>(null);
@@ -183,6 +184,12 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
     }, [onBusy, onError, onLogin, onRegister]);
 
     useEffect(() => {
+        const unsubscribe = _onInitReady(() => setIsReady(true));
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        if (!isReady) return;
         const onOwnIdFlowEvent = (flowEvent: OwnIdFlowEvent) => handleFlowEvent(flowEvent);
         const onOwnIdIntegrationEvent = (integrationEvent: OwnIdIntegrationEvent) => handleIntegrationEvent(integrationEvent);
 
@@ -210,7 +217,11 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
             flowEventsSubscription.current!.remove();
             integrationEventsSubscription.current!.remove();
         }
-    }, []);
+    }, [handleFlowEvent, handleIntegrationEvent, isReady, type]);
+
+    if (!isReady) {
+        return null;
+    }
 
     const OwnIdNativeViewManager: any = getNativeOwnIdButton();
     if (isFabric()) {
