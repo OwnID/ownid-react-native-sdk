@@ -2070,7 +2070,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - sdk-core (3.9.1):
+  - sdk-core (3.9.2):
     - ownid-core-ios-sdk (= 3.9.0)
     - React
   - SocketRocket (0.7.1)
@@ -2383,7 +2383,7 @@ SPEC CHECKSUMS:
   ReactCommon: 650c091009d523933f2d87eb7d0859721d60a1ae
   RNGestureHandler: bb4a982330d9f9313e9803efbd65ca541b0b3e9a
   RNScreens: 061a29e0166925f12965bcd69f3648b6e77ea37d
-  sdk-core: ad126198e5a255c54c8e4d819018e1e529328c60
+  sdk-core: 8d3f08fc090e33b108f78ab5388c7ca95ece56a6
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: a742cc68e8366fcfc681808162492bc0aa7a9498
 

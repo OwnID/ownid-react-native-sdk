@@ -127,6 +127,12 @@ public abstract class BaseOwnIdFabricManager(private val reactContext: ReactAppl
     public override fun onAfterUpdateTransaction(view: FragmentContainerView) {
         super.onAfterUpdateTransaction(view)
 
+        val existingFragment = viewFragmentMap[view]
+        val propsAreDefault = widgetProperties == OwnIdWidget.Properties()
+        if (existingFragment != null && propsAreDefault && preferredHeightDp == null) {
+            return
+        }
+
         val eventEmitter = reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
         val ownId = OwnId.getInstanceOrNull<OwnIdInstance>(instanceName)
 

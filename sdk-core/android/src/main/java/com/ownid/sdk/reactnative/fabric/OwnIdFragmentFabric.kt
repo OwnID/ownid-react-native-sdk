@@ -1,5 +1,6 @@
 package com.ownid.sdk.reactnative.fabric
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,9 @@ import com.ownid.sdk.getOwnIdViewModel
 import com.ownid.sdk.reactnative.OwnIdWidget
 import com.ownid.sdk.reactnative.emitToReact
 import com.ownid.sdk.view.AbstractOwnIdWidget
+import com.ownid.sdk.view.OwnIdAuthButton
+import com.ownid.sdk.view.OwnIdButton
+import com.ownid.sdk.view.popup.tooltip.Tooltip
 import com.ownid.sdk.viewmodel.OwnIdBaseViewModel
 import com.ownid.sdk.viewmodel.OwnIdLoginViewModel
 import com.ownid.sdk.viewmodel.OwnIdRegisterViewModel
@@ -35,8 +39,11 @@ public class OwnIdFragmentFabric(
         LOGIN(OwnIdLoginViewModel::class.java)
     }
 
-    private val ownIdViewModel: OwnIdBaseViewModel by lazy(LazyThreadSafetyMode.NONE) {
-        getOwnIdViewModel(this@OwnIdFragmentFabric, fragmentType.viewModelClass, ownIdInstance)
+    private lateinit var ownIdViewModel: OwnIdBaseViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        ownIdViewModel = getOwnIdViewModel(this@OwnIdFragmentFabric, fragmentType.viewModelClass, ownIdInstance)
     }
 
     public override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =

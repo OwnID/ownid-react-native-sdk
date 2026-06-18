@@ -115,6 +115,6 @@ export default {
 }
 
 export type { OwnIdResponse, OwnIdPayload } from './common';
-export { OwnIdButtonType, OwnIdPayloadType, OwnIdError, _setOwnIdNativeViewManager, _getViewId } from './common';
+export { OwnIdButtonType, OwnIdPayloadType, OwnIdError, _setOwnIdNativeViewManager, _getViewId, _setInitPending } from './common';
 export * from './button';
 export * from './authButton';

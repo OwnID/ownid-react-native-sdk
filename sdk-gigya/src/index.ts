@@ -1,5 +1,5 @@
 import { NativeModules, requireNativeComponent, UIManager, Platform } from "react-native";
-import { OwnIdConfiguration, _setOwnIdNativeViewManager, _getViewId, OwnIdButtonType, OwnIdError } from "@ownid/react-native-core";
+import { OwnIdConfiguration, _setOwnIdNativeViewManager, _getViewId, OwnIdButtonType, OwnIdError, _setInitPending } from "@ownid/react-native-core";
 
 import NativeOwnIdGigyaModule from './specs/NativeOwnIdGigyaModule';
 import NativeGigyaButton from './specs/NativeOwnIdGigyaButtonNativeComponent';
@@ -49,7 +49,9 @@ export default {
      * @returns {Promise<void>} - A promise indicating the completion of the initialization.
      */
     async init(configuration: OwnIdConfiguration) {
-        return OwnIdGigyaModule.createInstance(configuration);
+        const p = OwnIdGigyaModule.createInstance(configuration);
+        _setInitPending(p);
+        return p;
     },
 }
 

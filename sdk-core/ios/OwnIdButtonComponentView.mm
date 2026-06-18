@@ -84,9 +84,6 @@ static NSString *_Nonnull RCTOwnIdHexStringFromColor(SharedColor const &sharedCo
   return [NSString stringWithFormat:@"#%02lX%02lX%02lX", (long)r, (long)g, (long)b];
 }
 
-// Implementation moved below custom ShadowNode definitions so types are visible
-
-// Safe conversion helpers
 static std::string RCTOwnIdStdStringFromNSObject(id _Nullable obj)
 {
   if (!obj || obj == (id)kCFNull) {
@@ -109,7 +106,6 @@ static std::string RCTOwnIdStdStringFromNSObject(id _Nullable obj)
   if ([obj isKindOfClass:[NSDictionary class]] || [obj isKindOfClass:[NSArray class]]) {
     id jsonObj = obj;
     if (![NSJSONSerialization isValidJSONObject:jsonObj]) {
-      // Fallback to description
       NSString *desc = [jsonObj description];
       return std::string([desc UTF8String] ?: "");
     }
@@ -121,19 +117,9 @@ static std::string RCTOwnIdStdStringFromNSObject(id _Nullable obj)
     }
     return std::string();
   }
-  // Last resort: description
   NSString *desc = [obj description];
   return std::string([desc UTF8String] ?: "");
 }
-
-// Provide a custom ShadowNode with state and marked as a Yoga leaf. Measure returns
-// the last measured size coming from the ComponentView (synchronous priming in updateProps),
-// mirroring the Android approach where ShadowNode feeds Yoga size to avoid 0-width first pass.
-#ifdef __cplusplus
-namespace facebook::react {
-} // namespace facebook::react
-
-#endif // __cplusplus
 
 @implementation OwnIdButtonComponentView {
   CGFloat _lastLayoutWidth;
@@ -149,7 +135,6 @@ namespace facebook::react {
 
 + (facebook::react::ComponentDescriptorProvider)componentDescriptorProvider
 {
-  // Bind to the generated descriptor so Fabric uses view measurement
   return facebook::react::concreteComponentDescriptorProvider<facebook::react::OwnIdButtonComponentDescriptor>();
 }
 
@@ -178,10 +163,11 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
 - (void)attachControllerIfPossibleWithFrame:(CGRect)frame
 {
   if (_isAttached || !_configured || !_controller) { return; }
-  UIViewController *parent = OwnIdFindParentViewController(self);
-  if (!parent) {
-    return;
-  }
+  if (!self.window || frame.size.width <= 0 || frame.size.height <= 0) { return; }
+  UIViewController *resolved = self.reactViewController ?: OwnIdFindParentViewController(self);
+  if (!resolved) { return; }
+  if (self.reactViewController && resolved != self.reactViewController) { return; }
+  UIViewController *parent = resolved;
   _controller.view.translatesAutoresizingMaskIntoConstraints = YES;
   _controller.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   [parent addChildViewController:_controller];
@@ -189,7 +175,6 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   _controller.view.frame = frame;
   [_controller didMoveToParentViewController:parent];
   _controller.view.userInteractionEnabled = YES;
-  // Ensure appearance callbacks fire for SwiftUI content
   @try {
     [_controller beginAppearanceTransition:YES animated:NO];
     [_controller endAppearanceTransition];
@@ -210,12 +195,10 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   }
 }
 
-// Fabric measurement override
 - (CGSize)sizeThatFitsMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize
 {
   if (!_controller) { return {minimumSize.width, MAX(44.0, minimumSize.height)}; }
 
-  // Height constraint: prefer explicit preferredHeight if set; otherwise pass through the parent max height.
   NSNumber *ch = nil;
   if (_preferredHeight > 0) {
     ch = @(_preferredHeight);
@@ -225,14 +208,10 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
 
   CGFloat maxW = (isfinite(maximumSize.width) && maximumSize.width > 0) ? maximumSize.width : CGFLOAT_MAX;
 
-  // Respect parent width for both variants, but for icon button cap to intrinsic width.
   CGSize result = CGSizeZero;
 
-  // First, measure intrinsic size without width constraint to get a cap for icon.
   CGSize intrinsic = [_controller bridge_measureWithConstrainedWidth:nil constrainedHeight:ch];
 
-  // Then, if parent width is constrained, ask native to measure under that width as well
-  // (important for auth button and for potential shrink behavior).
   CGSize underParent = intrinsic;
   if (maxW < CGFLOAT_MAX) {
     underParent = [_controller bridge_measureWithConstrainedWidth:@(maxW) constrainedHeight:ch];
@@ -242,19 +221,16 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
     result.width = MIN(underParent.width, maxW);
     result.height = underParent.height;
   } else {
-    // Icon button: respect parent width but never exceed intrinsic width (cap at intrinsic).
     CGFloat candidate = (maxW < CGFLOAT_MAX) ? MIN(intrinsic.width, maxW) : intrinsic.width;
     result.width = candidate;
     result.height = intrinsic.height;
   }
 
-  // Clamp to RN provided min/max and enforce iOS minimum height 44.
   result.width = MAX(result.width, minimumSize.width);
   result.height = MAX(MAX(result.height, minimumSize.height), 44.0);
   if (isfinite(maximumSize.width)) { result.width = MIN(result.width, maximumSize.width); }
   if (isfinite(maximumSize.height)) { result.height = MIN(result.height, maximumSize.height); }
 
-  // Cache last measured size as a fallback if next measure briefly returns 0.
   if (result.width > 0 && result.height > 0) {
     _measuredWidth = result.width;
     _measuredHeight = result.height;
@@ -287,10 +263,6 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   NSString *sbg = RCTOwnIdHexStringFromColor(newProps.spinnerBackgroundColor);
   NSNumber *prefH = (newProps.preferredHeight > 0) ? @(newProps.preferredHeight) : nil;
   _preferredHeight = prefH ? [prefH doubleValue] : 0;
-  // If Core SDK not configured, stay inert (avoid crashes)
-  // Do not gate on SDK configuration; controller will idle until SDK is ready
-
-  // Wire callback for Fabric content size changes (used for measurement only).
   __weak __typeof(self) weakSelf = self;
   _controller.onNativeContentSize = ^(CGSize size, BOOL ignoreParent) {
     __strong __typeof(self) strongSelf = weakSelf;
@@ -300,10 +272,8 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
     }
     strongSelf->_measuredWidth = size.width;
     strongSelf->_measuredHeight = size.height;
-    // Notify Fabric that intrinsic content size may have changed.
     [strongSelf invalidateIntrinsicContentSize];
     [strongSelf setNeedsLayout];
-    // Propagate to JS (mirrors Android NA) so JS can set width
     const auto emitter = std::static_pointer_cast<const Emitter>(strongSelf->_eventEmitter);
     if (emitter) {
       facebook::react::OwnIdButtonEventEmitter::OnContentSizeChange contentSize{
@@ -314,7 +284,6 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
     }
   };
 
-  // Clear unused debugging callbacks.
   _controller.onNativeIntegration = nil;
   _controller.onNativeFlow = nil;
   _controller.onNativeReset = nil;
@@ -338,9 +307,7 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
                            preferredHeight:prefH];
   _configured = YES;
 
-  // Try to attach immediately; layout will refine size
   [self attachControllerIfPossibleWithFrame:self.contentView.bounds];
-  // Prime cached size (optional) to smooth out first render.
   NSNumber *ch = prefH;
   CGSize m = [_controller bridge_measureWithConstrainedWidth:nil constrainedHeight:ch];
   if (m.width > 0 && m.height > 0) {
@@ -348,10 +315,8 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
     _measuredHeight = m.height;
   }
 
-  // view-measured leaf: no shadow state updates
   [self setNeedsLayout];
 
-  // Ensure latest size is forwarded to Fabric/JS even if earlier layout cached a close value
   if (m.width > 0 && m.height > 0) {
     @try {
       [_controller bridge_forceForwardLayout];
@@ -370,8 +335,11 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
     // Wait until props arrive to attach
     return;
   }
-  // Use Fabric contentFrame to size our hosted controller view immediately
   CGRect contentFrame = RCTCGRectFromRect(layoutMetrics.getContentFrame());
+  if (_isAttached && _controller.parentViewController && _controller.parentViewController != OwnIdFindParentViewController(self)) {
+    // detach to avoid hierarchy assert; reattach below
+    [self prepareForRecycle];
+  }
   [self attachControllerIfPossibleWithFrame:contentFrame];
   if (_isAttached) {
     _controller.view.frame = contentFrame;
@@ -394,12 +362,9 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   }
 }
 
-// (no updateState override for view-measured leaf)
-
 - (void)updateEventEmitter:(const facebook::react::EventEmitter::Shared &)eventEmitter
 {
   [super updateEventEmitter:eventEmitter];
-  // If we already have a measured size before emitter was attached, send it now.
   if (eventEmitter && _measuredWidth > 0 && _measuredHeight > 0) {
     const auto typed = std::static_pointer_cast<const Emitter>(eventEmitter);
     if (typed) {
@@ -418,10 +383,42 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   @try {
     if (_configured && _controller) {
       [_controller bridge_commandReset];
+      if (_isAttached) {
+        [_controller willMoveToParentViewController:nil];
+        [_controller removeFromParentViewController];
+        [_controller.view removeFromSuperview];
+        _isAttached = NO;
+      }
     }
   } @catch (__unused id e) {
   }
   [super prepareForRecycle];
+}
+
+- (void)willMoveToSuperview:(UIView *)newSuperview
+{
+  [super willMoveToSuperview:newSuperview];
+  if (!_configured || !_controller) { return; }
+  UIViewController *targetVC = newSuperview ? [newSuperview reactViewController] : nil;
+  if (targetVC && _isAttached && _controller.parentViewController && _controller.parentViewController != targetVC) {
+    [_controller willMoveToParentViewController:nil];
+    [_controller removeFromParentViewController];
+    [_controller.view removeFromSuperview];
+    _isAttached = NO;
+    [self attachControllerIfPossibleWithFrame:self.bounds];
+  }
+}
+
+- (void)willMoveToWindow:(UIWindow *)newWindow
+{
+  [super willMoveToWindow:newWindow];
+  if (!_configured || !_controller) { return; }
+  if (newWindow == nil && _isAttached) {
+    [_controller willMoveToParentViewController:nil];
+    [_controller removeFromParentViewController];
+    [_controller.view removeFromSuperview];
+    _isAttached = NO;
+  }
 }
 
 - (void)handleCommand:(const NSString *)commandName args:(id)args
