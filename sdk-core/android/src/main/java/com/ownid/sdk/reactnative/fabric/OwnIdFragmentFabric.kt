@@ -1,70 +1,123 @@
 package com.ownid.sdk.reactnative.fabric
 
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RestrictTo
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.ownid.sdk.InternalOwnIdAPI
 import com.ownid.sdk.OwnIdInstance
 import com.ownid.sdk.RegistrationParameters
+import com.ownid.sdk.event.OwnIdLoginEvent
+import com.ownid.sdk.event.OwnIdLoginFlow
+import com.ownid.sdk.event.OwnIdRegisterEvent
+import com.ownid.sdk.event.OwnIdRegisterFlow
 import com.ownid.sdk.exception.OwnIdException
-import com.ownid.sdk.getOwnIdViewModel
+import com.ownid.sdk.internal.component.OwnIdInternalLogger
+import com.ownid.sdk.reactnative.OwnIdActivityFlowCoordinator
 import com.ownid.sdk.reactnative.OwnIdWidget
 import com.ownid.sdk.reactnative.emitToReact
 import com.ownid.sdk.view.AbstractOwnIdWidget
-import com.ownid.sdk.view.OwnIdAuthButton
-import com.ownid.sdk.view.OwnIdButton
-import com.ownid.sdk.view.popup.tooltip.Tooltip
 import com.ownid.sdk.viewmodel.OwnIdBaseViewModel
 import com.ownid.sdk.viewmodel.OwnIdLoginViewModel
 import com.ownid.sdk.viewmodel.OwnIdRegisterViewModel
 
 @OptIn(InternalOwnIdAPI::class)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class OwnIdFragmentFabric(
-    private val ownIdInstance: OwnIdInstance,
-    private val fragmentType: Type,
-    private val widgetProperties: OwnIdWidget.Properties,
-    private val onMeasured: (w: Int, h: Int) -> Unit,
-    private val eventEmitter: DeviceEventManagerModule.RCTDeviceEventEmitter,
-    private val loginId: String?,
+public class OwnIdFragmentFabric private constructor(
+    private val liveDependencies: LiveDependencies?,
 ) : Fragment() {
+
+    private class LiveDependencies(
+        val ownIdInstance: OwnIdInstance,
+        val fragmentType: Type,
+        var widgetProperties: OwnIdWidget.Properties,
+        val onMeasured: (w: Int, h: Int) -> Unit,
+        val eventEmitter: DeviceEventManagerModule.RCTDeviceEventEmitter,
+        val loginId: String?,
+        val ownerToken: String,
+    )
+
+    public constructor(
+        ownIdInstance: OwnIdInstance,
+        fragmentType: Type,
+        widgetProperties: OwnIdWidget.Properties,
+        onMeasured: (w: Int, h: Int) -> Unit,
+        eventEmitter: DeviceEventManagerModule.RCTDeviceEventEmitter,
+        loginId: String?,
+        ownerToken: String,
+    ) : this(
+        LiveDependencies(
+            ownIdInstance,
+            fragmentType,
+            widgetProperties,
+            onMeasured,
+            eventEmitter,
+            loginId,
+            ownerToken,
+        ),
+    )
+
+    public constructor() : this(null)
+
+    internal val fragmentType: Type?
+        get() = liveDependencies?.fragmentType
+
+    internal val widgetProperties: OwnIdWidget.Properties?
+        get() = liveDependencies?.widgetProperties
+
+    internal val ownerToken: String?
+        get() = liveDependencies?.ownerToken
 
     public enum class Type(internal val viewModelClass: Class<out OwnIdBaseViewModel>) {
         REGISTER(OwnIdRegisterViewModel::class.java),
         LOGIN(OwnIdLoginViewModel::class.java)
     }
 
-    private lateinit var ownIdViewModel: OwnIdBaseViewModel
+    private var coordinatorClaim: OwnIdActivityFlowCoordinator.Claim? = null
+    private var currentLoginId: String? = liveDependencies?.loginId
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ownIdViewModel = getOwnIdViewModel(this@OwnIdFragmentFabric, fragmentType.viewModelClass, ownIdInstance)
+        val dependencies = liveDependencies ?: run {
+            parentFragmentManager.beginTransaction()
+                .remove(this)
+                .commitAllowingStateLoss()
+            return
+        }
+        val activity = requireActivity() as FragmentActivity
+        when (val result = OwnIdActivityFlowCoordinator.claim(
+            activity = activity,
+            ownIdInstance = dependencies.ownIdInstance,
+            renderer = OwnIdActivityFlowCoordinator.Renderer.FABRIC,
+            widget = dependencies.widgetProperties.widgetType.toCoordinatorWidget(),
+            flow = dependencies.fragmentType.toCoordinatorFlow(),
+            claimant = this,
+            ownerToken = dependencies.ownerToken,
+        )) {
+            is OwnIdActivityFlowCoordinator.ClaimResult.Success -> coordinatorClaim = result.claim
+            is OwnIdActivityFlowCoordinator.ClaimResult.Failure -> emitCoordinatorError(dependencies, result.error)
+        }
     }
 
-    public override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        when (widgetProperties.widgetType) {
-            OwnIdWidget.Type.OwnIdButton -> OwnIdButtonFabricView(requireContext(), widgetProperties, onMeasured)
-            OwnIdWidget.Type.OwnIdAuthButton -> OwnIdAuthButtonFabricView(requireContext(), widgetProperties, onMeasured)
+    public override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val dependencies = liveDependencies ?: return null
+        return when (dependencies.widgetProperties.widgetType) {
+            OwnIdWidget.Type.OwnIdButton -> OwnIdButtonFabricView(requireContext(), dependencies.widgetProperties, dependencies.onMeasured)
+            OwnIdWidget.Type.OwnIdAuthButton -> OwnIdAuthButtonFabricView(requireContext(), dependencies.widgetProperties, dependencies.onMeasured)
         }
+    }
 
     public override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        when (val viewModel = ownIdViewModel) {
-            is OwnIdLoginViewModel -> {
-                viewModel.flowEvents.observe(viewLifecycleOwner) { it?.emitToReact(eventEmitter) }
-                viewModel.integrationEvents.observe(viewLifecycleOwner) { it?.emitToReact(eventEmitter) }
-            }
-
-            is OwnIdRegisterViewModel -> {
-                viewModel.flowEvents.observe(viewLifecycleOwner) { it?.emitToReact(eventEmitter) }
-                viewModel.integrationEvents.observe(viewLifecycleOwner) { it?.emitToReact(eventEmitter) }
-            }
+        val dependencies = liveDependencies ?: return
+        val claim = coordinatorClaim ?: return
+        claim.observeEvents(viewLifecycleOwner, dependencies.eventEmitter, dependencies.ownerToken) { isBusy ->
+            (this.view as? AbstractOwnIdWidget)?.onBusy(isBusy)
         }
 
         setViewModel()
@@ -75,25 +128,79 @@ public class OwnIdFragmentFabric(
         super.onDestroyView()
     }
 
+    public override fun onDestroy() {
+        coordinatorClaim?.release(permanently = activity?.isChangingConfigurations != true)
+        coordinatorClaim = null
+        super.onDestroy()
+    }
+
     public fun register(loginId: String, params: RegistrationParameters? = null) {
-        when (val vm = ownIdViewModel) {
+        if (liveDependencies == null) return
+        val vm = coordinatorClaim?.viewModel ?: return
+        when (vm) {
             is OwnIdLoginViewModel -> throw OwnIdException("Cannot call register for login")
             is OwnIdRegisterViewModel -> vm.register(loginId, params)
         }
     }
 
     private fun setViewModel() {
-        (view as? AbstractOwnIdWidget)?.let {
-            when (val vm = ownIdViewModel) {
-                is OwnIdLoginViewModel -> vm.attachToView(it, viewLifecycleOwner)
-                is OwnIdRegisterViewModel -> vm.attachToView(it, viewLifecycleOwner)
+        if (liveDependencies == null) return
+        val claim = coordinatorClaim ?: return
+        val vm = claim.viewModel
+        (view as? AbstractOwnIdWidget)?.let { widget ->
+            when (vm) {
+                is OwnIdLoginViewModel -> vm.attachToView(widget, viewLifecycleOwner)
+                is OwnIdRegisterViewModel -> vm.attachToView(widget, viewLifecycleOwner)
             }
-            it.setLoginId(loginId)
-            it.onLocaleUpdated()
+            widget.setLoginId(currentLoginId)
+            widget.onLocaleUpdated()
+            if (claim.isBusy) widget.onBusy(true)
         }
     }
 
     internal fun setLoginId(loginId: String?) {
+        currentLoginId = loginId
         (view as? AbstractOwnIdWidget)?.setLoginId(loginId)
+    }
+
+    internal fun updateWidgetProperties(properties: OwnIdWidget.Properties) {
+        val dependencies = liveDependencies ?: return
+        dependencies.widgetProperties = properties
+        when (val widget = view) {
+            is OwnIdButtonFabricView -> widget.updateProperties(properties)
+            is OwnIdAuthButtonFabricView -> widget.updateProperties(properties)
+        }
+    }
+
+    internal fun releaseCoordinatorClaim(permanently: Boolean = true) {
+        coordinatorClaim?.release(permanently)
+        coordinatorClaim = null
+    }
+
+    private fun emitCoordinatorError(dependencies: LiveDependencies, error: OwnIdException) {
+        OwnIdInternalLogger.logW(this, "onCreate", error.message)
+        when (dependencies.fragmentType) {
+            Type.LOGIN -> if (dependencies.ownIdInstance.ownIdIntegration == null) {
+                OwnIdLoginFlow.Error(error).emitToReact(dependencies.eventEmitter, dependencies.ownerToken)
+            } else {
+                OwnIdLoginEvent.Error(error).emitToReact(dependencies.eventEmitter, dependencies.ownerToken)
+            }
+
+            Type.REGISTER -> if (dependencies.ownIdInstance.ownIdIntegration == null) {
+                OwnIdRegisterFlow.Error(error).emitToReact(dependencies.eventEmitter, dependencies.ownerToken)
+            } else {
+                OwnIdRegisterEvent.Error(error).emitToReact(dependencies.eventEmitter, dependencies.ownerToken)
+            }
+        }
+    }
+
+    private fun OwnIdWidget.Type.toCoordinatorWidget(): OwnIdActivityFlowCoordinator.Widget = when (this) {
+        OwnIdWidget.Type.OwnIdButton -> OwnIdActivityFlowCoordinator.Widget.BUTTON
+        OwnIdWidget.Type.OwnIdAuthButton -> OwnIdActivityFlowCoordinator.Widget.AUTH_BUTTON
+    }
+
+    private fun Type.toCoordinatorFlow(): OwnIdActivityFlowCoordinator.Flow = when (this) {
+        Type.LOGIN -> OwnIdActivityFlowCoordinator.Flow.LOGIN
+        Type.REGISTER -> OwnIdActivityFlowCoordinator.Flow.REGISTER
     }
 }

@@ -135,6 +135,14 @@ static std::string RCTOwnIdStdStringFromNSObject(id _Nullable obj)
   CGFloat _measuredHeight;
   CGFloat _preferredHeight;
   BOOL _isIconWidget;
+  CGRect _contentFrame;
+  CGSize _pendingEventSize;
+  CGSize _lastEmittedSize;
+  CGSize _resolvedEventSize;
+  BOOL _hasPendingEventSize;
+  BOOL _hasResolvedEventSize;
+  BOOL _isEventScheduled;
+  NSUInteger _eventGeneration;
 }
 
 + (facebook::react::ComponentDescriptorProvider)componentDescriptorProvider
@@ -145,6 +153,7 @@ static std::string RCTOwnIdStdStringFromNSObject(id _Nullable obj)
 - (instancetype)initWithFrame:(CGRect)frame
 {
   if (self = [super initWithFrame:frame]) {
+    _props = OwnIdButtonShadowNode::defaultSharedProps();
     _controller = [OwnIDButtonViewController new];
     _isAttached = NO;
     _configured = NO;
@@ -164,14 +173,80 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   return RCTPresentedViewController();
 }
 
+static BOOL OwnIdSizeIsUsable(CGSize size) {
+  return isfinite(size.width) && isfinite(size.height) && size.width > 0 && size.height > 0;
+}
+
+static BOOL OwnIdSizesAreClose(CGSize lhs, CGSize rhs) {
+  return fabs(lhs.width - rhs.width) < 0.5 && fabs(lhs.height - rhs.height) < 0.5;
+}
+
+- (void)detachController
+{
+  if (!_controller) { return; }
+  if (_controller.parentViewController) {
+    [_controller willMoveToParentViewController:nil];
+  }
+  [_controller.view removeFromSuperview];
+  if (_controller.parentViewController) {
+    [_controller removeFromParentViewController];
+  }
+  _isAttached = NO;
+}
+
+- (void)scheduleContentSizeEvent:(CGSize)size
+{
+  if (!OwnIdSizeIsUsable(size)) {
+    return;
+  }
+  _resolvedEventSize = size;
+  _hasResolvedEventSize = YES;
+  _pendingEventSize = size;
+  _hasPendingEventSize = YES;
+  if (_isEventScheduled) {
+    return;
+  }
+
+  _isEventScheduled = YES;
+  NSUInteger generation = _eventGeneration;
+  __weak __typeof(self) weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    __strong __typeof(self) strongSelf = weakSelf;
+    if (!strongSelf || generation != strongSelf->_eventGeneration) { return; }
+    strongSelf->_isEventScheduled = NO;
+    if (!strongSelf->_hasPendingEventSize) { return; }
+    CGSize pendingSize = strongSelf->_pendingEventSize;
+    strongSelf->_hasPendingEventSize = NO;
+    if (OwnIdSizesAreClose(strongSelf->_lastEmittedSize, pendingSize)) {
+      return;
+    }
+
+    const auto emitter = std::static_pointer_cast<const Emitter>(strongSelf->_eventEmitter);
+    if (emitter) {
+      strongSelf->_lastEmittedSize = pendingSize;
+      facebook::react::OwnIdButtonEventEmitter::OnContentSizeChange payload{
+        (int)MAX(0, (int)lround(pendingSize.width)),
+        (int)MAX(0, (int)lround(pendingSize.height))
+      };
+      emitter->onContentSizeChange(payload);
+    }
+  });
+}
+
 - (void)attachControllerIfPossibleWithFrame:(CGRect)frame
 {
-  if (_isAttached || !_configured || !_controller) { return; }
+  if (!_configured || !_controller) { return; }
   if (!self.window || frame.size.width <= 0 || frame.size.height <= 0) { return; }
   UIViewController *resolved = self.reactViewController ?: OwnIdFindParentViewController(self);
   if (!resolved) { return; }
   if (self.reactViewController && resolved != self.reactViewController) { return; }
   UIViewController *parent = resolved;
+  if (_isAttached && _controller.parentViewController == parent && _controller.view.superview == self) {
+    return;
+  }
+  if (_isAttached || _controller.parentViewController || _controller.view.superview) {
+    [self detachController];
+  }
   _controller.view.translatesAutoresizingMaskIntoConstraints = YES;
   _controller.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   [parent addChildViewController:_controller];
@@ -179,10 +254,6 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   _controller.view.frame = frame;
   [_controller didMoveToParentViewController:parent];
   _controller.view.userInteractionEnabled = YES;
-  @try {
-    [_controller beginAppearanceTransition:YES animated:NO];
-    [_controller endAppearanceTransition];
-  } @catch (__unused id e) {}
   _isAttached = YES;
 }
 
@@ -190,12 +261,7 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
 {
   [super layoutSubviews];
   if (_configured && !_isAttached) {
-    [self attachControllerIfPossibleWithFrame:self.bounds];
-  }
-  if (_isAttached) {
-    _controller.view.translatesAutoresizingMaskIntoConstraints = YES;
-    _controller.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    _controller.view.frame = self.bounds;
+    [self attachControllerIfPossibleWithFrame:_contentFrame];
   }
 }
 
@@ -235,6 +301,8 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   if (isfinite(maximumSize.width)) { result.width = MIN(result.width, maximumSize.width); }
   if (isfinite(maximumSize.height)) { result.height = MIN(result.height, maximumSize.height); }
 
+  
+
   if (result.width > 0 && result.height > 0) {
     _measuredWidth = result.width;
     _measuredHeight = result.height;
@@ -256,6 +324,7 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   NSString *widgetPosStr = RCTOwnIdNSStringFromWidgetPosition(newProps.widgetPosition);
   NSString *typeStr = RCTOwnIdNSStringFromButtonType(newProps.type);
   NSString *loginId = RCTOwnIdNSStringFromStdString(newProps.loginId);
+  NSString *ownerToken = RCTOwnIdNSStringFromStdString(newProps.ownerToken);
   NSString *txt = RCTOwnIdHexStringFromColor(newProps.buttonTextColor);
   NSString *ico = RCTOwnIdHexStringFromColor(newProps.iconColor);
   NSString *bg = RCTOwnIdHexStringFromColor(newProps.buttonBackgroundColor);
@@ -266,6 +335,10 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   NSString *sc = RCTOwnIdHexStringFromColor(newProps.spinnerColor);
   NSString *sbg = RCTOwnIdHexStringFromColor(newProps.spinnerBackgroundColor);
   NSNumber *prefH = (newProps.preferredHeight > 0) ? @(newProps.preferredHeight) : nil;
+  NSNumber *resolvedH = prefH;
+  if (!resolvedH && _contentFrame.size.height > 0) {
+    resolvedH = @(_contentFrame.size.height);
+  }
   _preferredHeight = prefH ? [prefH doubleValue] : 0;
   __weak __typeof(self) weakSelf = self;
   _controller.onNativeContentSize = ^(CGSize size, BOOL ignoreParent) {
@@ -274,18 +347,10 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
     if (!(size.width > 0 && size.height > 0)) {
       return;
     }
+    if (!ignoreParent) { return; }
     strongSelf->_measuredWidth = size.width;
     strongSelf->_measuredHeight = size.height;
-    [strongSelf invalidateIntrinsicContentSize];
-    [strongSelf setNeedsLayout];
-    const auto emitter = std::static_pointer_cast<const Emitter>(strongSelf->_eventEmitter);
-    if (emitter) {
-      facebook::react::OwnIdButtonEventEmitter::OnContentSizeChange contentSize{
-        (int)MAX(0, (int)lround(size.width)),
-        (int)MAX(0, (int)lround(size.height))
-      };
-      emitter->onContentSizeChange(contentSize);
-    }
+    [strongSelf scheduleContentSizeEvent:size];
   };
 
   _controller.onNativeIntegration = nil;
@@ -296,6 +361,7 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
                             widgetType:widgetTypeStr
                          widgetPosition:widgetPosStr
                                   login:loginId
+                              ownerToken:ownerToken
                                   showOr:@(newProps.showOr)
                               showSpinner:@(newProps.showSpinner)
                                 iconColor:ico
@@ -308,24 +374,22 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
                    tooltipBorderColor:tbr
                               spinnerColor:sc
                    spinnerBackgroundColor:sbg
-                           preferredHeight:prefH];
+                           preferredHeight:resolvedH];
   _configured = YES;
 
-  [self attachControllerIfPossibleWithFrame:self.contentView.bounds];
-  NSNumber *ch = prefH;
+  [self attachControllerIfPossibleWithFrame:_contentFrame];
+  NSNumber *ch = resolvedH;
   CGSize m = [_controller bridge_measureWithConstrainedWidth:nil constrainedHeight:ch];
   if (m.width > 0 && m.height > 0) {
     _measuredWidth = m.width;
     _measuredHeight = m.height;
+    if (_isIconWidget) {
+      [self scheduleContentSizeEvent:m];
+    }
   }
-
+  
   [self setNeedsLayout];
 
-  if (m.width > 0 && m.height > 0) {
-    @try {
-      [_controller bridge_forceForwardLayout];
-    } @catch (__unused id e) {}
-  }
 }
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
@@ -334,15 +398,18 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
   _lastLayoutWidth = layoutMetrics.frame.size.width;
   _lastLayoutHeight = layoutMetrics.frame.size.height;
+  CGRect contentFrame = RCTCGRectFromRect(layoutMetrics.getContentFrame());
+  _contentFrame = contentFrame;
   // (no wrapper) just size controller view
   if (!_configured) {
     // Wait until props arrive to attach
     return;
   }
-  CGRect contentFrame = RCTCGRectFromRect(layoutMetrics.getContentFrame());
+  if (contentFrame.size.height > 0) {
+    [_controller bridge_applyResolvedHeight:@(contentFrame.size.height)];
+  }
   if (_isAttached && _controller.parentViewController && _controller.parentViewController != OwnIdFindParentViewController(self)) {
-    // detach to avoid hierarchy assert; reattach below
-    [self prepareForRecycle];
+    [self detachController];
   }
   [self attachControllerIfPossibleWithFrame:contentFrame];
   if (_isAttached) {
@@ -354,14 +421,7 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
     if (contentFrame.size.width > 0 && contentFrame.size.height > 0) {
       _measuredWidth = contentFrame.size.width;
       _measuredHeight = contentFrame.size.height;
-      const auto emitter = std::static_pointer_cast<const Emitter>(self->_eventEmitter);
-      if (emitter) {
-        facebook::react::OwnIdButtonEventEmitter::OnContentSizeChange payload{
-          (int)lround(contentFrame.size.width),
-          (int)lround(contentFrame.size.height)
-        };
-        emitter->onContentSizeChange(payload);
-      }
+      [self scheduleContentSizeEvent:contentFrame.size];
     }
   }
 }
@@ -369,15 +429,8 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
 - (void)updateEventEmitter:(const facebook::react::EventEmitter::Shared &)eventEmitter
 {
   [super updateEventEmitter:eventEmitter];
-  if (eventEmitter && _measuredWidth > 0 && _measuredHeight > 0) {
-    const auto typed = std::static_pointer_cast<const Emitter>(eventEmitter);
-    if (typed) {
-      facebook::react::OwnIdButtonEventEmitter::OnContentSizeChange payload{
-        (int)lround(_measuredWidth),
-        (int)lround(_measuredHeight)
-      };
-      typed->onContentSizeChange(payload);
-    }
+  if (eventEmitter && _hasResolvedEventSize) {
+    [self scheduleContentSizeEvent:_resolvedEventSize];
   }
 }
 
@@ -386,16 +439,22 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   // Fabric lifecycle hook: ensure native state is reset when the view is recycled.
   @try {
     if (_configured && _controller) {
-      [_controller bridge_commandReset];
-      if (_isAttached) {
-        [_controller willMoveToParentViewController:nil];
-        [_controller removeFromParentViewController];
-        [_controller.view removeFromSuperview];
-        _isAttached = NO;
-      }
+      [self detachController];
+      [_controller bridge_prepareForRecycle];
     }
   } @catch (__unused id e) {
   }
+  _configured = NO;
+  _preferredHeight = 0;
+  _measuredWidth = 0;
+  _measuredHeight = 0;
+  _isIconWidget = YES;
+  _contentFrame = CGRectZero;
+  _eventGeneration += 1;
+  _hasPendingEventSize = NO;
+  _hasResolvedEventSize = NO;
+  _isEventScheduled = NO;
+  _lastEmittedSize = CGSizeZero;
   [super prepareForRecycle];
 }
 
@@ -404,13 +463,15 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   [super willMoveToSuperview:newSuperview];
   if (!_configured || !_controller) { return; }
   UIViewController *targetVC = newSuperview ? [newSuperview reactViewController] : nil;
-  if (targetVC && _isAttached && _controller.parentViewController && _controller.parentViewController != targetVC) {
-    [_controller willMoveToParentViewController:nil];
-    [_controller removeFromParentViewController];
-    [_controller.view removeFromSuperview];
-    _isAttached = NO;
-    [self attachControllerIfPossibleWithFrame:self.bounds];
+  if (!newSuperview || (targetVC && _controller.parentViewController && _controller.parentViewController != targetVC)) {
+    [self detachController];
   }
+}
+
+- (void)didMoveToSuperview
+{
+  [super didMoveToSuperview];
+  [self attachControllerIfPossibleWithFrame:_contentFrame];
 }
 
 - (void)willMoveToWindow:(UIWindow *)newWindow
@@ -418,11 +479,14 @@ static UIViewController *OwnIdFindParentViewController(UIView *view) {
   [super willMoveToWindow:newWindow];
   if (!_configured || !_controller) { return; }
   if (newWindow == nil && _isAttached) {
-    [_controller willMoveToParentViewController:nil];
-    [_controller removeFromParentViewController];
-    [_controller.view removeFromSuperview];
-    _isAttached = NO;
+    [self detachController];
   }
+}
+
+- (void)didMoveToWindow
+{
+  [super didMoveToWindow];
+  [self attachControllerIfPossibleWithFrame:_contentFrame];
 }
 
 - (void)handleCommand:(const NSString *)commandName args:(id)args

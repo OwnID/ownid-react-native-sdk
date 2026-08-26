@@ -5,6 +5,23 @@ import OwnIDCoreSDK
 import SwiftUI
 import UIKit
 
+private func ownerScopedEventBody(_ body: [String: Any], ownerToken: String) -> [String: Any] {
+    var scopedBody = body
+    scopedBody["ownerToken"] = ownerToken
+    return scopedBody
+}
+
+private func normalizedMetadata(_ metadata: Any?) -> String {
+    guard let metadata else { return "" }
+    if let metadata = metadata as? String { return metadata }
+
+    guard let data = try? JSONSerialization.data(
+        withJSONObject: metadata,
+        options: [.fragmentsAllowed]
+    ) else { return "" }
+    return String(data: data, encoding: .utf8) ?? ""
+}
+
 open class OwnIDButtonViewController: UIViewController {
     private enum Constants {
         static let buttonHeightOffset = 14.0
@@ -16,8 +33,8 @@ open class OwnIDButtonViewController: UIViewController {
     private let resultPublisher = PassthroughSubject<Void, Never>()
     private var bag = Set<AnyCancellable>()
 
-    private var ownIdRegisterButton: AutoSizingHostingController<OwnID.FlowsSDK.RegisterView>?
-    private var ownIdLoginButton: AutoSizingHostingController<OwnID.FlowsSDK.LoginView>?
+    private var ownIdRegisterButton: SafeAreaIgnoringAutoSizingHostingController<OwnID.FlowsSDK.RegisterView>?
+    private var ownIdLoginButton: SafeAreaIgnoringAutoSizingHostingController<OwnID.FlowsSDK.LoginView>?
 
     public var ownIDLoginViewModel: OwnID.FlowsSDK.LoginView.ViewModel?
     public var ownIDRegisterModel: OwnID.FlowsSDK.RegisterView.ViewModel?
@@ -34,28 +51,28 @@ open class OwnIDButtonViewController: UIViewController {
     var widgetType: OwnID.UISDK.WidgetType = .iconButton
     var widgetPosition: OwnID.UISDK.WidgetPosition = .leading
     var showOr = true
-    var iconColor = UIColor.clear
-    var buttonBorderColor = UIColor.clear
-    var buttonBackgroundColor = UIColor.clear
-    var buttonTextColor = UIColor.clear
-    var shouldShowTooltip = true
+    var iconColor: UIColor?
+    var buttonBorderColor: UIColor?
+    var buttonBackgroundColor: UIColor?
+    var buttonTextColor: UIColor?
+    var shouldShowTooltip = false
     var tooltipPosition: OwnID.UISDK.TooltipPositionType = .bottom
-    var tooltipBackgroundColor = UIColor.clear
-    var tooltipBorderColor = UIColor.clear
-    var tooltipTextColor = UIColor.clear
+    var tooltipBackgroundColor: UIColor?
+    var tooltipBorderColor: UIColor?
+    var tooltipTextColor: UIColor?
     var showSpinner = true
-    var spinnerColor = UIColor.clear
-    var spinnerBackgroundColor = UIColor.clear
+    var spinnerColor: UIColor?
+    var spinnerBackgroundColor: UIColor?
     var height = CGFloat.zero
-    private var lastAppliedVisualHeight: CGFloat = 0
     //    private var pendingContentReadyReason: String?
     private var lastForwardedLayout: (size: CGSize, ignoreParent: Bool)?
-    private var isForwardingLayoutInfo = false
     private var hasCreatedContent = false
     private var forceNextForward = false
     private var lastConfiguredType: ViewDisplayType?
     private var lastConfiguredWidgetType: OwnID.UISDK.WidgetType?
     private var tapGestureRecognizer: UITapGestureRecognizer?
+    private var ownerToken = ""
+    weak var paperOwner: OwnIDButtonViewControllerWrapperView?
 
     @objc public var onNativeFlow: (([String: Any]) -> Void)?
     @objc public var onNativeIntegration: (([String: Any]) -> Void)?
@@ -72,6 +89,10 @@ open class OwnIDButtonViewController: UIViewController {
         self.instanceId = OwnIDButtonViewController.nextInstanceId
         OwnIDButtonViewController.nextInstanceId += 1
         super.init(coder: coder)
+    }
+
+    deinit {
+        teardownContent()
     }
 
     lazy var overlayTouchButton: UIButton = {
@@ -96,67 +117,30 @@ open class OwnIDButtonViewController: UIViewController {
     }()
 
     func viewSize() -> CGSize {
-        let candidateView: UIView?
-        switch self.type {
-        case .register:
-            candidateView = self.ownIdRegisterButton?.view
-        case .login:
-            candidateView = self.ownIdLoginButton?.view
-        }
-        guard let view = candidateView else { return .zero }
-        view.setNeedsLayout()
-        view.layoutIfNeeded()
-        var size = view.intrinsicContentSize
-        if size.width <= 0 || size.height <= 0 {
-            let fitting = view.systemLayoutSizeFitting(
-                CGSize(width: UIView.layoutFittingCompressedSize.width, height: UIView.layoutFittingCompressedSize.height),
-                withHorizontalFittingPriority: .fittingSizeLevel,
-                verticalFittingPriority: .required
-            )
-            if size.width <= 0 {
-                size.width = fitting.width
-            }
-            if size.height <= 0 {
-                size.height = fitting.height
-            }
-        }
-        if size.width <= 0 {
-            size.width = view.bounds.width
-        }
-        if size.height <= 0 {
-            size.height = view.bounds.height
-        }
-        return size
+        measureContent(constrainedWidth: nil, constrainedHeight: nil)
     }
 
     func measureContent(constrainedWidth: CGFloat?, constrainedHeight: CGFloat?) -> CGSize {
-        guard let hostingView = currentHostingView else {
-            return .zero
-        }
-        if let ch = constrainedHeight, ch > 0, abs(lastAppliedVisualHeight - ch) >= 0.5 {
-            applyVisualHeight(ch)
-        }
-        hostingView.setNeedsLayout()
-        hostingView.layoutIfNeeded()
-
-        let targetSize = CGSize(
-            width: constrainedWidth ?? UIView.layoutFittingCompressedSize.width,
-            height: constrainedHeight ?? UIView.layoutFittingCompressedSize.height
-        )
-        var measured = hostingView.systemLayoutSizeFitting(
-            targetSize,
-            withHorizontalFittingPriority: constrainedWidth != nil ? .required : .fittingSizeLevel,
-            verticalFittingPriority: constrainedHeight != nil ? .required : .fittingSizeLevel
-        )
-        // Fallback: some SwiftUI hosting views report unrealistically small width under compressed width.
-        if measured.width < 20 {
-            let alt = hostingView.sizeThatFits(
-                CGSize(width: 10_000, height: constrainedHeight ?? UIView.layoutFittingCompressedSize.height)
+        let fittedSize: CGSize
+        switch type {
+        case .register:
+            guard let ownIdRegisterButton else { return .zero }
+            fittedSize = ownIdRegisterButton.contentSizeThatFits(
+                constrainedWidth: constrainedWidth,
+                constrainedHeight: constrainedHeight
             )
-            if alt.width > measured.width { measured.width = alt.width }
-            if let h = constrainedHeight, alt.height > 0 { measured.height = max(h, alt.height) }
+        case .login:
+            guard let ownIdLoginButton else { return .zero }
+            fittedSize = ownIdLoginButton.contentSizeThatFits(
+                constrainedWidth: constrainedWidth,
+                constrainedHeight: constrainedHeight
+            )
         }
-        if let h = constrainedHeight, h > 0 { measured.height = max(h, measured.height) }
+
+        var measured = fittedSize
+        if height.isFinite, height > 0 {
+            measured.height = max(height, measured.height)
+        }
         if widgetType == .iconButton { measured.width = max(measured.width, measured.height) }
         return measured
     }
@@ -172,6 +156,7 @@ open class OwnIDButtonViewController: UIViewController {
         widgetType: NSString,
         widgetPosition: NSString,
         login: NSString,
+        ownerToken: NSString,
         showOr: NSNumber,
         showSpinner: NSNumber,
         iconColor: NSString,
@@ -191,65 +176,77 @@ open class OwnIDButtonViewController: UIViewController {
         let typeStr = (type as String).lowercased()
         let newType: ViewDisplayType = (typeStr == "register") ? .register : .login
         let newWidgetType: OwnID.UISDK.WidgetType = ((widgetType as String) == "OwnIdAuthButton") ? .authButton : .iconButton
-        let isDetatched = hasCreatedContent && (view.window == nil || view.superview == nil)
-        let rebuildNeeded = hasCreatedContent && (newType != self.type || newWidgetType != self.widgetType || isDetatched)
+        let newOwnerToken = ownerToken as String
+        let typeChanged = newType != self.type
+        let widgetChanged = newWidgetType != self.widgetType
+        let ownerChanged = newOwnerToken != self.ownerToken
+        let rebuildNeeded = hasCreatedContent && (
+            typeChanged ||
+                widgetChanged ||
+                ownerChanged
+        )
+        if rebuildNeeded {
+            // Cancel the old owner's pipelines before changing identity. Any
+            // already queued callback still retains its immutable old token.
+            teardownContent()
+        }
         self.type = newType
         self.widgetType = newWidgetType
+        self.ownerToken = newOwnerToken
         switch widgetPosition as String {
         case "end": self.widgetPosition = .trailing
         default: self.widgetPosition = .leading
         }
-        self.loginId = login as String
+        let newLoginId = login as String
+        if newLoginId != self.loginId {
+            self.loginId = newLoginId
+        }
         self.showOr = showOr.boolValue
         self.showSpinner = showSpinner.boolValue
 
-        // Colors
-        if iconColor.length > 0 { self.iconColor = (iconColor as String).hexToUIColor }
-        if buttonBorderColor.length > 0 { self.buttonBorderColor = (buttonBorderColor as String).hexToUIColor }
-        if buttonBackgroundColor.length > 0 { self.buttonBackgroundColor = (buttonBackgroundColor as String).hexToUIColor }
-        if buttonTextColor.length > 0 { self.buttonTextColor = (buttonTextColor as String).hexToUIColor }
+        // Empty bridge values reset to the native VisualLookConfig defaults.
+        self.iconColor = Self.color(from: iconColor)
+        self.buttonBorderColor = Self.color(from: buttonBorderColor)
+        self.buttonBackgroundColor = Self.color(from: buttonBackgroundColor)
+        self.buttonTextColor = Self.color(from: buttonTextColor)
 
         // Tooltip
-        if tooltipPositionStr.length > 0 {
-            let p = tooltipPositionStr as String
-            switch p {
-            case "start": self.tooltipPosition = .leading
-            case "end": self.tooltipPosition = .trailing
-            case "top": self.tooltipPosition = .top
-            case "bottom": self.tooltipPosition = .bottom
-            case "none": fallthrough
-            default: break
-            }
+        switch tooltipPositionStr as String {
+        case "start":
+            self.tooltipPosition = .leading
+            self.shouldShowTooltip = true
+        case "end":
+            self.tooltipPosition = .trailing
+            self.shouldShowTooltip = true
+        case "top":
+            self.tooltipPosition = .top
+            self.shouldShowTooltip = true
+        case "bottom":
+            self.tooltipPosition = .bottom
+            self.shouldShowTooltip = true
+        case "none": fallthrough
+        default:
+            self.tooltipPosition = .bottom
+            self.shouldShowTooltip = false
         }
-        if tooltipTextColor.length > 0 { self.tooltipTextColor = (tooltipTextColor as String).hexToUIColor }
-        if tooltipBackgroundColor.length > 0 { self.tooltipBackgroundColor = (tooltipBackgroundColor as String).hexToUIColor }
-        if tooltipBorderColor.length > 0 { self.tooltipBorderColor = (tooltipBorderColor as String).hexToUIColor }
-        self.shouldShowTooltip = false
+        self.tooltipTextColor = Self.color(from: tooltipTextColor)
+        self.tooltipBackgroundColor = Self.color(from: tooltipBackgroundColor)
+        self.tooltipBorderColor = Self.color(from: tooltipBorderColor)
         // Spinner
-        if spinnerColor.length > 0 { self.spinnerColor = (spinnerColor as String).hexToUIColor }
-        if spinnerBackgroundColor.length > 0 { self.spinnerBackgroundColor = (spinnerBackgroundColor as String).hexToUIColor }
+        self.spinnerColor = Self.color(from: spinnerColor)
+        self.spinnerBackgroundColor = Self.color(from: spinnerBackgroundColor)
 
         if let ph = preferredHeight?.doubleValue, ph > 0 {
             self.height = max(Self.Constants.buttonHeightOffset, CGFloat(ph))
-        }
-
-        if rebuildNeeded {
-            teardownContent()
+        } else {
+            self.height = 0
         }
 
         createContentIfNeeded()
-        if rebuildNeeded {
+        let visualConfigurationChanged = applyVisualConfiguration()
+        if rebuildNeeded || visualConfigurationChanged {
             forceNextForward = true
             forwardLayoutInfo()
-        }
-    }
-
-    private var currentHostingView: UIView? {
-        switch type {
-        case .register:
-            return ownIdRegisterButton?.view
-        case .login:
-            return ownIdLoginButton?.view
         }
     }
 
@@ -262,25 +259,11 @@ open class OwnIDButtonViewController: UIViewController {
         forwardLayoutInfo()
     }
 
-    open override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        forwardLayoutInfo()
-    }
-
-    open override var shouldAutomaticallyForwardAppearanceMethods: Bool {
-        return false
-    }
-
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        ownIdRegisterButton?.beginAppearanceTransition(true, animated: animated)
-        ownIdLoginButton?.beginAppearanceTransition(true, animated: animated)
 
         addTapGestureRecognizer()
         if authIntegration != nil { createContentIfNeeded() }
-
-        ownIdRegisterButton?.endAppearanceTransition()
-        ownIdLoginButton?.endAppearanceTransition()
     }
 
     open override func viewWillDisappear(_ animated: Bool) {
@@ -308,6 +291,11 @@ open class OwnIDButtonViewController: UIViewController {
         }
     }
 
+    private static func color(from value: NSString) -> UIColor? {
+        guard value.length > 0 else { return nil }
+        return (value as String).hexToUIColor
+    }
+
     private func teardownContent() {
         bag.removeAll()
 
@@ -316,14 +304,25 @@ open class OwnIDButtonViewController: UIViewController {
         ownIDRegisterModel = nil
         ownIDLoginViewModel = nil
 
-        ownIdRegisterButton?.view.removeFromSuperview()
-        ownIdLoginButton?.view.removeFromSuperview()
+        detachHostedController(ownIdRegisterButton)
+        detachHostedController(ownIdLoginButton)
         ownIdRegisterButton = nil
         ownIdLoginButton = nil
 
         lastForwardedLayout = nil
         forceNextForward = false
         hasCreatedContent = false
+    }
+
+    private func detachHostedController(_ hostedController: UIViewController?) {
+        guard let hostedController else { return }
+        if hostedController.parent != nil {
+            hostedController.willMove(toParent: nil)
+        }
+        hostedController.view.removeFromSuperview()
+        if hostedController.parent != nil {
+            hostedController.removeFromParent()
+        }
     }
 
     private func createButtonViewForButton(type: ViewDisplayType) {
@@ -338,10 +337,13 @@ open class OwnIDButtonViewController: UIViewController {
             ownIDRegisterModel = vm
             CreationInformation.shared.registerViewModel = vm
 
-            let ownIdRegisterButton = authIntegration.createOwnIDRegisterButton(for: vm)
+            let createdButton = authIntegration.createOwnIDRegisterButton(for: vm)
+            let ownIdRegisterButton = SafeAreaIgnoringAutoSizingHostingController(
+                wrapping: createdButton
+            )
             ownIdRegisterButton.resizingMode = (widgetType == .authButton) ? .fillParentWidth : .intrinsicWidth
-            ownIdRegisterButton.onIntrinsicSizeChange = { [weak self] _ in
-                self?.forwardLayoutInfo()
+            ownIdRegisterButton.onIntrinsicSizeChange = { [weak self] size in
+                self?.forwardLayoutInfo(size: size)
             }
             self.ownIdRegisterButton = ownIdRegisterButton
             resultingController = ownIdRegisterButton
@@ -350,37 +352,18 @@ open class OwnIDButtonViewController: UIViewController {
             subscribeRegister(to: vm.flowEventPublisher)
             vm.subscribe(to: resultPublisher.eraseToAnyPublisher())
 
-            ownIdRegisterButton.rootView.visualConfig.widgetType = widgetType
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.widgetPosition = widgetPosition
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.orViewConfig.isEnabled = showOr
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.iconColor = Color(iconColor)
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.height = height
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.borderColor = Color(buttonBorderColor)
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.backgroundColor = Color(buttonBackgroundColor)
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.orViewConfig.textColor = Color(buttonTextColor)
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.isEnabled = shouldShowTooltip
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.tooltipPosition = tooltipPosition
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.borderColor = Color(tooltipBorderColor)
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.backgroundColor = Color(tooltipBackgroundColor)
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.textColor = Color(tooltipTextColor)
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.isEnabled = showSpinner
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
-            ownIdRegisterButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
-            ownIdRegisterButton.rootView.visualConfig.authButtonConfig.backgroundColor = Color(buttonBackgroundColor)
-            ownIdRegisterButton.rootView.visualConfig.authButtonConfig.textColor = Color(buttonTextColor)
-            ownIdRegisterButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
-            ownIdRegisterButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
-            lastAppliedVisualHeight = height
-
         case .login:
             ensureIntegration()
             let vm = authIntegration.createLoginViewModel(loginIdPublisher: $loginId.eraseToAnyPublisher())
             ownIDLoginViewModel = vm
 
-            let ownIdLoginButton = authIntegration.createOwnIDLoginButton(for: vm)
+            let createdButton = authIntegration.createOwnIDLoginButton(for: vm)
+            let ownIdLoginButton = SafeAreaIgnoringAutoSizingHostingController(
+                wrapping: createdButton
+            )
             ownIdLoginButton.resizingMode = (widgetType == .authButton) ? .fillParentWidth : .intrinsicWidth
-            ownIdLoginButton.onIntrinsicSizeChange = { [weak self] _ in
-                self?.forwardLayoutInfo()
+            ownIdLoginButton.onIntrinsicSizeChange = { [weak self] size in
+                self?.forwardLayoutInfo(size: size)
             }
             self.ownIdLoginButton = ownIdLoginButton
             resultingController = ownIdLoginButton
@@ -388,33 +371,19 @@ open class OwnIDButtonViewController: UIViewController {
             subscribeLogin(to: vm.integrationEventPublisher)
             subscribeLogin(to: vm.flowEventPublisher)
             vm.subscribe(to: resultPublisher.eraseToAnyPublisher())
-
-            ownIdLoginButton.rootView.visualConfig.widgetType = widgetType
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.widgetPosition = widgetPosition
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.orViewConfig.isEnabled = showOr
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.iconColor = Color(iconColor)
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.height = height
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.borderColor = Color(buttonBorderColor)
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.backgroundColor = Color(buttonBackgroundColor)
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.orViewConfig.textColor = Color(buttonTextColor)
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.isEnabled = shouldShowTooltip
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.tooltipPosition = tooltipPosition
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.borderColor = Color(tooltipBorderColor)
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.backgroundColor = Color(tooltipBackgroundColor)
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.tooltipConfig.textColor = Color(tooltipTextColor)
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.isEnabled = showSpinner
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
-            ownIdLoginButton.rootView.visualConfig.iconButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
-            ownIdLoginButton.rootView.visualConfig.authButtonConfig.backgroundColor = Color(buttonBackgroundColor)
-            ownIdLoginButton.rootView.visualConfig.authButtonConfig.textColor = Color(buttonTextColor)
-            ownIdLoginButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
-            ownIdLoginButton.rootView.visualConfig.authButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
-            lastAppliedVisualHeight = height
         }
 
+        applyVisualConfiguration()
+
         addChild(resultingController)
-        resultingController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        resultingController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(resultingController.view)
+        NSLayoutConstraint.activate([
+            resultingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            resultingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            resultingController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            resultingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
         resultingController.didMove(toParent: self)
 
         if #unavailable(iOS 15) {
@@ -431,8 +400,10 @@ open class OwnIDButtonViewController: UIViewController {
     }
 
     func subscribeRegister(to eventsPublisher: OwnID.RegistrationPublisher) {
+        let subscriptionOwnerToken = ownerToken
         eventsPublisher
-            .sink { event in
+            .sink { [weak self] event in
+                guard let self else { return }
                 var eventDictionary = [String: Any]()
                 var isBusy = false
                 switch event {
@@ -442,7 +413,7 @@ open class OwnIDButtonViewController: UIViewController {
                         isBusy = false
                         eventDictionary["loginId"] = loginId ?? ""
                         if let authType {
-                            eventDictionary["authType"] = authType
+                            eventDictionary["authType"] = authType.rawValue
                         }
                         eventDictionary["eventType"] = "OwnIdRegisterEvent.ReadyToRegister"
 
@@ -450,7 +421,7 @@ open class OwnIDButtonViewController: UIViewController {
                         isBusy = false
                         eventDictionary = ["eventType": "OwnIdRegisterEvent.LoggedIn"]
                         if let authType {
-                            eventDictionary["authType"] = authType
+                            eventDictionary["authType"] = authType.rawValue
                         }
                         if let authToken {
                             eventDictionary["authToken"] = authToken
@@ -470,20 +441,25 @@ open class OwnIDButtonViewController: UIViewController {
 
                 ButtonEventsEventEmitter.shared?.sendEvent(
                     withName: ButtonEventsEventEmitter.EventType.ownIdIntegrationEvent.rawValue,
-                    body: ["eventType": "OwnIdRegisterEvent.Busy", "isBusy": isBusy]
+                    body: ownerScopedEventBody(
+                        ["eventType": "OwnIdRegisterEvent.Busy", "isBusy": isBusy],
+                        ownerToken: subscriptionOwnerToken
+                    )
                 )
 
                 ButtonEventsEventEmitter.shared?.sendEvent(
                     withName: ButtonEventsEventEmitter.EventType.ownIdIntegrationEvent.rawValue,
-                    body: eventDictionary
+                    body: ownerScopedEventBody(eventDictionary, ownerToken: subscriptionOwnerToken)
                 )
             }
             .store(in: &bag)
     }
 
     func subscribeRegister(to flowsPublisher: OwnID.RegistrationFlowPublisher) {
+        let subscriptionOwnerToken = ownerToken
         flowsPublisher
-            .sink { event in
+            .sink { [weak self] event in
+                guard let self else { return }
                 var eventDictionary = [String: Any]()
                 var isBusy = false
                 switch event {
@@ -493,7 +469,9 @@ open class OwnIDButtonViewController: UIViewController {
                         isBusy = false
                         eventDictionary = ["eventType": "OwnIdRegisterFlow.Response"]
                         eventDictionary["loginId"] = loginId
-                        eventDictionary["authType"] = authType
+                        if let authType {
+                            eventDictionary["authType"] = authType.rawValue
+                        }
                         if let authToken {
                             eventDictionary["authToken"] = authToken
                         }
@@ -509,7 +487,7 @@ open class OwnIDButtonViewController: UIViewController {
                         eventDictionary["payload"] = [
                             "type": type,
                             "data": payload.data ?? "",
-                            "metadata": payload.metadata ?? "",
+                            "metadata": normalizedMetadata(payload.metadata),
                         ]
                     case .loading:
                         isBusy = true
@@ -524,21 +502,26 @@ open class OwnIDButtonViewController: UIViewController {
 
                 ButtonEventsEventEmitter.shared?.sendEvent(
                     withName: ButtonEventsEventEmitter.EventType.ownIdFlowEvent.rawValue,
-                    body: ["eventType": "OwnIdRegisterFlow.Busy", "isBusy": isBusy]
+                    body: ownerScopedEventBody(
+                        ["eventType": "OwnIdRegisterFlow.Busy", "isBusy": isBusy],
+                        ownerToken: subscriptionOwnerToken
+                    )
                 )
 
                 ButtonEventsEventEmitter.shared?.sendEvent(
                     withName: ButtonEventsEventEmitter.EventType.ownIdFlowEvent.rawValue,
-                    body: eventDictionary
+                    body: ownerScopedEventBody(eventDictionary, ownerToken: subscriptionOwnerToken)
                 )
             }
             .store(in: &bag)
     }
 
     func subscribeLogin(to eventsPublisher: OwnID.LoginPublisher) {
+        let subscriptionOwnerToken = ownerToken
         eventsPublisher
             .eraseToAnyPublisher()
-            .sink { event in
+            .sink { [weak self] event in
+                guard let self else { return }
                 var eventDictionary = [String: Any]()
                 var isBusy = false
                 switch event {
@@ -547,8 +530,8 @@ open class OwnIDButtonViewController: UIViewController {
                     case .loggedIn(_, let authType, let authToken):
                         isBusy = false
                         eventDictionary = ["eventType": "OwnIdLoginEvent.LoggedIn"]
-                        if let authType = authType {
-                            eventDictionary["authType"] = authType as Any
+                        if let authType {
+                            eventDictionary["authType"] = authType.rawValue
                         }
                         if let authToken {
                             eventDictionary["authToken"] = authToken
@@ -565,21 +548,26 @@ open class OwnIDButtonViewController: UIViewController {
 
                 ButtonEventsEventEmitter.shared?.sendEvent(
                     withName: ButtonEventsEventEmitter.EventType.ownIdIntegrationEvent.rawValue,
-                    body: ["eventType": "OwnIdLoginEvent.Busy", "isBusy": isBusy]
+                    body: ownerScopedEventBody(
+                        ["eventType": "OwnIdLoginEvent.Busy", "isBusy": isBusy],
+                        ownerToken: subscriptionOwnerToken
+                    )
                 )
 
                 ButtonEventsEventEmitter.shared?.sendEvent(
                     withName: ButtonEventsEventEmitter.EventType.ownIdIntegrationEvent.rawValue,
-                    body: eventDictionary
+                    body: ownerScopedEventBody(eventDictionary, ownerToken: subscriptionOwnerToken)
                 )
             }
             .store(in: &bag)
     }
 
     func subscribeLogin(to flowsPublisher: OwnID.LoginFlowPublisher) {
+        let subscriptionOwnerToken = ownerToken
         flowsPublisher
             .eraseToAnyPublisher()
-            .sink { event in
+            .sink { [weak self] event in
+                guard let self else { return }
                 var eventDictionary = [String: Any]()
                 var isBusy = false
                 switch event {
@@ -591,7 +579,9 @@ open class OwnIDButtonViewController: UIViewController {
                         isBusy = false
                         eventDictionary = ["eventType": "OwnIdLoginFlow.Response"]
                         eventDictionary["loginId"] = loginId
-                        eventDictionary["authType"] = authType
+                        if let authType {
+                            eventDictionary["authType"] = authType.rawValue
+                        }
                         if let authToken {
                             eventDictionary["authToken"] = authToken
                         }
@@ -604,7 +594,11 @@ open class OwnIDButtonViewController: UIViewController {
                             type = "Login"
                         }
 
-                        eventDictionary["payload"] = ["type": type, "data": payload.data ?? "", "metadata": payload.metadata ?? ""]
+                        eventDictionary["payload"] = [
+                            "type": type,
+                            "data": payload.data ?? "",
+                            "metadata": normalizedMetadata(payload.metadata),
+                        ]
                     }
 
                 case .failure(let error):
@@ -614,12 +608,15 @@ open class OwnIDButtonViewController: UIViewController {
 
                 ButtonEventsEventEmitter.shared?.sendEvent(
                     withName: ButtonEventsEventEmitter.EventType.ownIdFlowEvent.rawValue,
-                    body: ["eventType": "OwnIdLoginFlow.Busy", "isBusy": isBusy]
+                    body: ownerScopedEventBody(
+                        ["eventType": "OwnIdLoginFlow.Busy", "isBusy": isBusy],
+                        ownerToken: subscriptionOwnerToken
+                    )
                 )
 
                 ButtonEventsEventEmitter.shared?.sendEvent(
                     withName: ButtonEventsEventEmitter.EventType.ownIdFlowEvent.rawValue,
-                    body: eventDictionary
+                    body: ownerScopedEventBody(eventDictionary, ownerToken: subscriptionOwnerToken)
                 )
             }
             .store(in: &bag)
@@ -627,19 +624,95 @@ open class OwnIDButtonViewController: UIViewController {
 }
 
 extension OwnIDButtonViewController {
-    fileprivate func applyVisualHeight(_ newHeight: CGFloat) {
-        guard newHeight.isFinite, newHeight > 0 else { return }
-        if abs(lastAppliedVisualHeight - newHeight) < 0.5 { return }
-        lastAppliedVisualHeight = newHeight
-        switch type {
-        case .register:
-            ownIdRegisterButton?.rootView.visualConfig.iconButtonConfig.height = newHeight
-            ownIdRegisterButton?.rootView.visualConfig.authButtonConfig.height = newHeight
-        case .login:
-            ownIdLoginButton?.rootView.visualConfig.iconButtonConfig.height = newHeight
-            ownIdLoginButton?.rootView.visualConfig.authButtonConfig.height = newHeight
+    @objc public func bridge_applyResolvedHeight(_ rawHeight: NSNumber) {
+        let resolvedHeight = CGFloat(rawHeight.doubleValue)
+        guard resolvedHeight.isFinite, resolvedHeight > 0 else { return }
+        let newHeight = max(Self.Constants.buttonHeightOffset, resolvedHeight)
+        guard abs(height - newHeight) >= 0.5 else { return }
+        height = newHeight
+        if applyVisualConfiguration() {
+            forceNextForward = true
+            forwardLayoutInfo()
         }
     }
+
+    private func makeVisualConfiguration() -> OwnID.UISDK.VisualLookConfig {
+        var visualConfiguration = OwnID.UISDK.VisualLookConfig()
+        visualConfiguration.widgetType = widgetType
+        visualConfiguration.iconButtonConfig.widgetPosition = widgetPosition
+        visualConfiguration.iconButtonConfig.orViewConfig.isEnabled = showOr
+        visualConfiguration.iconButtonConfig.loaderViewConfig.isEnabled = showSpinner
+        visualConfiguration.authButtonConfig.loaderViewConfig.isEnabled = showSpinner
+
+        if height.isFinite, height > 0 {
+            visualConfiguration.iconButtonConfig.height = height
+            visualConfiguration.authButtonConfig.height = height
+        }
+        if let iconColor {
+            visualConfiguration.iconButtonConfig.iconColor = Color(iconColor)
+        }
+        if let buttonBorderColor {
+            visualConfiguration.iconButtonConfig.borderColor = Color(buttonBorderColor)
+        }
+        if let buttonBackgroundColor {
+            visualConfiguration.iconButtonConfig.backgroundColor = Color(buttonBackgroundColor)
+            visualConfiguration.authButtonConfig.backgroundColor = Color(buttonBackgroundColor)
+        }
+        if let buttonTextColor {
+            visualConfiguration.iconButtonConfig.orViewConfig.textColor = Color(buttonTextColor)
+            visualConfiguration.authButtonConfig.textColor = Color(buttonTextColor)
+        }
+        if let spinnerColor {
+            visualConfiguration.iconButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
+            visualConfiguration.authButtonConfig.loaderViewConfig.spinnerColor = Color(spinnerColor)
+        }
+        if let spinnerBackgroundColor {
+            visualConfiguration.iconButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
+            visualConfiguration.authButtonConfig.loaderViewConfig.circleColor = Color(spinnerBackgroundColor)
+        }
+
+        visualConfiguration.iconButtonConfig.tooltipConfig.isEnabled = shouldShowTooltip
+        visualConfiguration.iconButtonConfig.tooltipConfig.tooltipPosition = tooltipPosition
+        if let tooltipTextColor {
+            visualConfiguration.iconButtonConfig.tooltipConfig.textColor = Color(tooltipTextColor)
+        }
+        if let tooltipBorderColor {
+            visualConfiguration.iconButtonConfig.tooltipConfig.borderColor = Color(tooltipBorderColor)
+        }
+        if let tooltipBackgroundColor {
+            visualConfiguration.iconButtonConfig.tooltipConfig.backgroundColor = Color(tooltipBackgroundColor)
+        }
+        return visualConfiguration
+    }
+
+    @discardableResult
+    private func applyVisualConfiguration() -> Bool {
+        let visualConfiguration = makeVisualConfiguration()
+        var changed = false
+
+        if let hostedController = ownIdRegisterButton {
+            var content = hostedController.contentRootView
+            if content.visualConfig != visualConfiguration {
+                content.visualConfig = visualConfiguration
+                hostedController.contentRootView = content
+                hostedController.view.invalidateIntrinsicContentSize()
+                hostedController.view.setNeedsLayout()
+                changed = true
+            }
+        }
+        if let hostedController = ownIdLoginButton {
+            var content = hostedController.contentRootView
+            if content.visualConfig != visualConfiguration {
+                content.visualConfig = visualConfiguration
+                hostedController.contentRootView = content
+                hostedController.view.invalidateIntrinsicContentSize()
+                hostedController.view.setNeedsLayout()
+                changed = true
+            }
+        }
+        return changed
+    }
+
     fileprivate func notifyContentReady() {
         guard let onContentReady else { return }
         DispatchQueue.main.async {
@@ -653,11 +726,11 @@ extension OwnIDButtonViewController {
         hasCreatedContent = true
         createButtonViewForButton(type: type)
     }
-    fileprivate func forwardLayoutInfo() {
-        guard !isForwardingLayoutInfo else { return }
-        isForwardingLayoutInfo = true
-        defer { isForwardingLayoutInfo = false }
-        let size = viewSize()
+    fileprivate func forwardLayoutInfo(size measuredSize: CGSize? = nil) {
+        let size = measuredSize ?? viewSize()
+        guard size.width.isFinite, size.height.isFinite, size.width > 0, size.height > 0 else {
+            return
+        }
         let ignoreParentSize = widgetType.shouldIgnoreParentSize
         let shouldForce = forceNextForward
         if let lastForwardedLayout, !shouldForce,
@@ -668,10 +741,7 @@ extension OwnIDButtonViewController {
         }
         lastForwardedLayout = (size, ignoreParentSize)
         if shouldForce { forceNextForward = false }
-        if let manager = CreationInformation.shared.managerInstance {
-            manager.updateLayoutInfo(size: size, shouldIgnoreParentSize: ignoreParentSize)
-        }
-        CreationInformation.shared.viewInstance?.receiveLayoutInfo(size: size, shouldIgnoreParentSize: ignoreParentSize)
+        paperOwner?.receiveLayoutInfo(size: size, shouldIgnoreParentSize: ignoreParentSize)
         onNativeContentSize?(size, ignoreParentSize)
     }
 }
@@ -691,6 +761,12 @@ extension OwnIDButtonViewController {
     @objc public func bridge_commandReset() {
         teardownContent()
         onNativeReset?()
+    }
+
+    @objc public func bridge_prepareForRecycle() {
+        teardownContent()
+        ownerToken = ""
+        height = 0
     }
 
     @objc public func bridge_commandRegister(_ params: [String: Any]?, login: NSString?) {
@@ -726,6 +802,9 @@ public class AutoSizingHostingController<Content>: UIHostingController<Content> 
     public var resizingMode: ResizingMode = .intrinsicWidth
     public var onIntrinsicSizeChange: ((CGSize) -> Void)?
     private var lastSentIntrinsicSize: CGSize = .zero
+    private var pendingIntrinsicSize: CGSize?
+    private var isIntrinsicNotificationScheduled = false
+    private var isMeasuringContent = false
 
     public override func viewDidLoad() {
         super.viewDidLoad()
@@ -735,27 +814,103 @@ public class AutoSizingHostingController<Content>: UIHostingController<Content> 
     }
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        guard !isMeasuringContent else { return }
         let intrinsic = view.intrinsicContentSize
         let parentSize = view.superview?.bounds.size ?? .zero
-        let targetWidth: CGFloat
-        let targetHeight: CGFloat
+        let reported: CGSize
         switch resizingMode {
         case .intrinsicWidth:
-            targetWidth = intrinsic.width
-            targetHeight = intrinsic.height
+            reported = intrinsic
         case .fillParentWidth:
-            targetWidth = parentSize.width.isFinite && parentSize.width > 0 ? parentSize.width : intrinsic.width
-            targetHeight = parentSize.height.isFinite && parentSize.height > 0 ? parentSize.height : intrinsic.height
+            reported = CGSize(
+                width: parentSize.width.isFinite && parentSize.width > 0 ? parentSize.width : intrinsic.width,
+                height: intrinsic.height.isFinite && intrinsic.height > 0 ? intrinsic.height : parentSize.height
+            )
         }
-        view.frame = CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight)
+        scheduleIntrinsicSizeNotification(reported)
+    }
 
-        let reported = CGSize(width: targetWidth, height: targetHeight)
-        if reported.width.isFinite, reported.height.isFinite {
-            if abs(lastSentIntrinsicSize.width - reported.width) > 0.5 || abs(lastSentIntrinsicSize.height - reported.height) > 0.5 {
-                lastSentIntrinsicSize = reported
-                onIntrinsicSizeChange?(reported)
-            }
+    func contentSizeThatFits(constrainedWidth: CGFloat?, constrainedHeight: CGFloat?) -> CGSize {
+        let validWidth = constrainedWidth.flatMap { $0.isFinite && $0 > 0 ? $0 : nil }
+        let validHeight = constrainedHeight.flatMap { $0.isFinite && $0 > 0 ? $0 : nil }
+        let parentWidth = view.superview?.bounds.width ?? view.bounds.width
+        let proposedWidth: CGFloat
+        switch resizingMode {
+        case .intrinsicWidth:
+            proposedWidth = validWidth ?? UIView.layoutFittingExpandedSize.width
+        case .fillParentWidth:
+            proposedWidth = validWidth ?? (parentWidth.isFinite && parentWidth > 0
+                ? parentWidth
+                : UIView.layoutFittingCompressedSize.width)
         }
+        let proposal = CGSize(
+            width: proposedWidth,
+            height: validHeight ?? UIView.layoutFittingExpandedSize.height
+        )
+
+        isMeasuringContent = true
+        defer { isMeasuringContent = false }
+
+        var measured = sizeThatFits(in: proposal)
+        if #unavailable(iOS 16.0), !measured.hasUsableDimensions {
+            measured = view.systemLayoutSizeFitting(
+                proposal,
+                withHorizontalFittingPriority: validWidth != nil ? .required : .fittingSizeLevel,
+                verticalFittingPriority: validHeight != nil ? .required : .fittingSizeLevel
+            )
+        }
+        if !measured.hasUsableDimensions {
+            let fallback = view.systemLayoutSizeFitting(
+                proposal,
+                withHorizontalFittingPriority: validWidth != nil ? .required : .fittingSizeLevel,
+                verticalFittingPriority: validHeight != nil ? .required : .fittingSizeLevel
+            )
+            if fallback.width.isFinite, fallback.width > 0 { measured.width = fallback.width }
+            if fallback.height.isFinite, fallback.height > 0 { measured.height = fallback.height }
+        }
+        return measured
+    }
+
+    private func scheduleIntrinsicSizeNotification(_ size: CGSize) {
+        guard size.hasUsableDimensions else { return }
+        pendingIntrinsicSize = size
+        guard !isIntrinsicNotificationScheduled else { return }
+        isIntrinsicNotificationScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.isIntrinsicNotificationScheduled = false
+            guard let reported = self.pendingIntrinsicSize else { return }
+            self.pendingIntrinsicSize = nil
+            guard !self.lastSentIntrinsicSize.isClose(to: reported) else { return }
+            self.lastSentIntrinsicSize = reported
+            self.onIntrinsicSizeChange?(reported)
+        }
+    }
+}
+
+private struct SafeAreaIgnoringContainer<Content: View>: View {
+    var content: Content
+
+    var body: some View {
+        content.ignoresSafeArea(.container, edges: .all)
+    }
+}
+
+private final class SafeAreaIgnoringAutoSizingHostingController<Content: View>:
+    AutoSizingHostingController<SafeAreaIgnoringContainer<Content>>
+{
+    var contentRootView: Content {
+        get { rootView.content }
+        set { rootView.content = newValue }
+    }
+
+    init(wrapping controller: AutoSizingHostingController<Content>) {
+        super.init(rootView: SafeAreaIgnoringContainer(content: controller.rootView))
+        view.backgroundColor = controller.view.backgroundColor
+    }
+
+    @MainActor @preconcurrency required dynamic init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
@@ -767,6 +922,10 @@ extension OwnIDButtonViewController {
 }
 
 extension CGSize {
+    fileprivate var hasUsableDimensions: Bool {
+        width.isFinite && height.isFinite && width > 0 && height > 0
+    }
+
     fileprivate func isClose(to other: CGSize, tolerance: CGFloat = 0.5) -> Bool {
         abs(width - other.width) < tolerance && abs(height - other.height) < tolerance
     }

@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Appearance, ColorSchemeName, UIManager, findNodeHandle, DeviceEventEmitter, NativeEventEmitter, NativeModules, Platform, EmitterSubscription, View, DimensionValue } from 'react-native';
-import { getNativeOwnIdButton, OwnIdNativeManagerName, OwnIdButtonType, OwnIdResponse, OwnIdError, _setViewId, isFabric, _onInitReady, _isInitReady } from './common';
-import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdLoginEvent, parsePayload } from './internal';
+import { getNativeOwnIdButton, OwnIdNativeManagerName, OwnIdButtonType, OwnIdResponse, OwnIdError, _setViewId, _notifyFabricListenersReady, isFabric, _onInitReady, _isInitReady } from './common';
+import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdLoginEvent, createOwnerToken, isOwnedEvent, parsePayload } from './internal';
+import { useButtonHeightResolution } from './buttonLayout';
 
 export const OwnIdAuthButtonColorSchemeLight = {
     backgroundColor: '#0070F2',
@@ -57,7 +58,12 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
         width: '100%', height: 48, ...selectedColorScheme, ...style
     }
 
+    const { nativeHeight, preferredHeight, onLayout } = useButtonHeightResolution(height);
+
     const ref = useRef(null);
+    const ownerTokenRef = useRef<string | null>(null);
+    const ownerToken = ownerTokenRef.current ?? createOwnerToken();
+    ownerTokenRef.current = ownerToken;
     const [isReady, setIsReady] = useState<boolean>(_isInitReady());
     const [measuredWidth, setMeasuredWidth] = useState<number | undefined>(undefined);
 
@@ -65,6 +71,43 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
     const integrationEventsSubscription = useRef<EmitterSubscription | null>(null);
 
     const type = OwnIdButtonType.Login;
+    const onLoginRef = useRef(onLogin);
+    const onErrorRef = useRef(onError);
+    const onBusyRef = useRef(onBusy);
+
+    onLoginRef.current = onLogin;
+    onErrorRef.current = onError;
+    onBusyRef.current = onBusy;
+
+    const handleFlow = useCallback((flowEvent: OwnIdFlowEvent) => {
+        switch (flowEvent.eventType) {
+            case OwnIdLoginFlow.Busy:
+                onBusyRef.current(flowEvent.isBusy);
+                break;
+            case OwnIdLoginFlow.Response: {
+                const { loginId, payload, authType, authToken } = flowEvent;
+                onLoginRef.current(parsePayload(loginId, payload, authType, authToken));
+                break;
+            }
+            case OwnIdLoginFlow.Error:
+                onErrorRef.current(flowEvent.error);
+                break;
+        }
+    }, []);
+
+    const handleIntegration = useCallback((integrationEvent: OwnIdIntegrationEvent) => {
+        switch (integrationEvent.eventType) {
+            case OwnIdLoginEvent.Busy:
+                onBusyRef.current(integrationEvent.isBusy);
+                break;
+            case OwnIdLoginEvent.LoggedIn:
+                onLoginRef.current({ authType: integrationEvent.authType, authToken: integrationEvent.authToken });
+                break;
+            case OwnIdLoginEvent.Error:
+                onErrorRef.current(integrationEvent.error);
+                break;
+        }
+    }, []);
 
     useEffect(() => {
         const unsubscribe = _onInitReady(() => setIsReady(true));
@@ -73,38 +116,15 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
 
     useEffect(() => {
         if (!isReady) return;
-        const handleFlow = (flowEvent: OwnIdFlowEvent) => {
-            switch (flowEvent.eventType) {
-                case OwnIdLoginFlow.Busy:
-                    onBusy(flowEvent.isBusy);
-                    break;
-                case OwnIdLoginFlow.Response: {
-                    const { loginId, payload, authType, authToken } = flowEvent;
-                    onLogin(parsePayload(loginId, payload, authType, authToken));
-                    break;
-                }
-                case OwnIdLoginFlow.Error:
-                    onError(flowEvent.error);
-                    break;
-            }
+        const onOwnIdFlowEvent = (flowEvent: OwnIdFlowEvent) => {
+            if (!isOwnedEvent(flowEvent, ownerToken)) return;
+            handleFlow(flowEvent);
         };
 
-        const handleIntegration = (integrationEvent: OwnIdIntegrationEvent) => {
-            switch (integrationEvent.eventType) {
-                case OwnIdLoginEvent.Busy:
-                    onBusy(integrationEvent.isBusy);
-                    break;
-                case OwnIdLoginEvent.LoggedIn:
-                    onLogin({ authType: integrationEvent.authType, authToken: integrationEvent.authToken });
-                    break;
-                case OwnIdLoginEvent.Error:
-                    onError(integrationEvent.error);
-                    break;
-            }
+        const onOwnIdIntegrationEvent = (integrationEvent: OwnIdIntegrationEvent) => {
+            if (!isOwnedEvent(integrationEvent, ownerToken)) return;
+            handleIntegration(integrationEvent);
         };
-        const onOwnIdFlowEvent = (flowEvent: OwnIdFlowEvent) => handleFlow(flowEvent);
-
-        const onOwnIdIntegrationEvent = (integrationEvent: OwnIdIntegrationEvent) => handleIntegration(integrationEvent);
 
         if (Platform.OS === 'android') {
             flowEventsSubscription.current = DeviceEventEmitter.addListener(OwnIdReactEventName.OwnIdFlowEvent, onOwnIdFlowEvent);
@@ -112,9 +132,11 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
 
             const viewId = findNodeHandle(ref.current);
             _setViewId(type, viewId);
-            if (!isFabric()) {
+            if (isFabric()) {
+                _notifyFabricListenersReady(ref.current, ownerToken);
+            } else {
                 // @ts-ignore
-                UIManager.dispatchViewManagerCommand(viewId, UIManager[OwnIdNativeManagerName].Commands.create.toString(), [viewId]);
+                UIManager.dispatchViewManagerCommand(viewId, UIManager[OwnIdNativeManagerName].Commands.create.toString(), [viewId, ownerToken]);
             }
         }
         if (Platform.OS === 'ios') {
@@ -128,7 +150,7 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
             flowEventsSubscription.current!.remove();
             integrationEventsSubscription.current!.remove();
         }
-    }, [isReady, onBusy, onError, onLogin]);
+    }, [handleFlow, handleIntegration, isReady, ownerToken, type]);
 
     if (!isReady) {
         return null;
@@ -137,11 +159,11 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
     const OwnIdNativeViewManager: any = getNativeOwnIdButton();
     if (Platform.OS === 'android' && isFabric()) {
         return (
-            <View style={{ width: (width as number | undefined) ?? measuredWidth, height }}>
+            <View style={{ width: (width as number | undefined) ?? measuredWidth, height }} onLayout={onLayout}>
                 <OwnIdNativeViewManager
                     // @ts-ignore
                     widgetType={OwnIdWidgetType.OwnIdAuthButton}
-                    style={[styles, { height }]}
+                    style={[styles, { height: nativeHeight }]}
                     buttonTextColor={textColor}
                     buttonBackgroundColor={backgroundColor}
                     showSpinner={showSpinner}
@@ -149,6 +171,7 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
                     spinnerBackgroundColor={spinnerBackgroundColor}
                     type={type}
                     {...restProps}
+                    ownerToken={ownerToken}
                     onContentSizeChange={(e: any) => {
                         const w = e?.nativeEvent?.width;
                         if (typeof w === 'number' && w > 0) { setMeasuredWidth(w); }
@@ -161,12 +184,12 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
 
     if (Platform.OS === 'ios' && isFabric()) {
         return (
-            <View style={{ width: (width as number | undefined) ?? measuredWidth, height }}>
+            <View style={{ width: (width as number | undefined) ?? measuredWidth, height }} onLayout={onLayout}>
                 <OwnIdNativeViewManager
                     // @ts-ignore
                     widgetType={OwnIdWidgetType.OwnIdAuthButton}
-                    style={[styles, { height }]}
-                    preferredHeight={typeof height === 'number' ? Math.max(48, Number(height)) : undefined}
+                    style={[styles, { height: nativeHeight }]}
+                    preferredHeight={preferredHeight}
                     buttonTextColor={textColor}
                     buttonBackgroundColor={backgroundColor}
                     showSpinner={showSpinner}
@@ -174,6 +197,7 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
                     spinnerBackgroundColor={spinnerBackgroundColor}
                     type={type}
                     {...restProps}
+                    ownerToken={ownerToken}
                     onContentSizeChange={(e: any) => {
                         const w = e?.nativeEvent?.width;
                         if (typeof w === 'number' && w > 0) { setMeasuredWidth(w); }
@@ -186,7 +210,7 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
     {
         const containerWidth = (width as DimensionValue | undefined) ?? (measuredWidth as number | undefined);
         return (
-            <View style={{ width, height }}>
+            <View style={{ width, height }} onLayout={onLayout}>
                 <OwnIdNativeViewManager
                     // @ts-ignore
                     widgetType={OwnIdWidgetType.OwnIdAuthButton}
@@ -197,12 +221,13 @@ export const OwnIdAuthButton = (props: OwnIdAuthButtonProps) => {
                     spinnerColor={spinnerColor}
                     spinnerBackgroundColor={spinnerBackgroundColor}
                     type={type}
-                    {...(Platform.OS === 'ios' ? { preferredHeight: typeof height === 'number' ? Math.max(48, Number(height)) : undefined } : {})}
+                    {...(Platform.OS === 'ios' ? { preferredHeight } : {})}
                     onContentSizeChange={(e: any) => {
                         const w = e?.nativeEvent?.width;
                         if (typeof w === 'number' && w > 0) { setMeasuredWidth(w); }
                     }}
                     {...restProps}
+                    ownerToken={ownerToken}
                     ref={ref}
                 />
             </View>

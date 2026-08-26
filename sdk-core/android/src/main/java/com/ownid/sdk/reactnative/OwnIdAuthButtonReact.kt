@@ -14,9 +14,11 @@ import com.ownid.sdk.view.OwnIdAuthButton
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class OwnIdAuthButtonReact(
     context: Context,
-    private val properties: OwnIdWidget.Properties,
+    private var properties: OwnIdWidget.Properties,
     private val shadowNode: OwnIdLayoutShadowNode,
 ) : OwnIdAuthButton(context) {
+
+    private var requestedBusy: Boolean = false
 
     private val measureListener = object : OwnIdLayoutShadowNode.MeasureListener {
         @WorkerThread
@@ -48,13 +50,31 @@ public class OwnIdAuthButtonReact(
     }
 
     public override fun onBusy(isBusy: Boolean) {
-        super.onBusy(isBusy)
+        requestedBusy = isBusy
+        applyRequestedBusy()
         reMeasureAndLayout(true)
     }
 
     override fun setStrings() {
         super.setStrings()
         reMeasureAndLayout(true)
+    }
+
+    internal fun updateProperties(properties: OwnIdWidget.Properties) {
+        if (this.properties == properties) return
+        this.properties = properties
+        setColors(
+            properties.textColor?.let { ColorStateList.valueOf(it) },
+            properties.backgroundColor?.let { ColorStateList.valueOf(it) },
+            properties.spinnerColor,
+            properties.spinnerBackgroundColor
+        )
+        applyRequestedBusy()
+        post { reMeasureAndLayout(true) }
+    }
+
+    private fun applyRequestedBusy() {
+        super.onBusy(requestedBusy && properties.showSpinner)
     }
 
     private var currentWidthMeasureSpec: Int? = null

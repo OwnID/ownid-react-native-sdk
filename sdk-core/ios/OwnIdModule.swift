@@ -11,9 +11,8 @@
     public final class OwnIdModule: RCTViewManager {
         private enum Constants {
             static let enrollErrorCode = "enrollError"
+            static let enrollmentInProgressMessage = "Credential enrollment is already in progress"
         }
-
-        private var bag = Set<AnyCancellable>()
 
         @objc public func createInstance(
             _ config: [String: Any],
@@ -26,10 +25,10 @@
         }
 
         @objc public func setLocale(_ locale: String?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-            if let locale {
-                OwnID.CoreSDK.setSupportedLanguages([locale])
+            OwnID.runOnMainThread {
+                OwnID.CoreSDK.setSupportedLanguages(locale.map { [$0] } ?? Locale.preferredLanguages)
+                resolve(nil)
             }
-            resolve(nil)
         }
 
         @objc public func enrollCredential(
@@ -40,10 +39,18 @@
             resolve: @escaping RCTPromiseResolveBlock,
             reject: @escaping RCTPromiseRejectBlock
         ) {
+            guard instanceName == nil else {
+                reject(
+                    OwnID.GenericError.unsupportedInstanceNameCode,
+                    OwnID.GenericError.unsupportedInstanceNameMessage,
+                    OwnID.GenericError()
+                )
+                return
+            }
+
             DispatchQueue.main.async {
-                OwnID.CoreSDK.enrollCredential(loginId: loginId, authToken: authToken, force: force)
-                    .receive(on: DispatchQueue.main)
-                    .sink { event in
+                guard let operationID = EnrollmentOperationOwner.shared.begin(
+                    settle: { event in
                         switch event {
                         case .success:
                             resolve(nil)
@@ -58,7 +65,17 @@
                             }
                         }
                     }
-                    .store(in: &self.bag)
+                ) else {
+                    reject(Constants.enrollErrorCode, Constants.enrollmentInProgressMessage, nil)
+                    return
+                }
+
+                let cancellable = OwnID.CoreSDK.enrollCredential(loginId: loginId, authToken: authToken, force: force)
+                    .receive(on: DispatchQueue.main)
+                    .sink { event in
+                        EnrollmentOperationOwner.shared.settle(event, for: operationID)
+                    }
+                EnrollmentOperationOwner.shared.retain(cancellable, for: operationID)
             }
         }
 

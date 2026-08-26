@@ -12,6 +12,38 @@ The [OwnID](https://ownid.com/) React Native SDK is a client library offering a 
 
 - **OwnID React Native Integration Component** - An optional extension of the React Native Core SDK, designed for seamless integration with identity platforms on the native side. When present, it executes the actual registration and login processes into the identity platform.
 
+## Install OwnID React Native Core SDK
+
+Install the Core package from npm:
+
+```bash
+npm install @ownid/react-native-core
+```
+
+The package supports React Native autolinking, so no manual Android linking is required. Its Android dependency is resolved from Maven Central; make sure `mavenCentral()` is included in your Android repositories. The SDK builds against Android API 35 and requires Android API 24 or higher.
+
+For iOS, OwnID Core 3.11.0 is distributed from the public Git tag rather than CocoaPods Trunk. Add the native SDK inside your app target, before `use_native_modules!`, in `ios/Podfile`:
+
+```ruby
+ownid_ios_sdk_git = 'https://github.com/OwnID/ownid-ios-sdk.git'
+ownid_ios_sdk_tag = '3.11.0'
+
+target 'YourApp' do
+  pod 'ownid-core-ios-sdk', :git => ownid_ios_sdk_git, :tag => ownid_ios_sdk_tag
+
+  config = use_native_modules!
+  # Keep the rest of your React Native CocoaPods configuration here.
+end
+```
+
+Then install the pods:
+
+```bash
+cd ios && pod install && cd ..
+```
+
+The iOS deployment target is iOS 14.0 or higher. For initialization, passkey setup, and UI usage, see the [OwnID React Native Core SDK integration guide](docs/sdk-react-native-integration.md).
+
 ### To integrate OwnID with your identity platform, you have two pathways:
 
 - **[Direct Integration](docs/sdk-react-native-integration.md)** - Handle OwnID Response data directly in React Native without using the Integration component.

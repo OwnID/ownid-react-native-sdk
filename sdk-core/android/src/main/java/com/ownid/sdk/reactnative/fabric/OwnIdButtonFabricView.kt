@@ -17,9 +17,11 @@ import kotlin.math.roundToInt
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class OwnIdButtonFabricView(
     context: Context,
-    private val properties: OwnIdWidget.Properties,
+    private var properties: OwnIdWidget.Properties,
     private val onMeasured: (width: Int, height: Int) -> Unit,
 ) : OwnIdButton(context) {
+
+    private var requestedBusy: Boolean = false
 
     init {
         layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -49,7 +51,8 @@ internal class OwnIdButtonFabricView(
     }
 
     override fun onBusy(isBusy: Boolean) {
-        super.onBusy(isBusy)
+        requestedBusy = isBusy
+        applyRequestedBusy()
         post { reMeasureAndLayout() }
     }
 
@@ -65,5 +68,34 @@ internal class OwnIdButtonFabricView(
         measure(widthSpec, heightSpec)
         layout(0, 0, measuredWidth, measuredHeight)
         onMeasured.invoke(measuredWidth, measuredHeight)
+    }
+
+    internal fun updateProperties(properties: OwnIdWidget.Properties) {
+        if (this.properties == properties) return
+        this.properties = properties
+        position = properties.widgetPosition
+        showOr = properties.showOr
+        showSpinner = properties.showSpinner
+        setColors(
+            properties.textColor?.let { ColorStateList.valueOf(it) },
+            properties.backgroundColor?.let { ColorStateList.valueOf(it) },
+            properties.borderColor?.let { ColorStateList.valueOf(it) },
+            properties.iconColor?.let { ColorStateList.valueOf(it) },
+            properties.spinnerColor,
+            properties.spinnerBackgroundColor
+        )
+        tooltipProperties = Tooltip.Properties(
+            null,
+            properties.tooltipTextColor,
+            properties.tooltipBackgroundColor,
+            properties.tooltipBorderColor,
+            null
+        )
+        applyRequestedBusy()
+        post { reMeasureAndLayout() }
+    }
+
+    private fun applyRequestedBusy() {
+        super.onBusy(requestedBusy && properties.showSpinner)
     }
 }

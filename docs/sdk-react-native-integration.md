@@ -27,10 +27,29 @@ Before incorporating OwnID into your application, you need to create an OwnID ap
 The OwnID React Native Core SDK is available from the [npm repository](https://www.npmjs.com/package/@ownid/react-native-core):
 ```bash
 npm install @ownid/react-native-core
-cd ios && pod install && cd .. # CocoaPods on iOS needs this extra step
 ```
 
-The OwnID React Native Core SDK supports [autolinking](https://github.com/react-native-community/cli/blob/main/docs/autolinking.md), build based on Android API 34 (minimum API 23), iOS 14 and higher.
+On iOS, OwnID Core 3.11.0 is distributed from the public Git tag rather than CocoaPods Trunk. Add the native SDK before `use_native_modules!` in your application's `ios/Podfile`:
+
+```ruby
+ownid_ios_sdk_git = 'https://github.com/OwnID/ownid-ios-sdk.git'
+ownid_ios_sdk_tag = '3.11.0'
+
+target 'YourApp' do
+  pod 'ownid-core-ios-sdk', :git => ownid_ios_sdk_git, :tag => ownid_ios_sdk_tag
+
+  config = use_native_modules!
+  # Keep the rest of your React Native CocoaPods configuration here.
+end
+```
+
+Then install the pods:
+
+```bash
+cd ios && pod install && cd ..
+```
+
+The OwnID React Native Core SDK supports [autolinking](https://github.com/react-native-community/cli/blob/main/docs/autolinking.md), builds with Android API 35 (minimum API 24), and supports iOS 14 and higher.
 
 ## Enable passkey authentication
 

@@ -10,7 +10,6 @@ let _ownIdInitReady = false;
 const _ownIdInitListeners: Array<() => void> = [];
 
 export function _setInitPending(promise: Promise<void>) {
-    _ownIdInitReady = false;
     promise.then(() => {
         _ownIdInitReady = true;
         while (_ownIdInitListeners.length) {
@@ -53,6 +52,13 @@ export function getNativeOwnIdButton(): any {
     return CachedNativeOwnIdButton;
 }
 
+// Internal Fabric handshake. The command is sent only after both global event listeners exist.
+export function _notifyFabricListenersReady(viewRef: any, ownerToken: string): void {
+    if (!viewRef) return;
+    const spec = require('./specs/NativeOwnIdButtonNativeComponent') as typeof import('./specs/NativeOwnIdButtonNativeComponent');
+    spec.Commands.listenersReady(viewRef, ownerToken);
+}
+
 // Legacy setter retained for external overrides (used by Gigya Android)
 export function _setOwnIdNativeViewManager(value: any) {
     CachedNativeOwnIdButton = value;
@@ -69,13 +75,13 @@ export enum OwnIdButtonType {
 /**
  * Represents the OwnID response for Registration or Login flows.
  * 
- * @property {string} authType - Type of authentication used in the OwnID flow.
+ * @property {string} authType - (optional) Type of authentication used in the OwnID flow.
  * @property {string} loginId - (optional) User login ID used in the OwnID flow. Unavailable in `onLogin` callback for OwnID with Integration component.
  * @property {OwnIdPayload} payload - (optional) Result of the OwnID flow. Only available for OwnID without the Integration component.
  * @property {string} authToken - (optional) A token that can be used to refresh a session.
  */
 export interface OwnIdResponse {
-    authType: string;
+    authType?: string;
     loginId?: string;
     payload?: OwnIdPayload;
     authToken?: string;

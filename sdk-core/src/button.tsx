@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Appearance, ColorSchemeName, UIManager, findNodeHandle, DeviceEventEmitter, NativeEventEmitter, NativeModules, Platform, EmitterSubscription, View, DimensionValue } from 'react-native';
-import { getNativeOwnIdButton, OwnIdNativeManagerName, OwnIdButtonType, OwnIdResponse, OwnIdPayloadType, OwnIdError, _setViewId, isFabric, _onInitReady, _isInitReady } from './common';
-import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdRegisterFlow, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdRegisterEvent, OwnIdLoginEvent, parsePayload } from './internal';
+import { getNativeOwnIdButton, OwnIdNativeManagerName, OwnIdButtonType, OwnIdResponse, OwnIdPayloadType, OwnIdError, _setViewId, _notifyFabricListenersReady, isFabric, _onInitReady, _isInitReady } from './common';
+import { OwnIdWidgetType, OwnIdReactEventName, OwnIdFlowEvent, OwnIdRegisterFlow, OwnIdLoginFlow, OwnIdIntegrationEvent, OwnIdRegisterEvent, OwnIdLoginEvent, createOwnerToken, isOwnedEvent, parsePayload } from './internal';
+import { useButtonHeightResolution } from './buttonLayout';
 
 export const OwnIdButtonColorSchemeLight = {
     iconColor: '#0070F2',
@@ -114,28 +115,44 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
         height: 48, tooltipPosition: OwnIdTooltipPosition.None, ...selectedColorScheme, ...style
     }
 
+    const { nativeHeight, preferredHeight, onLayout } = useButtonHeightResolution(height);
+
     const ref = useRef(null);
+    const ownerTokenRef = useRef<string | null>(null);
+    const ownerToken = ownerTokenRef.current ?? createOwnerToken();
+    ownerTokenRef.current = ownerToken;
     const [isReady, setIsReady] = useState<boolean>(_isInitReady());
     const [measuredWidth, setMeasuredWidth] = useState<number | undefined>(undefined);
 
     const flowEventsSubscription = useRef<EmitterSubscription | null>(null);
     const integrationEventsSubscription = useRef<EmitterSubscription | null>(null);
+    const onRegisterRef = useRef(onRegister);
+    const onUndoRef = useRef(onUndo);
+    const onLoginRef = useRef(onLogin);
+    const onErrorRef = useRef(onError);
+    const onBusyRef = useRef(onBusy);
+
+    onRegisterRef.current = onRegister;
+    onUndoRef.current = onUndo;
+    onLoginRef.current = onLogin;
+    onErrorRef.current = onError;
+    onBusyRef.current = onBusy;
 
     const handleFlowEvent = useCallback((flowEvent: OwnIdFlowEvent) => {
         switch (flowEvent.eventType) {
             case OwnIdRegisterFlow.Busy:
             case OwnIdLoginFlow.Busy:
-                onBusy(flowEvent.isBusy);
+                onBusyRef.current(flowEvent.isBusy);
                 return;
             case OwnIdRegisterFlow.Response: {
                 const { loginId, payload, authType, authToken } = flowEvent;
                 if (flowEvent.payload.type === OwnIdPayloadType.Registration) {
-                    onRegister(parsePayload(loginId, payload, authType, authToken));
+                    onRegisterRef.current(parsePayload(loginId, payload, authType, authToken));
                     return;
                 }
                 if (flowEvent.payload.type === OwnIdPayloadType.Login) {
                     const { loginId, payload, authType, authToken } = flowEvent;
-                    onLogin(parsePayload(loginId, payload, authType, authToken));
+                    onLoginRef.current(parsePayload(loginId, payload, authType, authToken));
                     return;
                 }
                 return;
@@ -143,45 +160,45 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
 
             case OwnIdLoginFlow.Response: {
                 const { loginId, payload, authType, authToken } = flowEvent;
-                onLogin(parsePayload(loginId, payload, authType, authToken));
+                onLoginRef.current(parsePayload(loginId, payload, authType, authToken));
                 return;
             }
             case OwnIdRegisterFlow.Error:
             case OwnIdLoginFlow.Error:
-                onError(flowEvent.error);
+                onErrorRef.current(flowEvent.error);
                 return;
             case OwnIdRegisterFlow.Undo:
-                onUndo();
+                onUndoRef.current();
                 return;
             default:
                 return;
         }
-    }, [onBusy, onError, onLogin, onRegister, type]);
+    }, []);
 
     const handleIntegrationEvent = useCallback((integrationEvent: OwnIdIntegrationEvent) => {
         switch (integrationEvent.eventType) {
             case OwnIdRegisterEvent.Busy:
             case OwnIdLoginEvent.Busy:
-                onBusy(integrationEvent.isBusy);
+                onBusyRef.current(integrationEvent.isBusy);
                 return;
             case OwnIdRegisterEvent.ReadyToRegister:
-                onRegister({ loginId: integrationEvent.loginId, authType: integrationEvent.authType });
+                onRegisterRef.current({ loginId: integrationEvent.loginId, authType: integrationEvent.authType });
                 return;
             case OwnIdRegisterEvent.Undo:
-                onUndo();
+                onUndoRef.current();
                 return;
             case OwnIdRegisterEvent.LoggedIn:
             case OwnIdLoginEvent.LoggedIn:
-                onLogin({ authType: integrationEvent.authType, authToken: integrationEvent.authToken });
+                onLoginRef.current({ authType: integrationEvent.authType, authToken: integrationEvent.authToken });
                 return;
             case OwnIdRegisterEvent.Error:
             case OwnIdLoginEvent.Error:
-                onError(integrationEvent.error);
+                onErrorRef.current(integrationEvent.error);
                 return;
             default:
                 return;
         }
-    }, [onBusy, onError, onLogin, onRegister]);
+    }, []);
 
     useEffect(() => {
         const unsubscribe = _onInitReady(() => setIsReady(true));
@@ -190,8 +207,14 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
 
     useEffect(() => {
         if (!isReady) return;
-        const onOwnIdFlowEvent = (flowEvent: OwnIdFlowEvent) => handleFlowEvent(flowEvent);
-        const onOwnIdIntegrationEvent = (integrationEvent: OwnIdIntegrationEvent) => handleIntegrationEvent(integrationEvent);
+        const onOwnIdFlowEvent = (flowEvent: OwnIdFlowEvent) => {
+            if (!isOwnedEvent(flowEvent, ownerToken)) return;
+            handleFlowEvent(flowEvent);
+        };
+        const onOwnIdIntegrationEvent = (integrationEvent: OwnIdIntegrationEvent) => {
+            if (!isOwnedEvent(integrationEvent, ownerToken)) return;
+            handleIntegrationEvent(integrationEvent);
+        };
 
         if (Platform.OS === 'android') {
             flowEventsSubscription.current = DeviceEventEmitter.addListener(OwnIdReactEventName.OwnIdFlowEvent, onOwnIdFlowEvent);
@@ -199,9 +222,11 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
 
             const viewId = findNodeHandle(ref.current);
             _setViewId(type, viewId);
-            if (!isFabric()) {
+            if (isFabric()) {
+                _notifyFabricListenersReady(ref.current, ownerToken);
+            } else {
                 // @ts-ignore
-                UIManager.dispatchViewManagerCommand(viewId, UIManager[OwnIdNativeManagerName].Commands.create.toString(), [viewId]);
+                UIManager.dispatchViewManagerCommand(viewId, UIManager[OwnIdNativeManagerName].Commands.create.toString(), [viewId, ownerToken]);
             }
         }
 
@@ -217,7 +242,7 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
             flowEventsSubscription.current!.remove();
             integrationEventsSubscription.current!.remove();
         }
-    }, [handleFlowEvent, handleIntegrationEvent, isReady, type]);
+    }, [handleFlowEvent, handleIntegrationEvent, isReady, ownerToken, type]);
 
     if (!isReady) {
         return null;
@@ -227,12 +252,12 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
     if (isFabric()) {
         if (Platform.OS === 'android') {
             return (
-                <View style={{ width: width ?? measuredWidth, height }}>
+                <View style={{ width: width ?? measuredWidth, height }} onLayout={onLayout}>
                     <OwnIdNativeViewManager
                         // @ts-ignore
                         widgetType={OwnIdWidgetType.OwnIdButton}
                         widgetPosition={buttonPosition}
-                        style={[styles, { height }]}
+                        style={[styles, { height: nativeHeight }]}
                         showOr={showOr}
                         buttonTextColor={textColor}
                         iconColor={iconColor}
@@ -247,6 +272,7 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
                         spinnerBackgroundColor={spinnerBackgroundColor}
                         type={type}
                         {...restProps}
+                        ownerToken={ownerToken}
                         onContentSizeChange={(e: any) => {
                             const w = e?.nativeEvent?.width;
                             if (typeof w === 'number' && w > 0) { setMeasuredWidth(w); }
@@ -259,12 +285,12 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
 
         if (Platform.OS === 'ios') {
             return (
-                <View style={{ width: width ?? measuredWidth, height }}>
+                <View style={{ width: width ?? measuredWidth, height }} onLayout={onLayout}>
                     <OwnIdNativeViewManager
                         // @ts-ignore
                         widgetType={OwnIdWidgetType.OwnIdButton}
                         widgetPosition={buttonPosition}
-                        style={[styles, { height }]}
+                        style={[styles, { height: nativeHeight }]}
                         showOr={showOr}
                         buttonTextColor={textColor}
                         iconColor={iconColor}
@@ -277,12 +303,13 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
                         spinnerColor={spinnerColor}
                         spinnerBackgroundColor={spinnerBackgroundColor}
                         type={type}
-                        preferredHeight={Math.max(48, Number(height))}
+                        preferredHeight={preferredHeight}
                         onContentSizeChange={(e: any) => {
                             const w = e?.nativeEvent?.width;
                             if (typeof w === 'number' && w > 0) { setMeasuredWidth(w); }
                         }}
                         {...restProps}
+                        ownerToken={ownerToken}
                         ref={ref}
                     />
                 </View>
@@ -292,7 +319,7 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
 
     {
         return (
-            <View style={{ width, height }}>
+            <View style={{ width, height }} onLayout={onLayout}>
                 <OwnIdNativeViewManager
                     // @ts-ignore
                     widgetType={OwnIdWidgetType.OwnIdButton}
@@ -311,12 +338,15 @@ export const OwnIdButton = (props: OwnIdButtonProps) => {
                     spinnerColor={spinnerColor}
                     spinnerBackgroundColor={spinnerBackgroundColor}
                     type={type}
-                    {...(Platform.OS === 'ios' ? { preferredHeight: Math.max(48, Number(height)) } : {})}
+                    {...(Platform.OS === 'ios' ? {
+                        preferredHeight
+                    } : {})}
                     onContentSizeChange={(e: any) => {
                         const w = e?.nativeEvent?.width;
                         if (typeof w === 'number' && w > 0) { setMeasuredWidth(w); }
                     }}
                     {...restProps}
+                    ownerToken={ownerToken}
                     ref={ref}
                 />
             </View>

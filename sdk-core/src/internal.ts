@@ -23,7 +23,30 @@ export enum OwnIdLoginFlow {
     Error = 'OwnIdLoginFlow.Error',
 }
 
-export type OwnIdFlowEvent =
+/**
+ * Identifies the mounted button that owns an event. This is intentionally
+ * kept in the internal event contract and is never forwarded to callbacks.
+ */
+export type OwnIdInternalEvent = {
+    ownerToken: string;
+};
+
+let ownerTokenSequence = 0;
+const ownerTokenProcessId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+
+/**
+ * Generates a process-local identity for one mounted native button.
+ */
+export function createOwnerToken(): string {
+    ownerTokenSequence += 1;
+    return `ownid-owner-${ownerTokenProcessId}-${ownerTokenSequence}`;
+}
+
+export function isOwnedEvent(event: OwnIdInternalEvent | null | undefined, ownerToken: string): boolean {
+    return event?.ownerToken === ownerToken;
+}
+
+export type OwnIdFlowEvent = OwnIdInternalEvent & (
     {
         eventType: OwnIdRegisterFlow.Busy | OwnIdLoginFlow.Busy;
         isBusy: boolean;
@@ -36,12 +59,13 @@ export type OwnIdFlowEvent =
         eventType: OwnIdRegisterFlow.Response | OwnIdLoginFlow.Response;
         loginId: string;
         payload: OwnIdPayload;
-        authType: string;
+        authType?: string;
         authToken?: string;
     } |
     {
         eventType: OwnIdRegisterFlow.Undo;
-    };
+    }
+);
 
 export enum OwnIdRegisterEvent {
     Busy = 'OwnIdRegisterEvent.Busy',
@@ -57,7 +81,7 @@ export enum OwnIdLoginEvent {
     Error = 'OwnIdLoginEvent.Error',
 }
 
-export type OwnIdIntegrationEvent =
+export type OwnIdIntegrationEvent = OwnIdInternalEvent & (
     {
         eventType: OwnIdRegisterEvent.Busy | OwnIdLoginEvent.Busy;
         isBusy: boolean;
@@ -69,18 +93,19 @@ export type OwnIdIntegrationEvent =
     {
         eventType: OwnIdRegisterEvent.ReadyToRegister;
         loginId: string;
-        authType: string;
+        authType?: string;
     } |
     {
         eventType: OwnIdRegisterEvent.LoggedIn | OwnIdLoginEvent.LoggedIn;
-        authType: string;
+        authType?: string;
         authToken?: string;
     } |
     {
         eventType: OwnIdRegisterEvent.Undo;
-    };
+    }
+);
 
-export function parsePayload(loginId: string, ownIdPayload: OwnIdPayload, authType: string, authToken?: string) {
+export function parsePayload(loginId: string, ownIdPayload: OwnIdPayload, authType?: string, authToken?: string) {
     let payload = { ...ownIdPayload };
     try {
         payload.data = JSON.parse(ownIdPayload.data);
@@ -99,39 +124,40 @@ export function generatePassword(
     const possibleNumberChars = '0123456789';
     const possibleSpecialChars = '@$%*&^!#_';
 
-    let resArr: string[] = [];
+    validateNonNegativeSafeInteger(length, 'length');
+    validateNonNegativeSafeInteger(numberCapitalised, 'numberCapitalised');
+    validateNonNegativeSafeInteger(numberNumbers, 'numberNumbers');
+    validateNonNegativeSafeInteger(numberSpecial, 'numberSpecial');
 
-    if (numberCapitalised) {
-        resArr = addGroup(resArr, length, possibleCapitalChars, numberCapitalised);
-    }
-    if (numberNumbers) {
-        resArr = addGroup(resArr, length, possibleNumberChars, numberNumbers);
-    }
-    if (numberSpecial) {
-        resArr = addGroup(resArr, length, possibleSpecialChars, numberSpecial);
+    const requestedCount = numberCapitalised + numberNumbers + numberSpecial;
+    if (requestedCount > length) {
+        throw new RangeError('Requested character counts must not exceed length');
     }
 
-    const arrLength = resArr.length;
+    const result: string[] = [];
+    addGroup(result, possibleCapitalChars, numberCapitalised);
+    addGroup(result, possibleNumberChars, numberNumbers);
+    addGroup(result, possibleSpecialChars, numberSpecial);
+    addGroup(result, possibleRegularChars, length - requestedCount);
 
-    for (let i = length; i > arrLength; i--) {
-        resArr.push(possibleRegularChars[Math.floor(Math.random() * possibleRegularChars.length)]);
-    }
-
-    resArr = shuffle(resArr);
-
-    return resArr.join('');
+    return shuffle(result).join('');
 }
 
-function addGroup(arr: string[], length: number, possibleChars: string, number = 1) {
-    for (let i = Math.floor(Math.random() * (length / 4 - number) + number); i--;) {
+function validateNonNegativeSafeInteger(value: number, name: string): void {
+    if (!Number.isFinite(value) || !Number.isSafeInteger(value) || value < 0) {
+        throw new RangeError(`${name} must be a finite, non-negative safe integer`);
+    }
+}
+
+function addGroup(arr: string[], possibleChars: string, count: number): void {
+    for (let i = 0; i < count; i += 1) {
         const char = possibleChars[Math.floor(Math.random() * possibleChars.length)];
         arr.push(char);
     }
-    return arr;
 }
 
 function shuffle(arr: string[]) {
-    for (let i = arr.length - 1; i--;) {
+    for (let i = arr.length - 1; i > 0; i -= 1) {
         const j = Math.floor(Math.random() * (i + 1));
         const x = arr[i];
         arr[i] = arr[j];

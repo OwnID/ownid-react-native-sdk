@@ -16,9 +16,11 @@ import kotlin.math.roundToInt
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class OwnIdAuthButtonFabricView(
     context: Context,
-    private val properties: OwnIdWidget.Properties,
+    private var properties: OwnIdWidget.Properties,
     private val onMeasured: (width: Int, height: Int) -> Unit,
 ) : OwnIdAuthButton(context) {
+
+    private var requestedBusy: Boolean = false
 
     init {
         layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -37,7 +39,8 @@ internal class OwnIdAuthButtonFabricView(
     }
 
     override fun onBusy(isBusy: Boolean) {
-        super.onBusy(isBusy)
+        requestedBusy = isBusy
+        applyRequestedBusy()
         post { measureAndReport() }
     }
 
@@ -57,5 +60,22 @@ internal class OwnIdAuthButtonFabricView(
         measure(widthSpec, heightSpec)
         layout(0, 0, measuredWidth, measuredHeight)
         onMeasured.invoke(measuredWidth, measuredHeight)
+    }
+
+    internal fun updateProperties(properties: OwnIdWidget.Properties) {
+        if (this.properties == properties) return
+        this.properties = properties
+        setColors(
+            properties.textColor?.let { ColorStateList.valueOf(it) },
+            properties.backgroundColor?.let { ColorStateList.valueOf(it) },
+            properties.spinnerColor,
+            properties.spinnerBackgroundColor
+        )
+        applyRequestedBusy()
+        post { measureAndReport() }
+    }
+
+    private fun applyRequestedBusy() {
+        super.onBusy(requestedBusy && properties.showSpinner)
     }
 }

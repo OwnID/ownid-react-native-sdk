@@ -43,8 +43,7 @@ final class OwnIDActionButtonManager: RCTViewManager {
 
     override func view() -> UIView! {
         let instance = OwnIDButtonViewControllerWrapperView()
-        CreationInformation.shared.viewInstance = instance
-        CreationInformation.shared.managerInstance = self
+        instance.paperManager = self
         return instance
     }
 
@@ -52,19 +51,23 @@ final class OwnIDActionButtonManager: RCTViewManager {
     override func shadowView() -> RCTShadowView! { OwnIDShadowView() }
     override var methodQueue: DispatchQueue! { .main }
 
-    func updateLayoutInfo(size: CGSize, shouldIgnoreParentSize: Bool) {
+    func updateLayoutInfo(
+        size: CGSize,
+        shouldIgnoreParentSize: Bool,
+        for viewInstance: OwnIDButtonViewControllerWrapperView
+    ) {
+        let reactTag = viewInstance.reactTag
         if shouldIgnoreParentSize {
-            DispatchQueue.main.async {
-                self.bridge.uiManager.setSize(size, for: CreationInformation.shared.viewInstance)
+            DispatchQueue.main.async { [weak self, weak viewInstance] in
+                guard let self, let viewInstance else { return }
+                guard viewInstance.reactTag == reactTag else { return }
+                self.bridge.uiManager.setSize(size, for: viewInstance)
             }
         }
-        RCTExecuteOnUIManagerQueue({
-            if let viewInstance = CreationInformation.shared.viewInstance {
-                let view = self.bridge.uiManager.shadowView(forReactTag: viewInstance.reactTag)
-                view?.setLocalData(LocalDataSize(size: size, shouldIgnoreParentSize: shouldIgnoreParentSize))
-            } else {
-                OwnID.CoreSDK.logger.log(level: .warning, message: "RN: OwnID view instance is nil.", type: Self.self)
-            }
+        RCTExecuteOnUIManagerQueue({ [weak self, weak viewInstance] in
+            guard let self, let viewInstance, viewInstance.reactTag == reactTag else { return }
+            let view = self.bridge.uiManager.shadowView(forReactTag: reactTag)
+            view?.setLocalData(LocalDataSize(size: size, shouldIgnoreParentSize: shouldIgnoreParentSize))
         })
     }
 }

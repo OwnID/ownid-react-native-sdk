@@ -24,6 +24,14 @@ import type { Spec as NativeOwnIdSpec } from './specs/NativeOwnIdModule';
 import { generatePassword } from './internal';
 import { _setInitPending } from './common';
 
+const unsupportedInstanceNameMessage = 'Named OwnID instances are not supported';
+
+function assertDefaultInstance(instanceName?: string | null): void {
+  if (instanceName != null) {
+    throw new Error(unsupportedInstanceNameMessage);
+  }
+}
+
 function getOwnIdModule(): NativeOwnIdSpec | null {
   try {
     const tm = (TurboModuleRegistry as any)?.get?.('OwnIdModule');
@@ -50,11 +58,13 @@ export default {
    * 
    * @param {OwnIdConfiguration} configuration - (mandatory) Configuration for the OwnID SDK.
    * @param {string} productName - (mandatory) Used in network calls as part of the `User Agent` string. Example: "DirectIntegration/3.4.0".
-   * @param {string} instanceName - (optional) The name of the OwnID instance.
+   * @param {string} instanceName - (legacy, optional) Must be omitted because
+   * named OwnID instances are not supported.
    * 
    * @returns {Promise<void>} - A promise indicating the completion of the initialization.
    */
   async init(configuration: OwnIdConfiguration, productName: string, instanceName?: string) {
+    assertDefaultInstance(instanceName);
     const M = requireOwnIdModule();
     const p: Promise<void> = (M as any).createInstance(configuration, productName, instanceName);
     _setInitPending(p);
@@ -73,7 +83,7 @@ export default {
    * 
    * @returns {Promise<void>} A promise that resolves when the locale is set.
    */
-  async setLocale(locale?: string): Promise<void> {
+  async setLocale(locale?: string | null): Promise<void> {
     const M = requireOwnIdModule();
     return (M as any).setLocale(locale);
   },
@@ -84,13 +94,15 @@ export default {
    * @param {string} loginId - The user's login ID.
    * @param {string} authToken - The user's authentication token.
    * @param {boolean} force - (optional) if set to true, the enrollment will be forced even if the enrollment request timeout (7 days) has not passed. Defaults to false.
-   * @param {string} instanceName - (optional) The name of the OwnID instance.
+   * @param {string} instanceName - (legacy, optional) Must be omitted because
+   * named OwnID instances are not supported.
    * 
-   * @returns {Promise<string>} - A promise with enrollment result.
+   * @returns {Promise<void>} - A promise that resolves when enrollment completes.
    */
-  async enrollCredential(loginId: string, authToken: string, force: boolean = false, instanceName?: string) {
+  async enrollCredential(loginId: string, authToken: string, force: boolean = false, instanceName?: string): Promise<void> {
+    assertDefaultInstance(instanceName);
     const M = requireOwnIdModule();
-    return (M as any).enrollCredential(loginId, authToken, force, instanceName);
+    await (M as any).enrollCredential(loginId, authToken, force, instanceName);
   },
 
   /**

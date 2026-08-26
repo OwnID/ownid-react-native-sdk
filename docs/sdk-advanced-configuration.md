@@ -34,7 +34,7 @@ All parameters are eventually sent to the native OwnID SDKs. For more details, r
 Example:
 
 ```ts
-await OwnId.init({ appId: "your_app_id", env: "uat", region: "eu", enableLogging: true, redirectUrl: "com.ownid.demo.react://ownid" }, ...)
+await OwnId.init({ appId: "your_app_id", env: "uat", region: "eu", enableLogging: true, redirectionUri: "com.ownid.demo.react://ownid" }, ...)
 ```
 
 ## Custom locale

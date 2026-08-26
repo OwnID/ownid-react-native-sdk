@@ -10,11 +10,16 @@ import com.ownid.sdk.event.OwnIdLoginEvent
 import com.ownid.sdk.event.OwnIdLoginFlow
 import com.ownid.sdk.event.OwnIdRegisterEvent
 import com.ownid.sdk.event.OwnIdRegisterFlow
+import com.ownid.sdk.exception.OwnIdException
+import com.ownid.sdk.exception.OwnIdUserError
 
 @InternalOwnIdAPI
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal fun OwnIdEvent.emitToReact(eventEmitter: DeviceEventManagerModule.RCTDeviceEventEmitter) {
-    eventEmitter.emit(getReactEventName(), toWritableMap())
+internal fun OwnIdEvent.emitToReact(
+    eventEmitter: DeviceEventManagerModule.RCTDeviceEventEmitter,
+    ownerToken: String
+) {
+    eventEmitter.emit(getReactEventName(), toWritableMap().apply { putString("ownerToken", ownerToken) })
 }
 
 @InternalOwnIdAPI
@@ -49,7 +54,7 @@ internal fun OwnIdEvent.toWritableMap(): WritableMap = when (this) {
 
             OwnIdRegisterFlow.Undo -> Unit
 
-            is OwnIdRegisterFlow.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toMap()))
+            is OwnIdRegisterFlow.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toReactErrorMap()))
         }
 
         arguments
@@ -73,7 +78,7 @@ internal fun OwnIdEvent.toWritableMap(): WritableMap = when (this) {
                 authToken?.let { arguments.putString("authToken", it) }
             }
 
-            is OwnIdLoginFlow.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toMap()))
+            is OwnIdLoginFlow.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toReactErrorMap()))
         }
 
         arguments
@@ -96,7 +101,7 @@ internal fun OwnIdEvent.toWritableMap(): WritableMap = when (this) {
                 arguments.putString("authType", authType)
                 authToken?.let { arguments.putString("authToken", it) }
             }
-            is OwnIdRegisterEvent.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toMap()))
+            is OwnIdRegisterEvent.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toReactErrorMap()))
         }
 
         arguments
@@ -113,11 +118,27 @@ internal fun OwnIdEvent.toWritableMap(): WritableMap = when (this) {
                 arguments.putString("authType", authType)
                 authToken?.let { arguments.putString("authToken", it) }
             }
-            is OwnIdLoginEvent.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toMap()))
+            is OwnIdLoginEvent.Error -> arguments.putMap("error", Arguments.makeNativeMap(cause.toReactErrorMap()))
         }
 
         arguments
     }
 
     else -> throw IllegalArgumentException("Unknown OwnIdEvent type: ${this::class.java}")
+}
+
+@OptIn(InternalOwnIdAPI::class)
+private fun Throwable.toReactErrorMap(): Map<String, Any?> {
+    val result: MutableMap<String, Any?> = when (this) {
+        is OwnIdException -> toMap().toMutableMap()
+        else -> mutableMapOf(
+            "className" to javaClass.simpleName,
+            "message" to message,
+            "cause" to null,
+            "stackTrace" to stackTraceToString(),
+        )
+    }
+    result["cause"] = cause?.toReactErrorMap()
+    if (this is OwnIdUserError) result["message"] = userMessage
+    return result
 }

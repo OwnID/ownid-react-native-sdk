@@ -28,11 +28,11 @@ static NSDictionary *OwnId_Config_ToNSDictionary(JS::NativeOwnIdModule::OwnIdCon
     if (auto region = cfg.region()) {
         d[@"region"] = region;
     }
+    if (auto isLoggingEnabled = cfg.enableLogging()) {
+        d[@"enableLogging"] = @(*isLoggingEnabled);
+    }
     if (auto uri = cfg.redirectionUri()) {
         d[@"redirectionUri"] = uri;
-    }
-    if (auto uriA = cfg.redirectionUriAndroid()) {
-        d[@"redirectionUriAndroid"] = uriA;
     }
     if (auto uriI = cfg.redirectionUriIos()) {
         d[@"redirectionUriIos"] = uriI;

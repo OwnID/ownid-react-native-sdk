@@ -31,3 +31,4 @@ export interface Spec extends TurboModule {
 export default (TurboModuleRegistry.get<Spec>(
   'OwnIdModule',
 ) as Spec | null);
+

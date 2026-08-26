@@ -15,9 +15,11 @@ import com.ownid.sdk.view.popup.tooltip.Tooltip
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class OwnIdButtonReact(
     context: Context,
-    private val properties: OwnIdWidget.Properties,
+    private var properties: OwnIdWidget.Properties,
     private val shadowNode: OwnIdLayoutShadowNode,
 ) : OwnIdButton(context) {
+
+    private var requestedBusy: Boolean = false
 
     private val measureListener = object : OwnIdLayoutShadowNode.MeasureListener {
         @WorkerThread
@@ -65,13 +67,43 @@ public class OwnIdButtonReact(
     }
 
     override fun onBusy(isBusy: Boolean) {
-        super.onBusy(isBusy)
+        requestedBusy = isBusy
+        applyRequestedBusy()
         reMeasureAndLayout(true)
     }
 
     override fun setStrings() {
         super.setStrings()
         reMeasureAndLayout(true)
+    }
+
+    internal fun updateProperties(properties: OwnIdWidget.Properties) {
+        if (this.properties == properties) return
+        this.properties = properties
+        position = properties.widgetPosition
+        showOr = properties.showOr
+        showSpinner = properties.showSpinner
+        setColors(
+            properties.textColor?.let { ColorStateList.valueOf(it) },
+            properties.backgroundColor?.let { ColorStateList.valueOf(it) },
+            properties.borderColor?.let { ColorStateList.valueOf(it) },
+            properties.iconColor?.let { ColorStateList.valueOf(it) },
+            properties.spinnerColor,
+            properties.spinnerBackgroundColor
+        )
+        tooltipProperties = Tooltip.Properties(
+            null,
+            properties.tooltipTextColor,
+            properties.tooltipBackgroundColor,
+            properties.tooltipBorderColor,
+            properties.tooltipPosition
+        )
+        applyRequestedBusy()
+        post { reMeasureAndLayout(true) }
+    }
+
+    private fun applyRequestedBusy() {
+        super.onBusy(requestedBusy && properties.showSpinner)
     }
 
     private var currentWidthMeasureSpec: Int? = null

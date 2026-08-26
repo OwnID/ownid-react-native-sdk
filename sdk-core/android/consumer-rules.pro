@@ -1,0 +1,2 @@
+-keep class com.ownid.sdk.reactnative.OwnIdFragment { public <init>(); }
+-keep class com.ownid.sdk.reactnative.fabric.OwnIdFragmentFabric { public <init>(); }

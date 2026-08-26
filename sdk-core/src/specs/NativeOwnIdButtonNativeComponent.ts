@@ -1,5 +1,6 @@
-import type { ViewProps } from 'react-native';
+import type { HostComponent, ViewProps } from 'react-native';
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
+import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands';
 import type { WithDefault, Int32, DirectEventHandler, } from 'react-native/Libraries/Types/CodegenTypes';
 import type { ColorValue } from 'react-native';
 
@@ -31,6 +32,7 @@ export interface NativeProps extends ViewProps {
 
   type?: OwnIdButtonType;
   loginId?: string;
+  ownerToken: string;
 
   preferredHeight?: Int32;
 
@@ -38,4 +40,15 @@ export interface NativeProps extends ViewProps {
   onContentSizeChange?: DirectEventHandler<ContentSize>;
 }
 
-export default codegenNativeComponent<NativeProps>('OwnIdButton');
+interface NativeCommands {
+  listenersReady: (
+    viewRef: React.ElementRef<HostComponent<NativeProps>>,
+    ownerToken: string,
+  ) => void;
+}
+
+export const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
+  supportedCommands: ['listenersReady'],
+});
+
+export default codegenNativeComponent<NativeProps>('OwnIdButton') as HostComponent<NativeProps>;

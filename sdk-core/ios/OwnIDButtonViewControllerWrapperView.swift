@@ -1,35 +1,6 @@
 import Foundation
-import OwnIDCoreSDK
 import React
 import UIKit
-
-enum OwnIdButtonWidgetTypeBridge: String {
-    case iconButton = "OwnIdButton"
-    case authButton = "OwnIdAuthButton"
-
-    func toCoreVariant() -> OwnID.UISDK.WidgetType {
-        switch self {
-        case .iconButton:
-            return .iconButton
-        case .authButton:
-            return .authButton
-        }
-    }
-}
-
-enum OwnIdButtonWidgetPositionBridge: String {
-    case start
-    case end
-
-    func toCoreVariant() -> OwnID.UISDK.WidgetPosition {
-        switch self {
-        case .start:
-            return .leading
-        case .end:
-            return .trailing
-        }
-    }
-}
 
 @objcMembers
 @objc(OwnIDButtonViewControllerWrapperView)
@@ -42,7 +13,12 @@ public final class OwnIDButtonViewControllerWrapperView: UIView {
     private var jsResolvedWidth: CGFloat = 0
     private var pendingControllerAttach = false
     private var isMeasurementScheduled = false
+    private var pendingContentSizeEvent: CGSize?
+    private var lastContentSizeEvent: CGSize = .zero
+    private var isContentSizeEventScheduled = false
+    private var hasAppliedPropBatch = false
     @objc public var measurementCallback: (() -> Void)?
+    weak var paperManager: OwnIDActionButtonManager?
 
     @objc(registerMeasurementCallback:)
     public func registerMeasurementCallback(_ callback: @escaping () -> Void) {
@@ -52,21 +28,21 @@ public final class OwnIDButtonViewControllerWrapperView: UIView {
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        CreationInformation.shared.viewInstance = self
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        CreationInformation.shared.viewInstance = self
+    }
+
+    deinit {
+        controller?.bridge_prepareForRecycle()
+        removeButtonController()
     }
 
     // MARK: Button General Properties
 
-    @objc var loginId: NSString = "" {
-        didSet {
-            controller?.loginId = loginId as String
-        }
-    }
+    @objc var loginId: NSString = ""
+    @objc var ownerToken: NSString = ""
 
     @objc var showOr: NSNumber = 1
     @objc var type: NSString = ""
@@ -96,7 +72,13 @@ public final class OwnIDButtonViewControllerWrapperView: UIView {
     // NA interop compatibility
     @objc var preferredHeight: NSNumber? {
         didSet {
-            guard let value = preferredHeight?.doubleValue, value > 0 else { return }
+            guard let value = preferredHeight?.doubleValue, value > 0 else {
+                // React Native sends nil when an explicit height is removed.
+                // Do not let the previous numeric value force the next
+                // intrinsic measurement.
+                lastResolvedHeight = nil
+                return
+            }
             applyResolvedHeight(CGFloat(value))
         }
     }
@@ -111,18 +93,12 @@ public final class OwnIDButtonViewControllerWrapperView: UIView {
 
     public override func reactSetFrame(_ frame: CGRect) {
         super.reactSetFrame(frame)
-        let frameHeight = frame.size.height
-        let fallbackHeight = superview?.bounds.height ?? 0
-        let candidateHeight = frameHeight > 0 ? frameHeight : fallbackHeight
         controller?.view.frame = bounds
         if bounds.width.isFinite, bounds.width > 0 {
             rendererResolvedWidth = bounds.width
         }
         if bounds.height.isFinite, bounds.height > 0 {
             rendererResolvedHeight = bounds.height
-        }
-        if candidateHeight > 0 {
-            applyResolvedHeight(candidateHeight)
         }
         addButtonController()
     }
@@ -131,7 +107,6 @@ public final class OwnIDButtonViewControllerWrapperView: UIView {
         super.layoutSubviews()
         if let hostedView = controller?.view {
             hostedView.frame = bounds
-            hostedView.setNeedsLayout()
         }
         if bounds.width.isFinite, bounds.width > 0 {
             rendererResolvedWidth = bounds.width
@@ -145,13 +120,25 @@ public final class OwnIDButtonViewControllerWrapperView: UIView {
         super.didMoveToWindow()
         if window != nil {
             addButtonController()
+        } else {
+            detachButtonController()
+        }
+    }
+
+    public override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        if superview != nil {
+            addButtonController()
+        } else {
+            detachButtonController()
         }
     }
 
     public override func didSetProps(_ changedProps: [String]!) {
         super.didSetProps(changedProps)
         createButtonControllerIfNeeded()
-        applyControllerFields()
+        configureController()
+        hasAppliedPropBatch = true
         addButtonController()
     }
 }
@@ -211,8 +198,7 @@ extension OwnIDButtonViewControllerWrapperView {
         lastResolvedHeight = resolvedHeight
         rendererResolvedHeight = resolvedHeight
         createButtonControllerIfNeeded()
-        controller.height = resolvedHeight
-        applyControllerFields()
+        controller.bridge_applyResolvedHeight(NSNumber(value: Double(resolvedHeight)))
         addButtonController()
     }
 }
@@ -225,116 +211,90 @@ extension OwnIDButtonViewControllerWrapperView {
 
         controller = OwnIDButtonViewController()
         controller.authIntegration = CreationInformation.shared.authIntegration
+        controller.paperOwner = self
     }
 
     fileprivate func removeButtonController() {
         guard let controller else { return }
-        controller.view.removeFromSuperview()
-        if controller.parent != nil {
-            controller.willMove(toParent: nil)
-            controller.removeFromParent()
-        }
+        detachButtonController()
         self.controller = nil
         pendingControllerAttach = false
     }
 
-    fileprivate func applyControllerFields() {
-        guard controller != nil else { return }
-
-        controller.type = ViewDisplayType(rawValue: type.lowercased) ?? .login
-        controller.showOr = showOr.boolValue
-
-        if let widgetType = OwnIdButtonWidgetTypeBridge(rawValue: widgetType as String)?.toCoreVariant() {
-            controller.widgetType = widgetType
+    fileprivate func detachButtonController() {
+        guard let controller else { return }
+        if controller.parent != nil {
+            controller.willMove(toParent: nil)
         }
-        if let widgetPosition = OwnIdButtonWidgetPositionBridge(rawValue: widgetPosition as String)?.toCoreVariant() {
-            controller.widgetPosition = widgetPosition
-        }
-
-        if let iconColor = iconColor.nonEmptyColor {
-            controller.iconColor = iconColor
-        }
-        if let buttonBorderColor = buttonBorderColor.nonEmptyColor {
-            controller.buttonBorderColor = buttonBorderColor
-        }
-        if let buttonBackgroundColor = buttonBackgroundColor.nonEmptyColor {
-            controller.buttonBackgroundColor = buttonBackgroundColor
-        }
-        if let buttonTextColor = buttonTextColor.nonEmptyColor {
-            controller.buttonTextColor = buttonTextColor
-        }
-
-        updateTooltipPosition()
-        if let tooltipBorderColor = tooltipBorderColor.nonEmptyColor {
-            controller.tooltipBorderColor = tooltipBorderColor
-        }
-        if let tooltipBackgroundColor = tooltipBackgroundColor.nonEmptyColor {
-            controller.tooltipBackgroundColor = tooltipBackgroundColor
-        }
-        if let tooltipTextColor = tooltipTextColor.nonEmptyColor {
-            controller.tooltipTextColor = tooltipTextColor
-        }
-
-        controller.showSpinner = showSpinner.boolValue
-        if let spinnerColor = spinnerColor.nonEmptyColor {
-            controller.spinnerColor = spinnerColor
-        }
-        if let spinnerBackgroundColor = spinnerBackgroundColor.nonEmptyColor {
-            controller.spinnerBackgroundColor = spinnerBackgroundColor
+        controller.viewIfLoaded?.removeFromSuperview()
+        if controller.parent != nil {
+            controller.removeFromParent()
         }
     }
 
+    fileprivate func configureController() {
+        guard controller != nil else { return }
+
+        controller.bridge_configure(
+            type: type,
+            widgetType: widgetType,
+            widgetPosition: widgetPosition,
+            login: loginId,
+            ownerToken: ownerToken,
+            showOr: showOr,
+            showSpinner: showSpinner,
+            iconColor: iconColor,
+            buttonBorderColor: buttonBorderColor,
+            buttonBackgroundColor: buttonBackgroundColor,
+            buttonTextColor: buttonTextColor,
+            tooltipPositionStr: tooltipPosition,
+            tooltipTextColor: tooltipTextColor,
+            tooltipBackgroundColor: tooltipBackgroundColor,
+            tooltipBorderColor: tooltipBorderColor,
+            spinnerColor: spinnerColor,
+            spinnerBackgroundColor: spinnerBackgroundColor,
+            preferredHeight: preferredHeight
+        )
+    }
+
     fileprivate func addButtonController() {
+        // Paper invokes individual prop setters before didSetProps. Do not create
+        // publisher subscriptions until the complete prop batch (including the
+        // owner token) has been applied.
+        guard hasAppliedPropBatch else { return }
         guard let controller else { return }
-        guard controller.view.superview !== self else { return }
+        guard window != nil else { return }
         // Attach only when we have a valid React-managed view controller
         guard let parentViewController = self.reactViewController() else {
-            if !pendingControllerAttach {
-                pendingControllerAttach = true
-            }
+            guard !pendingControllerAttach else { return }
+            pendingControllerAttach = true
             DispatchQueue.main.async { [weak self] in
+                self?.pendingControllerAttach = false
                 self?.addButtonController()
             }
             return
         }
-        // Paper: do not defer on window/bounds; attach now and rely on constraints + later measurements
         pendingControllerAttach = false
         controller.onContentReady = { [weak self] in
             self?.requestMeasurement()
         }
         controller.loadViewIfNeeded()
+        if controller.parent === parentViewController, controller.view.superview === self {
+            requestMeasurement()
+            return
+        }
+        detachButtonController()
         controller.view.translatesAutoresizingMaskIntoConstraints = false
         controller.view.frame = bounds
-        // Paper: avoid VC containment to prevent parent mismatch with react-native-screens
-        if isFabricRuntime {
-            // Defensive: only for Fabric (wrapper normally not used in Fabric)
-            parentViewController.addChild(controller)
-            addSubview(controller.view)
-            NSLayoutConstraint.activate([
-                controller.view.leadingAnchor.constraint(equalTo: leadingAnchor),
-                controller.view.trailingAnchor.constraint(equalTo: trailingAnchor),
-                controller.view.topAnchor.constraint(equalTo: topAnchor),
-                controller.view.bottomAnchor.constraint(equalTo: bottomAnchor),
-            ])
-            setNeedsLayout()
-            layoutIfNeeded()
-            controller.didMove(toParent: parentViewController)
-        } else {
-            // Detach from any previous parent to avoid VC tree assertions
-            if controller.parent != nil {
-                controller.willMove(toParent: nil)
-                controller.removeFromParent()
-            }
-            addSubview(controller.view)
-            NSLayoutConstraint.activate([
-                controller.view.leadingAnchor.constraint(equalTo: leadingAnchor),
-                controller.view.trailingAnchor.constraint(equalTo: trailingAnchor),
-                controller.view.topAnchor.constraint(equalTo: topAnchor),
-                controller.view.bottomAnchor.constraint(equalTo: bottomAnchor),
-            ])
-            setNeedsLayout()
-            layoutIfNeeded()
-        }
+        parentViewController.addChild(controller)
+        addSubview(controller.view)
+        NSLayoutConstraint.activate([
+            controller.view.leadingAnchor.constraint(equalTo: leadingAnchor),
+            controller.view.trailingAnchor.constraint(equalTo: trailingAnchor),
+            controller.view.topAnchor.constraint(equalTo: topAnchor),
+            controller.view.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+        controller.didMove(toParent: parentViewController)
         requestMeasurement()
     }
 
@@ -342,13 +302,12 @@ extension OwnIDButtonViewControllerWrapperView {
         guard let controller else {
             return lastMeasuredSize
         }
-        let preferred = lastResolvedHeight ?? CGFloat(preferredHeight?.doubleValue ?? 0)
-        let fallbackHeight = rendererResolvedHeight > 0 ? rendererResolvedHeight : (bounds.height > 0 ? bounds.height : Self.minHeight)
-        let baseHeight = max(max(preferred, fallbackHeight), Self.minHeight)
+        let preferred = CGFloat(preferredHeight?.doubleValue ?? 0)
+        let baseHeight = max(preferred, Self.minHeight)
         let widthConstraint: CGFloat? = rendererResolvedWidth > 0 ? rendererResolvedWidth : (jsResolvedWidth > 0 ? jsResolvedWidth : nil)
         let measuredSize = controller.measureContent(
             constrainedWidth: widthConstraint,
-            constrainedHeight: baseHeight
+            constrainedHeight: preferred > 0 ? baseHeight : nil
         )
         var width = widthConstraint ?? measuredSize.width
         var height = measuredSize.height
@@ -378,58 +337,44 @@ extension OwnIDButtonViewControllerWrapperView {
         }
     }
 
-    fileprivate func updateTooltipPosition() {
-        if tooltipPosition.length != 0 {
-            let unifiedPosition = tooltipPosition as String
-            let hideTooltip = unifiedPosition == "none"
-            if hideTooltip {
-                controller.shouldShowTooltip = false
-            } else {
-                if let mappedPosition = OwnID.UISDK.TooltipPositionType.mapPosition(position: unifiedPosition) {
-                    controller.tooltipPosition = mappedPosition
-                }
-            }
-        }
-    }
 }
 
 extension OwnIDButtonViewControllerWrapperView {
     func receiveLayoutInfo(size: CGSize, shouldIgnoreParentSize: Bool) {
-        rendererResolvedWidth = size.width.isFinite ? max(0, size.width) : rendererResolvedWidth
+        paperManager?.updateLayoutInfo(
+            size: size,
+            shouldIgnoreParentSize: shouldIgnoreParentSize,
+            for: self
+        )
+        if shouldIgnoreParentSize, size.width.isFinite {
+            rendererResolvedWidth = max(0, size.width)
+        }
         rendererResolvedHeight = size.height.isFinite ? max(Self.minHeight, size.height) : rendererResolvedHeight
-        setNeedsLayout()
-        layoutIfNeeded()
         addButtonController()
         requestMeasurement()
-        if let onContentSizeChange, rendererResolvedWidth > 0, rendererResolvedHeight > 0 {
-            onContentSizeChange(["width": Int(lround(rendererResolvedWidth)), "height": Int(lround(rendererResolvedHeight))])
-        }
+        scheduleContentSizeEvent(
+            CGSize(width: rendererResolvedWidth, height: rendererResolvedHeight)
+        )
     }
-}
 
-extension OwnIDButtonViewControllerWrapperView {
-    fileprivate var isFabricRuntime: Bool {
-        CreationInformation.shared.managerInstance == nil
-    }
-}
-extension NSString {
-    fileprivate var nonEmptyColor: UIColor? {
-        guard length != 0 else { return nil }
-        let string = self as String
-        return string.hexToUIColor
-    }
-}
-
-extension OwnID.UISDK.TooltipPositionType {
-    fileprivate static func mapPosition(position: String) -> OwnID.UISDK.TooltipPositionType? {
-        switch position {
-        case "start":
-            return .leading
-        case "end":
-            return .trailing
-
-        default:
-            return OwnID.UISDK.TooltipPositionType(rawValue: position)
+    private func scheduleContentSizeEvent(_ size: CGSize) {
+        guard size.width.isFinite, size.height.isFinite, size.width > 0, size.height > 0 else { return }
+        pendingContentSizeEvent = size
+        guard !isContentSizeEventScheduled else { return }
+        isContentSizeEventScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.isContentSizeEventScheduled = false
+            guard let size = self.pendingContentSizeEvent else { return }
+            self.pendingContentSizeEvent = nil
+            guard abs(self.lastContentSizeEvent.width - size.width) >= 0.5 ||
+                abs(self.lastContentSizeEvent.height - size.height) >= 0.5
+            else { return }
+            self.lastContentSizeEvent = size
+            self.onContentSizeChange?([
+                "width": Int(lround(size.width)),
+                "height": Int(lround(size.height)),
+            ])
         }
     }
 }

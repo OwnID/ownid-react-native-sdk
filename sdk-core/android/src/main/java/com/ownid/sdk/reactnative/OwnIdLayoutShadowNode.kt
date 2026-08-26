@@ -3,6 +3,7 @@ package com.ownid.sdk.reactnative
 import android.view.View
 import androidx.annotation.WorkerThread
 import com.facebook.react.uimanager.LayoutShadowNode
+import com.facebook.react.uimanager.UIViewOperationQueue
 import com.facebook.yoga.YogaMeasureFunction
 import com.facebook.yoga.YogaMeasureMode
 import com.facebook.yoga.YogaMeasureOutput
@@ -37,13 +38,19 @@ public class OwnIdLayoutShadowNode : LayoutShadowNode(), YogaMeasureFunction {
         setMeasureFunction(this)
     }
 
+    override fun onCollectExtraUpdates(uiViewOperationQueue: UIViewOperationQueue) {
+        super.onCollectExtraUpdates(uiViewOperationQueue)
+        uiViewOperationQueue.enqueueUpdateExtraData(reactTag, this)
+    }
+
     override fun measure(node: YogaNode, width: Float, widthMode: YogaMeasureMode, height: Float, heightMode: YogaMeasureMode): Long {
         requestedWidth = width
         requestedWidthMode = widthMode
         requestedHeight = height
         requestedHeightMode = heightMode
 
-        measureListenerSet.forEach { listener -> listener.onMeasure() }
+        val listeners = synchronized(measureListenerSet) { measureListenerSet.toList() }
+        listeners.forEach { listener -> listener.onMeasure() }
 
         return YogaMeasureOutput.make(measuredWidth, measuredHeight)
     }
