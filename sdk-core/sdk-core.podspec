@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'sdk-core'
-  s.version          = '3.11.0'
+  s.version          = '3.12.0'
   s.summary          = 'sdk-core'
 
   s.description      = <<-DESC

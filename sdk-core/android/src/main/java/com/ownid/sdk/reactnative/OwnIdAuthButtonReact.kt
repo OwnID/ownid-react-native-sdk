@@ -6,6 +6,7 @@ import android.content.res.ColorStateList
 import android.view.ViewGroup
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
+import androidx.appcompat.view.ContextThemeWrapper
 import com.ownid.sdk.InternalOwnIdAPI
 import com.ownid.sdk.view.OwnIdAuthButton
 
@@ -16,7 +17,9 @@ public class OwnIdAuthButtonReact(
     context: Context,
     private var properties: OwnIdWidget.Properties,
     private val shadowNode: OwnIdLayoutShadowNode,
-) : OwnIdAuthButton(context) {
+) : OwnIdAuthButton(
+    ContextThemeWrapper(context, R.style.OwnIdReactNativeAuthButtonTheme)
+) {
 
     private var requestedBusy: Boolean = false
 

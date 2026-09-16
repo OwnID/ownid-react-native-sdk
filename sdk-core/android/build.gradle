@@ -20,7 +20,7 @@ ext {
     name = "OwnID React Native Core SDK"
     groupId = "com.ownid.android-sdk"
     artifactId = "react-native-core"
-    versionName = "3.11.0"
+    versionName = "3.12.0"
 }
 
 group = ext.groupId
@@ -59,7 +59,7 @@ dependencies {
 def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-core.properties"
 clean { delete propertiesFileName }
 tasks.register("setVersionProperties", WriteProperties) {
-    outputFile file(propertiesFileName)
+    destinationFile.set(file(propertiesFileName))
     property "name", "OwnIDReactNativeCore"
     property "version", project.ext.versionName
 }

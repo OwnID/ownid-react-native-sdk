@@ -5,9 +5,11 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.view.ViewGroup
 import androidx.annotation.RestrictTo
+import androidx.appcompat.view.ContextThemeWrapper
 import com.facebook.react.uimanager.PixelUtil
 import com.ownid.sdk.InternalOwnIdAPI
 import com.ownid.sdk.reactnative.OwnIdWidget
+import com.ownid.sdk.reactnative.R
 import com.ownid.sdk.view.OwnIdAuthButton
 import kotlin.math.roundToInt
 
@@ -18,7 +20,9 @@ internal class OwnIdAuthButtonFabricView(
     context: Context,
     private var properties: OwnIdWidget.Properties,
     private val onMeasured: (width: Int, height: Int) -> Unit,
-) : OwnIdAuthButton(context) {
+) : OwnIdAuthButton(
+    ContextThemeWrapper(context, R.style.OwnIdReactNativeAuthButtonTheme)
+) {
 
     private var requestedBusy: Boolean = false
 
