@@ -1,0 +1,54 @@
+{
+  "name": "@ownid/react-native-compact-demo",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Plain React Native demo of the OwnID SDK Elite flow and Demo Identity profile.",
+  "scripts": {
+    "android:dev": "react-native run-android --mode devDebug --appId com.ownid.demo.dev",
+    "android:uat": "react-native run-android --mode uatDebug --appId com.ownid.demo.uat",
+    "check": "prettier --check \"**/*.{js,json,md,mjs,ts,tsx}\" && eslint . --max-warnings=0 && tsc --noEmit",
+    "format": "prettier --write \"**/*.{js,json,md,mjs,ts,tsx}\"",
+    "format:check": "prettier --check \"**/*.{js,json,md,mjs,ts,tsx}\"",
+    "ios:dev": "react-native run-ios --scheme OwnIDCompactDemoDev --mode DevDebug",
+    "ios:uat": "react-native run-ios --scheme OwnIDCompactDemoUat --mode UatDebug",
+    "lint": "eslint . --max-warnings=0",
+    "start": "react-native start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ownid/react-native-core": "file:../../.artifacts/ownid-react-native-core-4.0.0.tgz",
+    "react": "19.2.0",
+    "react-native": "0.83.10",
+    "react-native-safe-area-context": "5.5.2",
+    "react-native-webview": "16.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@babel/runtime": "7.29.7",
+    "@eslint/js": "10.0.1",
+    "@react-native-community/cli": "20.2.0",
+    "@react-native-community/cli-platform-android": "20.2.0",
+    "@react-native-community/cli-platform-ios": "20.2.0",
+    "@react-native/babel-preset": "0.83.10",
+    "@react-native/metro-config": "0.83.10",
+    "@react-native/typescript-config": "0.83.10",
+    "@types/react": "19.2.18",
+    "eslint": "10.10.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.12.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.0"
+  },
+  "engines": {
+    "node": "^20.19.4 || ^22.13.0 || >=24.0.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "11.6.2",
+      "onFail": "error"
+    }
+  },
+  "packageManager": "npm@11.6.2"
+}

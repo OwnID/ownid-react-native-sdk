@@ -1,0 +1,8 @@
+.DS_Store
+.expo/
+android/
+ios/
+node_modules/
+npm-debug.log*
+*.jsbundle
+coverage/

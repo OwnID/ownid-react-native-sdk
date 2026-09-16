@@ -1,65 +1,30 @@
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath("com.android.tools.build:gradle")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
-        classpath("com.facebook.react:react-native-gradle-plugin")
-    }
+def ownIdExtOrDefault = { String propertyName, int fallback ->
+  rootProject.ext.has(propertyName) ? rootProject.ext.get(propertyName) : fallback
 }
 
-plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("com.facebook.react")
-}
+def ownIdCompileSdkVersion = ownIdExtOrDefault("compileSdkVersion", 36).toString().toInteger()
+def ownIdMinSdkVersion = ownIdExtOrDefault("minSdkVersion", 24).toString().toInteger()
 
-ext {
-    name = "OwnID React Native Core SDK"
-    groupId = "com.ownid.android-sdk"
-    artifactId = "react-native-core"
-    versionName = "3.12.0"
-}
-
-group = ext.groupId
+apply plugin: "com.android.library"
 
 android {
-    namespace = "com.ownid.sdk.reactnative"
-    compileSdk = 35
-    buildToolsVersion = "35.0.0"
+  namespace "com.ownid.sdk.reactnative.core"
+  compileSdkVersion ownIdCompileSdkVersion
 
-    defaultConfig {
-        minSdk = 24
-        targetSdk = 35
+  defaultConfig {
+    minSdkVersion Math.max(ownIdMinSdkVersion, 24)
+  }
 
-        consumerProguardFiles 'consumer-rules.pro'
-
-        gradle.projectsEvaluated {
-            preBuild.dependsOn(setVersionProperties)
-        }
-    }
-
-    kotlinOptions {
-        freeCompilerArgs += ["-module-name", "com.ownid.sdk.reactnative.core"]
-        freeCompilerArgs += "-Xexplicit-api=strict"
-    }
-
-    lint {
-        enable "Interoperability"
-    }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
 }
 
 dependencies {
-    api("com.facebook.react:react-android")
-    api("com.ownid.android-sdk:core:3.11.0")
-}
-
-def propertiesFileName = "src/main/assets/com/ownid/sdk/react-native-core.properties"
-clean { delete propertiesFileName }
-tasks.register("setVersionProperties", WriteProperties) {
-    destinationFile.set(file(propertiesFileName))
-    property "name", "OwnIDReactNativeCore"
-    property "version", project.ext.versionName
+  implementation "com.facebook.react:react-android"
+  implementation project(":react-native-webview")
+  implementation "androidx.credentials:credentials:1.6.0"
+  implementation "androidx.credentials:credentials-play-services-auth:1.6.0"
+  compileOnly "androidx.webkit:webkit:1.14.0"
 }

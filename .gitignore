@@ -62,3 +62,4 @@ buck-out/
 
 # generate output
 dist
+/sdk-core/lib/

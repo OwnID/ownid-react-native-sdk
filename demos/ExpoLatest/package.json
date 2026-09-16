@@ -1,0 +1,58 @@
+{
+  "name": "@ownid/demo-expo-latest",
+  "version": "0.0.1",
+  "description": "Expo development-build demo of the OwnID SDK Elite flow with the Brita UAT application.",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "android": "expo run:android --variant debug --port 8082",
+    "config": "expo config --type public",
+    "dependencies:check": "expo install --check",
+    "format": "prettier --write \"**/*.{js,json,md,mjs,ts,tsx}\"",
+    "format:check": "prettier --check \"**/*.{js,json,md,mjs,ts,tsx}\"",
+    "ios": "expo run:ios --configuration Debug --port 8082",
+    "lint": "eslint . --max-warnings=0",
+    "prebuild:android": "expo prebuild --clean --platform android --no-install",
+    "prebuild:ios": "expo prebuild --clean --platform ios --no-install",
+    "start": "expo start --dev-client --port 8082",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ownid/react-native-core": "file:../../.artifacts/ownid-react-native-core-4.0.0.tgz",
+    "expo": "57.0.23",
+    "expo-build-properties": "57.0.19",
+    "expo-dev-client": "57.0.19",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-webview": "16.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/react": "19.2.18",
+    "eslint": "10.10.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.12.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.0"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "11.6.2",
+      "onFail": "error"
+    }
+  },
+  "packageManager": "npm@11.6.2",
+  "expo": {
+    "install": {
+      "exclude": [
+        "react-native-webview"
+      ]
+    }
+  }
+}
