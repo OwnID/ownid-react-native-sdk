@@ -22,11 +22,11 @@ npm install @ownid/react-native-core
 
 The package supports React Native autolinking, so no manual Android linking is required. Its Android dependency is resolved from Maven Central; make sure `mavenCentral()` is included in your Android repositories. The SDK builds against Android API 35 and requires Android API 24 or higher.
 
-For iOS, OwnID Core 3.11.0 is distributed from the public Git tag rather than CocoaPods Trunk. Add the native SDK inside your app target, before `use_native_modules!`, in `ios/Podfile`:
+For iOS, OwnID Core 3.11.1 is distributed from the public Git tag rather than CocoaPods Trunk. Add the native SDK inside your app target, before `use_native_modules!`, in `ios/Podfile`:
 
 ```ruby
 ownid_ios_sdk_git = 'https://github.com/OwnID/ownid-ios-sdk.git'
-ownid_ios_sdk_tag = '3.11.0'
+ownid_ios_sdk_tag = '3.11.1'
 
 target 'YourApp' do
   pod 'ownid-core-ios-sdk', :git => ownid_ios_sdk_git, :tag => ownid_ios_sdk_tag

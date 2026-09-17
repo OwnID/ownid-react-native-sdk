@@ -3,4 +3,6 @@
 
 @interface AppDelegate : RCTAppDelegate
 
+@property (nonatomic, strong, nullable) NSDictionary *launchOptions;
+
 @end
