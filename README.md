@@ -28,7 +28,7 @@ Use React Native 0.83 or newer with the New Architecture, React 19 (19.2 or newe
 
 1. [Configure OwnID](docs/configuration.md) with your application ID.
 2. [Enable passkeys](https://docs.ownid.com/mobile-sdks/setup/passkeys) for your Android and iOS apps.
-3. [Configure providers (optional)](docs/providers.md).
+3. [Configure shared providers (optional)](docs/providers.md).
 4. [Add Elite Flow](docs/elite-flow.md) to your authentication screen.
 
 ## Example

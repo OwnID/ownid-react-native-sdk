@@ -2,8 +2,10 @@ import { Container } from '../di';
 import { prepareInitialization, prepareJsonInitialization, RuntimeLanguageProviderToken } from '../configuration/runtime';
 import type { PreparedInitialization, RuntimeConfiguration } from '../configuration/runtime';
 import type { OwnIDConfigurationOptions } from '../configuration';
-import { OwnIDLogLevel } from '../logging';
-import { LoggingService, LoggingServiceToken } from '../logging/internal';
+import { OwnIDLogLevel, OwnIdLoggerDiToken, OwnIdLogRouterDiToken } from '../logging';
+import { OwnIdLogger } from '../logging/OwnIdLogger';
+import type { OwnIdLogRouter } from '../logging/OwnIdLogRouter';
+import { OwnIdLogRouterImpl } from '../logging/impl/OwnIdLogRouterImpl';
 import type { OwnIDLoggingOptions } from '../logging';
 import { defaultRuntimeComposition } from './composition';
 import type { RuntimeComposition } from './composition';
@@ -29,28 +31,35 @@ export class InstanceIdentityConflictError extends Error {
 export class RuntimeRoot {
   private readonly root: Container;
   private readonly composition: RuntimeComposition;
-  private readonly logging: LoggingService;
+  private readonly localLogger: OwnIdLogger;
+  private readonly logRouter: OwnIdLogRouter;
   private readonly instances = new Map<string, InstanceEntry>();
   private languageOverride: readonly string[] | null = null;
 
   static create(composition: RuntimeComposition = defaultRuntimeComposition): RuntimeRoot {
     const root = Container.createRoot('ownid.scope.root');
-    const logging = new LoggingService();
-    root.registerValue(LoggingServiceToken, logging);
-    const runtime = new RuntimeRoot(root, composition, logging);
+    const localLogger = new OwnIdLogger();
+    root.registerValue(OwnIdLoggerDiToken, localLogger);
+    const logRouter = new OwnIdLogRouterImpl(
+      () => root.resolveOptional(OwnIdLoggerDiToken),
+      () => undefined
+    );
+    root.registerValue(OwnIdLogRouterDiToken, logRouter);
+    const runtime = new RuntimeRoot(root, composition, localLogger, logRouter);
     root.registerValue(RuntimeLanguageProviderToken, Object.freeze({ snapshot: () => runtime.languageOverride }));
     composition.composeRoot(root);
     return runtime;
   }
 
-  private constructor(root: Container, composition: RuntimeComposition, logging: LoggingService) {
+  private constructor(root: Container, composition: RuntimeComposition, localLogger: OwnIdLogger, logRouter: OwnIdLogRouter) {
     this.root = root;
     this.composition = composition;
-    this.logging = logging;
+    this.localLogger = localLogger;
+    this.logRouter = logRouter;
   }
 
   configureLogging(options?: OwnIDLoggingOptions): void {
-    this.logging.configure(options);
+    this.localLogger.configure(options);
   }
 
   initialize(name: string, configuration: OwnIDConfigurationOptions): void {
@@ -110,9 +119,9 @@ export class RuntimeRoot {
         }
       }
 
-      this.logging.emit(OwnIDLogLevel.Error, source, 'OwnID initialization failed.', error);
+      this.logRouter.log(OwnIDLogLevel.Error, source, 'OwnID initialization failed.', error);
       if (abortFailure !== undefined) {
-        this.logging.emit(OwnIDLogLevel.Error, source, 'OwnID instance abort failed.', abortFailure.cause);
+        this.logRouter.log(OwnIDLogLevel.Error, source, 'OwnID instance abort failed.', abortFailure.cause);
       }
       throw error;
     }
@@ -120,7 +129,7 @@ export class RuntimeRoot {
     if (previous !== undefined) {
       this.disposeEntry(previous, source);
     }
-    this.logging.emit(OwnIDLogLevel.Debug, source, 'OwnID initialized.');
+    this.logRouter.log(OwnIDLogLevel.Debug, source, 'OwnID initialized.');
   }
 
   destroy(name: string): void {
@@ -131,7 +140,7 @@ export class RuntimeRoot {
 
     this.instances.delete(name);
     this.disposeEntry(current, 'OwnID.destroy');
-    this.logging.emit(OwnIDLogLevel.Debug, 'OwnID.destroy', 'OwnID destroyed.');
+    this.logRouter.log(OwnIDLogLevel.Debug, 'OwnID.destroy', 'OwnID destroyed.');
   }
 
   private assertIdentityAvailable(name: string, candidate: RuntimeConfiguration): void {
@@ -161,7 +170,7 @@ export class RuntimeRoot {
     }
 
     for (const failure of failures) {
-      this.logging.emit(OwnIDLogLevel.Error, source, failure.message, failure.cause);
+      this.logRouter.log(OwnIDLogLevel.Error, source, failure.message, failure.cause);
     }
   }
 }

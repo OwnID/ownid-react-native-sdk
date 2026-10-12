@@ -12,7 +12,7 @@ import {
 } from '../../../src/flows/elite/protocol';
 
 const documentToken = '00112233445566778899aabbccddeeff';
-const base = { channel: ELITE_PROTOCOL_CHANNEL, version: ELITE_PROTOCOL_VERSION, documentToken } as const;
+const base = { channel: ELITE_PROTOCOL_CHANNEL, version: ELITE_PROTOCOL_VERSION, documentMode: 'https', documentToken } as const;
 
 function parse(value: unknown) {
   return parseElitePageFrame(JSON.stringify(value));
@@ -29,6 +29,8 @@ function assertInvalid(action: () => unknown): void {
 describe('Elite page protocol parsing', () => {
   test('parses lifecycle frames from their required fields and tolerates additive fields', () => {
     const frames = [
+      { ...base, kind: 'document-ready' },
+      { ...base, documentMode: 'inline', kind: 'document-ready' },
       { ...base, kind: 'ready', future: true },
       { ...base, kind: 'start-issued' },
       { ...base, kind: 'start-settled', status: 'completed' },
@@ -95,6 +97,8 @@ describe('Elite page protocol parsing', () => {
       [],
       { ...base, channel: 'ownid', kind: 'ready' },
       { ...base, version: 2, kind: 'ready' },
+      { ...base, documentMode: undefined, kind: 'document-ready' },
+      { ...base, documentMode: 'unknown', kind: 'document-ready' },
       { ...base, documentToken: 'not-a-token', kind: 'ready' },
       { ...base, kind: 'start-settled', status: 'failed' },
       { ...base, kind: 'failure', phase: 'protocol', message: 'bad' },

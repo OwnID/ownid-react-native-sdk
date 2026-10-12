@@ -4,7 +4,7 @@ import { describe, mock, test } from 'node:test';
 
 import { OwnIDLogLevel } from '../../src/logging';
 import type { OwnIDLogEntry, OwnIDLogHandler } from '../../src/logging';
-import { LoggingService } from '../../src/logging/internal';
+import { OwnIdLogger } from '../../src/logging/OwnIdLogger';
 
 const requireFromTest = createRequire(import.meta.url);
 const requireFromReactNative = createRequire(requireFromTest.resolve('react-native/package.json'));
@@ -19,27 +19,20 @@ const severities: readonly OwnIDLogEntry['level'][] = [
 
 const thresholds: readonly OwnIDLogLevel[] = [...severities, OwnIDLogLevel.Off];
 
-const priorities: Readonly<Record<OwnIDLogLevel, number>> = {
-  [OwnIDLogLevel.Verbose]: 2,
-  [OwnIDLogLevel.Debug]: 3,
-  [OwnIDLogLevel.Info]: 4,
-  [OwnIDLogLevel.Warn]: 5,
-  [OwnIDLogLevel.Error]: 6,
-  [OwnIDLogLevel.Off]: Number.POSITIVE_INFINITY,
-};
-
-describe('LoggingService configuration and thresholds', () => {
+describe('OwnIdLogger configuration and thresholds', () => {
   test('each threshold emits its severity and every more severe entry', () => {
     for (const threshold of thresholds) {
       const entries: OwnIDLogEntry[] = [];
-      const logger = new LoggingService();
+      const logger = new OwnIdLogger();
       logger.configure({ level: threshold, onLog: (entry) => entries.push(entry) });
 
       for (const severity of severities) {
         logger.emit(severity, 'ThresholdTest', severity);
       }
 
-      const expected = severities.filter((severity) => threshold !== OwnIDLogLevel.Off && priorities[severity] >= priorities[threshold]);
+      const expected = severities.slice(thresholds.indexOf(threshold));
+      for (const severity of severities) assert.equal(logger.isEnabled(severity), expected.includes(severity), `${threshold}: ${severity}`);
+      assert.equal(logger.isEnabled(OwnIDLogLevel.Off), false);
       assert.deepEqual(
         entries.map((entry) => entry.level),
         expected,
@@ -50,7 +43,7 @@ describe('LoggingService configuration and thresholds', () => {
 
   test('omission resets to off, restores the default label, and releases the handler', () => {
     const entries: OwnIDLogEntry[] = [];
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
     const debug = mock.method(console, 'debug', () => undefined);
 
     try {
@@ -73,7 +66,7 @@ describe('LoggingService configuration and thresholds', () => {
 
   test('invalid options preserve the previous complete configuration', () => {
     const entries: OwnIDLogEntry[] = [];
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
     logger.configure({ level: OwnIDLogLevel.Info, label: 'Stable', onLog: (entry) => entries.push(entry) });
 
     const invalidOptions: readonly unknown[] = [
@@ -107,11 +100,11 @@ describe('LoggingService configuration and thresholds', () => {
   });
 });
 
-describe('LoggingService records and sinks', () => {
+describe('OwnIdLogger records and sinks', () => {
   test('a custom handler receives an exact frozen record and the original cause', () => {
     const cause = { mutable: true };
     let captured: OwnIDLogEntry | undefined;
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
     logger.configure({
       level: OwnIDLogLevel.Warn,
       label: 'OwnID-Test',
@@ -135,7 +128,7 @@ describe('LoggingService records and sinks', () => {
 
   test('an absent cause is omitted rather than stored as an undefined field', () => {
     let captured: OwnIDLogEntry | undefined;
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
     logger.configure({ level: OwnIDLogLevel.Info, onLog: (entry) => (captured = entry) });
 
     logger.emit(OwnIDLogLevel.Info, 'Source', 'Message');
@@ -151,7 +144,7 @@ describe('LoggingService records and sinks', () => {
     const info = mock.method(console, 'info', () => undefined);
     const warn = mock.method(console, 'warn', () => undefined);
     const error = mock.method(console, 'error', () => undefined);
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
 
     try {
       logger.configure({ level: OwnIDLogLevel.Verbose, label: 'Label %s' });
@@ -187,7 +180,7 @@ describe('LoggingService records and sinks', () => {
 
     try {
       requireFromReactNative(consoleModulePath);
-      const logger = new LoggingService();
+      const logger = new OwnIdLogger();
       const cause = new Error('failure');
       logger.configure({ level: OwnIDLogLevel.Verbose, label: 'Label %s' });
 
@@ -223,7 +216,7 @@ describe('LoggingService records and sinks', () => {
   test('a custom handler replaces the console sink', () => {
     const entries: OwnIDLogEntry[] = [];
     const debug = mock.method(console, 'debug', () => undefined);
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
 
     try {
       logger.configure({ level: OwnIDLogLevel.Debug, onLog: (entry) => entries.push(entry) });
@@ -239,7 +232,7 @@ describe('LoggingService records and sinks', () => {
   test('handler reconfiguration and nested logging use the new complete snapshot', () => {
     const firstEntries: OwnIDLogEntry[] = [];
     const secondEntries: OwnIDLogEntry[] = [];
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
 
     logger.configure({
       level: OwnIDLogLevel.Info,
@@ -267,10 +260,24 @@ describe('LoggingService records and sinks', () => {
     );
   });
 
+  test('same-handler synchronous nested logging preserves both entries', () => {
+    const sources: string[] = [];
+    const logger = new OwnIdLogger();
+    logger.configure({
+      level: OwnIDLogLevel.Error,
+      onLog: (entry) => {
+        sources.push(entry.source);
+        if (entry.source === 'Outer') logger.emit(OwnIDLogLevel.Error, 'Nested', 'nested');
+      },
+    });
+    logger.emit(OwnIDLogLevel.Error, 'Outer', 'outer');
+    assert.deepEqual(sources, ['Outer', 'Nested']);
+  });
+
   test('synchronous handler failures are reported directly and do not escape', () => {
     const sinkFailure = new Error('sink failed');
     const error = mock.method(console, 'error', () => undefined);
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
     logger.configure({
       level: OwnIDLogLevel.Error,
       label: 'OwnID-Test',
@@ -290,7 +297,7 @@ describe('LoggingService records and sinks', () => {
   test('rejected thenables returned by a void handler are observed without awaiting', async () => {
     const sinkFailure = new Error('async sink failed');
     const error = mock.method(console, 'error', () => undefined);
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
     const handler: OwnIDLogHandler = async () => {
       throw sinkFailure;
     };
@@ -308,7 +315,7 @@ describe('LoggingService records and sinks', () => {
   test('a throwing then getter is treated as a handler failure', () => {
     const thenFailure = new Error('then getter failed');
     const error = mock.method(console, 'error', () => undefined);
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
     const handler = (() =>
       Object.defineProperty({}, 'then', {
         get: () => {
@@ -329,7 +336,7 @@ describe('LoggingService records and sinks', () => {
     const debug = mock.method(console, 'debug', () => {
       throw new Error('console failed');
     });
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
     logger.configure({ level: OwnIDLogLevel.Debug });
 
     try {
@@ -344,7 +351,7 @@ describe('LoggingService records and sinks', () => {
     const error = mock.method(console, 'error', () => {
       throw new Error('console failed');
     });
-    const logger = new LoggingService();
+    const logger = new OwnIdLogger();
     logger.configure({
       level: OwnIDLogLevel.Error,
       onLog: () => {
@@ -357,6 +364,122 @@ describe('LoggingService records and sinks', () => {
       assert.equal(error.mock.callCount(), 1);
     } finally {
       mock.restoreAll();
+    }
+  });
+});
+
+describe('OwnIdLogger configuration snapshots and handler boundaries', () => {
+  test('reads each configuration getter once and ignores later changes to the input', () => {
+    const logger = new OwnIdLogger();
+    const entries: OwnIDLogEntry[] = [];
+    const replacementEntries: OwnIDLogEntry[] = [];
+    const reads: string[] = [];
+    let level = OwnIDLogLevel.Info;
+    let label = 'Captured';
+    let handler: OwnIDLogHandler = (entry) => entries.push(entry);
+    const options = {
+      get level() {
+        reads.push('level');
+        return level;
+      },
+      get label() {
+        reads.push('label');
+        return label;
+      },
+      get onLog() {
+        reads.push('onLog');
+        return handler;
+      },
+    };
+    logger.configure(options);
+    level = OwnIDLogLevel.Off;
+    label = 'Changed';
+    handler = (entry) => replacementEntries.push(entry);
+    logger.emit(OwnIDLogLevel.Info, 'Snapshot', '');
+    assert.deepEqual(reads, ['level', 'label', 'onLog']);
+    assert.deepEqual(entries, [{ level: OwnIDLogLevel.Info, label: 'Captured', source: 'Snapshot', message: '' }]);
+    assert.deepEqual(replacementEntries, []);
+  });
+
+  test('throwing label or handler getters preserve the previous complete configuration', () => {
+    const logger = new OwnIdLogger();
+    const entries: OwnIDLogEntry[] = [];
+    logger.configure({ level: OwnIDLogLevel.Info, label: 'Stable', onLog: (entry) => entries.push(entry) });
+    for (const field of ['label', 'onLog'] as const) {
+      const failure = new Error(`${field} getter failed`);
+      const options = Object.defineProperty({ level: OwnIDLogLevel.Error, label: 'Candidate' }, field, {
+        get: () => {
+          throw failure;
+        },
+      });
+      assert.throws(
+        () => logger.configure(options),
+        (cause: unknown) => cause === failure
+      );
+      logger.emit(OwnIDLogLevel.Info, field, 'still enabled');
+    }
+    assert.deepEqual(
+      entries.map(({ level, label, source }) => ({ level, label, source })),
+      [
+        { level: OwnIDLogLevel.Info, label: 'Stable', source: 'label' },
+        { level: OwnIDLogLevel.Info, label: 'Stable', source: 'onLog' },
+      ]
+    );
+  });
+
+  test('default and invalid runtime levels are disabled and Off never emits', () => {
+    const logger = new OwnIdLogger();
+    assert.ok(severities.every((severity) => !logger.isEnabled(severity)));
+    const entries: OwnIDLogEntry[] = [];
+    logger.configure({ level: OwnIDLogLevel.Verbose, onLog: (entry) => entries.push(entry) });
+    for (const invalid of [undefined, null, 5, {}, 'trace', OwnIDLogLevel.Off]) {
+      assert.equal(logger.isEnabled(invalid as never), false);
+      assert.doesNotThrow(() => logger.emit(invalid as never, 'Invalid', 'ignored'));
+    }
+    logger.emit(OwnIDLogLevel.Error, 'Valid', '', null);
+    assert.deepEqual(entries, [{ level: OwnIDLogLevel.Error, label: 'OwnID-SDK', source: 'Valid', message: '', cause: null }]);
+  });
+
+  test('a delayed handler rejection retains the label at emission after reconfiguration', async (context) => {
+    const failure = new Error('delayed handler failure');
+    let reject: (cause: unknown) => void = () => undefined;
+    const pending = new Promise<void>((_resolve, rejectPromise) => {
+      reject = rejectPromise;
+    });
+    const error = context.mock.method(console, 'error', () => undefined);
+    const logger = new OwnIdLogger();
+    logger.configure({ level: OwnIDLogLevel.Error, label: 'Original', onLog: () => pending });
+    logger.emit(OwnIDLogLevel.Error, 'Source', 'Message');
+    logger.configure({ level: OwnIDLogLevel.Off, label: 'Replacement' });
+    reject(failure);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    assert.equal(error.mock.callCount(), 1);
+    assert.deepEqual(error.mock.calls[0]?.arguments, ['[Original] Logging callback failed.', failure]);
+  });
+
+  test('synchronous and callable thenables are assimilated without waiting or leaking rejection', async (context) => {
+    const error = context.mock.method(console, 'error', () => undefined);
+    for (const callable of [false, true]) {
+      for (const rejects of [false, true]) {
+        let thenCalls = 0;
+        const failure = new Error('thenable failed');
+        const result = Object.assign(callable ? () => undefined : {}, {
+          then(resolve: () => void, reject: (cause: unknown) => void) {
+            thenCalls++;
+            if (rejects) reject(failure);
+            else resolve();
+          },
+        });
+        const logger = new OwnIdLogger();
+        logger.configure({ level: OwnIDLogLevel.Error, onLog: (() => result) as unknown as OwnIDLogHandler });
+        const before = error.mock.callCount();
+        assert.doesNotThrow(() => logger.emit(OwnIDLogLevel.Error, 'Source', 'Message'));
+        assert.equal(thenCalls, 0);
+        await new Promise<void>((resolve) => setImmediate(resolve));
+        assert.equal(thenCalls, 1);
+        assert.equal(error.mock.callCount(), before + (rejects ? 1 : 0));
+        if (rejects) assert.deepEqual(error.mock.calls.at(-1)?.arguments, ['[OwnID-SDK] Logging callback failed.', failure]);
+      }
     }
   });
 });

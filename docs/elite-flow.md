@@ -1,124 +1,107 @@
 # Elite Flow
 
-Elite Flow presents OwnID's hosted passkey-first authentication experience inside a WebView. Use it when OwnID should provide the authentication UI while your app owns the surrounding screen, creates the app session, and handles navigation or dismissal.
+Elite Flow presents OwnID's passkey-first authentication UI inside a WebView. Your app owns the surrounding screen, creates its session, and handles navigation or dismissal.
 
-Before adding the screen, [initialize OwnID](configuration.md) and complete [Passkey Setup](https://docs.ownid.com/mobile-sdks/setup/passkeys).
+## Prerequisites
+
+Follow the SDK's [installation](../README.md#install) and [requirements](../README.md#requirements), [initialize OwnID](configuration.md), and complete [Passkey Setup](https://docs.ownid.com/mobile-sdks/setup/passkeys).
 
 ## Add the View
 
-Render [`OwnIDEliteView`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/flows/elite/OwnIDEliteView.tsx) in a screen or modal that provides its dimensions. The View fills that area; your app handles safe areas and navigation.
+Render [`OwnIDEliteView`](../sdk-core/src/flows/elite/OwnIDEliteView.tsx) in a screen or modal with dimensions. The View fills its parent; your app handles safe areas and navigation. Both `options` and `options.origin` are required.
 
 ```tsx
-import { OwnIDEliteView } from '@ownid/react-native-core';
-import type { AuthResult, LoginPayload, OwnIDEliteErrorDetails, OwnIDEliteFinishParams } from '@ownid/react-native-core';
-import { appAuth } from './auth';
+import { View } from "react-native";
+import { OwnIDEliteView } from "@ownid/react-native-core";
+import type { AuthResult, LoginPayload, OwnIDEliteErrorDetails, OwnIDEliteFinishParams } from "@ownid/react-native-core";
+import { appAuth } from "./auth";
 
 export function LoginScreen() {
   return (
-    <OwnIDEliteView
-      options={{ origin: 'https://login.example.com' }}
-      events={{
-        onFinish: async (params: OwnIDEliteFinishParams) => {
-          // Open your signed-in screen.
-        },
-        onError: async (message: string, details: OwnIDEliteErrorDetails) => {
-          if (details.terminal) {
-            // Show an error in your app and dismiss or replace this screen.
-          }
-        },
-        onClose: async () => {
-          // Dismiss the login screen.
-        },
-      }}
-      providers={{
-        session: {
-          create: async (payload: LoginPayload): Promise<AuthResult> => {
-            try {
-              // Create or restore your app session.
-              await appAuth.createSession(payload);
-              return { status: 'logged-in' };
-            } catch {
-              return { status: 'fail', reason: 'Unable to create the app session.' };
+    <View style={{ flex: 1 }}>
+      <OwnIDEliteView
+        options={{ origin: "https://example.com" }}
+        events={{
+          onFinish: async (_params: OwnIDEliteFinishParams) => {
+            // Open your signed-in screen.
+          },
+          onError: async (_message: string, details: OwnIDEliteErrorDetails) => {
+            if (details.terminal) {
+              // Show an error and dismiss or replace this screen.
             }
           },
-        },
-      }}
-    />
+          onClose: async () => {
+            // Dismiss the login screen.
+          },
+        }}
+        providers={{
+          session: {
+            create: async (payload: LoginPayload): Promise<AuthResult> => {
+              try {
+                await appAuth.createSession(payload);
+                return { status: "logged-in" };
+              } catch {
+                return { status: "fail", reason: "Unable to create the app session." };
+              }
+            },
+          },
+        }}
+      />
+    </View>
   );
 }
 ```
 
-One mounted View runs one flow. To retry or change its inputs, unmount it and mount a new View.
+`appAuth` represents your app's authentication service. Replace it and the event comments with your app's session and navigation actions.
 
-## Origin
+The SDK loads the HTTPS page and replaces its content with its built-in Elite UI, using your OwnID configuration and app callbacks.
 
-[`options.origin`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/flows/elite/OwnIDEliteView.tsx) sets the WebView document's origin. It defaults to `https://webview.ownid.com`; use the origin configured for your integration and align its host with your passkey relying-party domain.
+One mounted View runs one authentication attempt. Its inputs are captured at mount; changing props does not update or restart it. Unmount and mount a new View to retry or change inputs. Reinitializing or destroying OwnID also ends the attempt.
 
-Use an HTTPS URL with an ASCII DNS host and optional port. A trailing slash is allowed; other paths, queries, fragments, IP addresses, and Unicode hostnames are not. This setting does not change the OwnID environment or region.
+## Bootstrap URL
 
-Replace the example origin with your integration's domain.
+`options.origin` is a required HTTPS origin or page URL. A non-root path or a query string on the root path loads that URL directly. A bare host or root path without a query string loads `/.well-known/assetlinks.json` on Android or `/.well-known/apple-app-site-association` on iOS. Use an ASCII DNS hostname and optional port; fragments, user information, and IP addresses are rejected. The page must load directly without redirects. Replace the example URL with your integration's URL.
+
+The page **must not contain an existing OwnID Web SDK**. An empty HTML page or one containing only plain text, without complex styles or JavaScript, is recommended. The page's document policies must permit the configured OwnID scripts, styles, and network requests.
+
+The bootstrap URL's hostname must equal your configured relying party ID (RP ID) or be a subdomain of it. Passkeys are associated with that RP ID. This URL does not change the OwnID environment or region.
+
+Available authentication methods depend on whether the HTTPS page can load securely, platform support, and your OwnID configuration.
 
 ## Session Provider
 
-The hosted experience authenticates with OwnID, but your app still needs to create or restore its own session. When authentication reaches that handoff, Elite calls the effective [`providers.session.create`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/providers/index.ts) callback with [`LoginPayload`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/models/authentication.ts).
+Elite requires an effective `providers.session.create` callback, registered with `OwnID.setProviders` or supplied through the View's `providers` prop. It receives [`LoginPayload`](../sdk-core/src/models/authentication.ts) when your app needs to create or restore its session.
 
-The callback can be configured with `OwnID.setProviders` or supplied through the View's `providers` prop shown above. Elite requires an effective callback.
+- Return `{ status: 'logged-in' }` only after your app session is ready. Elite accepts only `logged-in` as successful session creation.
+- For an expected failure, return `{ status: 'fail', reason?: string }` with an optional concise explanation.
 
-- After your app's authentication service creates or restores the session and securely stores its session material, return `{ status: 'logged-in' }`. Elite accepts only `logged-in` as successful session creation.
-- When the app session cannot be created as an expected failure, return `{ status: 'fail', reason?: string }`. Use `reason` for a concise explanation when it helps the hosted experience.
+Return only JSON-compatible data.
 
-Return only JSON-compatible data from this callback. Unsupported JavaScript values, cycles, non-finite numbers, and missing array entries fail the request; `undefined` object fields are omitted.
+An uncaught throw or rejection reports a provider failure back to Elite and logs the original error when logging is enabled; it does not directly invoke the React Native `onError` callback. SDK teardown does not cancel pending app work, and its later result is ignored.
 
-`appAuth` in the example represents your app's authentication service. An uncaught throw or rejection reports a provider failure to the hosted experience and records the original error when logging is enabled. The React Native SDK does not call `onError` just for that callback failure. If the View is unmounted while the provider promise is pending, the SDK does not cancel the app's work and ignores its later result.
-
-See [Providers](providers.md) for provider registration and the shared payload and result types.
+See [Providers](providers.md) for registration and shared payload and result types.
 
 ## Events
 
-All event callbacks are optional and asynchronous. Replace the example comments with your app's actions.
+All callbacks are optional and return `Promise<void>`. The public types are defined in [`OwnIDEliteEvents`](../sdk-core/src/flows/elite/events.ts).
 
-### `onFinish`
+| Callback                                                    | When it runs and arguments                                                                                                                                                                                                                                                |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onFinish(params: OwnIDEliteFinishParams)`                  | Successful hosted authentication. `params` contains `loginId: string`, `authType: AuthMethod`, `source: 'mobile' \| 'desktop'`, and optional `authToken: string`. Update app state and navigate or dismiss the screen.                                                    |
+| `onError(message: string, details: OwnIDEliteErrorDetails)` | Hosted errors and setup, loading, or runtime failures. `message` describes the failure; `details` contains `code: ErrorCode`, `source: string`, optional `additionalDetails: object \| string`, and `terminal: boolean`. Use `code` to choose app behavior or error copy. |
+| `onClose()`                                                 | The hosted flow requests closure without successful completion. Clear transient authentication state and dismiss the screen.                                                                                                                                              |
 
-`onFinish` has type [`(params: OwnIDEliteFinishParams) => Promise<void>`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/flows/elite/events.ts) and runs when hosted authentication completes successfully.
+`onFinish` and `onClose` end the attempt. During normal completion or closure, the SDK waits for their promises before clearing the View, even if they reject. Callback failures do not invoke `onError`. Closing the View does not cancel app work already in progress.
 
-Its `params` contain:
-
-- `loginId: string`: the login identifier used for authentication.
-- [`authType: AuthMethod`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/models/authentication.ts): the authentication method reported by OwnID.
-- `source: 'mobile' | 'desktop'`: the device category selected by the hosted flow.
-
-Update app state and navigate to the signed-in screen or dismiss the surrounding UI. This event ends the attempt. During normal completion, OwnID waits for the callback promise before clearing the View, even if it rejects. Callback failures are logged when enabled and do not call `onError`.
-
-### `onError`
-
-`onError` has type [`(message: string, details: OwnIDEliteErrorDetails) => Promise<void>`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/flows/elite/events.ts) and reports hosted errors plus setup, loading, and runtime failures.
-
-`message` describes the failure for diagnostics. Its `details` contain:
-
-- [`code: ErrorCode`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/models/error.ts): the stable error category to use when choosing app behavior or error copy.
-- `source: string`: the SDK or hosted source that reported the failure.
-- `additionalDetails?: object | string`: optional diagnostic information.
-- `terminal: boolean`: whether the current authentication attempt can no longer continue.
-
-When `terminal` is `true`, this attempt has ended or could not start, and it cannot continue. Show an error in your app and dismiss or replace the Elite screen. To retry, mount a new `OwnIDEliteView`.
-
-When `terminal` is `false`, the hosted experience reported an error while this attempt was active. Do not close the screen solely because this callback ran; the hosted flow may handle the error. A value of `false` does not guarantee that the error is recoverable or that the attempt will remain active.
-
-### `onClose`
-
-`onClose` has type `() => Promise<void>` and runs when the hosted flow asks to close without successful completion. Clear transient authentication state and dismiss the surrounding screen or modal.
-
-This event ends the attempt. During normal closure, OwnID waits for the callback promise before clearing the View, even if it rejects. Callback failures are logged when enabled and do not call `onError`.
+With `terminal: true`, the attempt has ended or could not start. Show an error and dismiss or replace the screen; mount a new View to retry. With `terminal: false`, the error alone does not end the attempt or guarantee recovery. The hosted flow may handle it, so keep the screen open unless your app has another reason to close it.
 
 ## Unico Human-Token Integration
 
-When your OwnID journey uses Unico Human-Token, the hosted flow presents Unico's browser experience. See Unico's [Web App Integration](https://developer.unico.io/developers/sdks-and-tools/web/web-integration/index.html) guide for the underlying browser product.
-
-For journeys that use the camera and foreground location, add the following permissions to your app.
+When your OwnID journey uses Unico Human-Token, see Unico's [Web App Integration](https://developer.unico.io/developers/sdks-and-tools/web/web-integration/index.html). For journeys that use the camera or foreground location, declare the capabilities they use. These examples cover both.
 
 ### Bare React Native
 
-In `android/app/src/main/AndroidManifest.xml`, add these entries inside `<manifest>`:
+Add the Android permissions inside `<manifest>` in `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.CAMERA" />
@@ -126,7 +109,7 @@ In `android/app/src/main/AndroidManifest.xml`, add these entries inside `<manife
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 ```
 
-In your iOS app's `Info.plist`, add purpose strings describing how your app uses these capabilities:
+Add purpose strings in your iOS app's `Info.plist`, describing your app's use:
 
 ```xml
 <key>NSCameraUsageDescription</key>
@@ -135,17 +118,19 @@ In your iOS app's `Info.plist`, add purpose strings describing how your app uses
 <string>Use your location during the Unico Human-Token flow.</string>
 ```
 
-See the platform guides for [Android permissions](https://developer.android.com/training/permissions/requesting), [iOS camera access](https://developer.apple.com/documentation/bundleresources/information-property-list/nscamerausagedescription), and [iOS location access](https://developer.apple.com/documentation/bundleresources/information-property-list/nslocationwheninuseusagedescription).
-
 ### Expo
 
-Add the equivalent settings to your app configuration:
+Add the equivalent settings in `app.json` or `app.config.ts`:
 
 ```json
 {
   "expo": {
     "android": {
-      "permissions": ["android.permission.CAMERA", "android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION"]
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "ios": {
       "infoPlist": {
@@ -157,4 +142,4 @@ Add the equivalent settings to your app configuration:
 }
 ```
 
-See [Expo permissions](https://docs.expo.dev/guides/permissions/). Rebuild your native app after changing these settings.
+See [Expo permissions](https://docs.expo.dev/guides/permissions/). Rebuild your native app after changing these declarations.

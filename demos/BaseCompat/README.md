@@ -1,72 +1,57 @@
 # OwnID Compat Demo
 
-OwnID Compat Demo is a plain React Native 0.83 app that demonstrates `@ownid/react-native-core` at the SDK's minimum supported React Native version. It initializes OwnID, presents the hosted Elite flow, creates a real Demo Identity session, and loads the user's Demo Identity profile.
-
-The app has separate DEV and UAT native build environments. Each environment supplies its OwnID app ID, Elite document origin, and Demo Identity backend from [`configuration.ts`](./src/configuration.ts).
-
-At app startup, [`App.tsx`](./App.tsx) enables optional debug logging and initializes OwnID for the app lifetime.
-
-## Code map
-
-- [`App.tsx`](./App.tsx) initializes OwnID and owns the current screen and session.
-- [`HomeScreen.tsx`](./src/screens/HomeScreen.tsx) renders the demo controls and actionable errors.
-- [`EliteScreen.tsx`](./src/screens/EliteScreen.tsx) contains the complete `OwnIDEliteView` integration, including events and the session provider.
-- [`UserScreen.tsx`](./src/screens/UserScreen.tsx) loads and displays the signed-in user's Demo Identity profile and provides logout.
-- [`configuration.ts`](./src/configuration.ts) defines the DEV and UAT settings.
-- [`demoIdentity.ts`](./src/identity/demoIdentity.ts) validates sessions and loads profiles from Demo Identity.
+A React Native 0.83 app demonstrating OwnID Elite sign-in with the Demo Identity service. Tap **Start Elite Flow**, complete sign-in, and view your user profile. **Logout** returns to the start screen.
 
 ## Requirements
 
-- A Node version accepted by `^20.19.4 || ^22.13.0 || >=24.0.0`
-- npm 11.6.2 through Corepack
-- The Android toolchain for React Native 0.83, with API 24 or later
-- Xcode, Ruby 3.2 or later, and Bundler 2.7.2 for iOS 15.1 or later
+- Node 20.x (20.19.4+), 22.x (22.13+), or 24+; npm 11.6.2 through Corepack
+- For Android: the React Native Android toolchain with SDK API 36, and an emulator or device running Android 7/API 24 or later
+- For iOS: macOS, Xcode 26, an iOS Simulator runtime, Ruby 3.2+, and Bundler 2.7.2
 
-This demo does not yet support running on iOS 27 when built with the iOS 27 SDK (Xcode 27), because its React Native 0.83 host does not use the scene lifecycle.
+Use an iOS 26 or earlier Simulator runtime (minimum iOS 15.1). This demo does not support iOS 27/Xcode 27.
 
 ## Install
 
-From this demo directory, build and pack the SDK, then install the demo from that archive just as a published package consumer would:
+From the repository root:
 
 ```sh
-cd ../..
-mkdir -p .artifacts
-cd sdk-core
-corepack npm@11.6.2 run build
-corepack npm@11.6.2 pack --pack-destination ../.artifacts
-
-cd ../demos/BaseCompat
+cd demos/BaseCompat
 corepack npm@11.6.2 install
-bundle install
-cd ios && bundle exec pod install && cd ..
 ```
 
-The demo depends on `../../.artifacts/ownid-react-native-core-4.0.0.tgz`. Repack and reinstall it after changing the SDK, then refresh the iOS pods.
+For iOS only, install the native dependencies on macOS:
+
+```sh
+bundle install
+cd ios
+bundle exec pod install
+cd ..
+```
+
+The demo installs `@ownid/react-native-core` 4.0.1 from npm.
 
 ## Run
 
-Start Metro in one terminal:
+From `demos/BaseCompat`, start Metro and keep the terminal open:
 
 ```sh
 corepack npm@11.6.2 run start
 ```
 
-Run the DEV or UAT debug app from another terminal:
+In another terminal, also in `demos/BaseCompat`, run the UAT demo on your chosen platform.
+
+For Android, start an emulator or connect a device with USB debugging enabled:
 
 ```sh
-corepack npm@11.6.2 run android:dev
 corepack npm@11.6.2 run android:uat
+```
 
-corepack npm@11.6.2 run ios:dev
+For the iOS Simulator on macOS:
+
+```sh
 corepack npm@11.6.2 run ios:uat
 ```
 
-The included Android keystore and iOS signing configuration are only for OwnID demo environments. Do not use them in a production app.
+Use `android:dev` or `ios:dev` instead for the DEV environment. Physical iOS builds require access to the configured Apple signing team; use the Simulator if you do not have that access.
 
-On Android, the demo uses React Native's standard edge-to-edge mode across its supported API 24+ range. The app keeps controls inside the safe area and adjusts status-bar icons for each screen; Android may use a contrast scrim for older releases or button navigation, while gesture navigation stays transparent.
-
-## Check the project
-
-```sh
-corepack npm@11.6.2 run check
-```
+See [`EliteScreen.tsx`](./src/screens/EliteScreen.tsx) for the integration example.

@@ -1,6 +1,6 @@
 # SDK Configuration
 
-Call [`OwnID.initialize`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/runtime/OwnID.ts) once during app startup, before using SDK features. Use your application ID from the OwnID Console:
+Call [`OwnID.initialize`](../sdk-core/src/runtime/OwnID.ts) once during app startup, before using SDK features. Use your application ID from the OwnID Console:
 
 ```ts
 import { OwnID } from '@ownid/react-native-core';
@@ -22,7 +22,7 @@ OwnID.initialize({
 
 ## From JSON
 
-Use [`OwnID.initializeFromJson`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/runtime/OwnID.ts) when your app receives its configuration as a JSON string:
+Use [`OwnID.initializeFromJson`](../sdk-core/src/runtime/OwnID.ts) when your app receives its configuration as a JSON string:
 
 ```ts
 OwnID.initializeFromJson(`{
@@ -38,11 +38,11 @@ Both initialization methods are synchronous. Invalid configuration throws and le
 
 Initializing again replaces the current configuration and stops active SDK operations. After reinitializing, get `OwnID.flows` again before starting a new flow.
 
-Call [`OwnID.destroy()`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/runtime/OwnID.ts) when your app needs to shut down OwnID.
+Call [`OwnID.destroy()`](../sdk-core/src/runtime/OwnID.ts) when your app needs to shut down OwnID.
 
 ## Logging
 
-Logging is disabled by default. Configure it with [`OwnID.configureLogging`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/runtime/OwnID.ts) and [`OwnIDLogLevel`](https://github.com/OwnID/ownid-react-native-sdk/blob/HEAD/sdk-core/src/logging/index.ts) before initialization when you need SDK logs:
+Logging is disabled by default. Configure it with [`OwnID.configureLogging`](../sdk-core/src/runtime/OwnID.ts) and [`OwnIDLogLevel`](../sdk-core/src/logging/index.ts) before initialization when you need SDK logs:
 
 ```ts
 import { OwnID, OwnIDLogLevel } from '@ownid/react-native-core';

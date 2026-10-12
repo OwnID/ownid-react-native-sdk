@@ -6,9 +6,12 @@ import type { OwnIDEliteFinishParams } from './events';
 export const ELITE_PROTOCOL_CHANNEL = 'ownid.elite' as const;
 export const ELITE_PROTOCOL_VERSION = 1 as const;
 
+export type EliteDocumentMode = 'https' | 'inline';
+
 type EliteFrameBase = Readonly<{
   channel: typeof ELITE_PROTOCOL_CHANNEL;
   version: typeof ELITE_PROTOCOL_VERSION;
+  documentMode: EliteDocumentMode;
   documentToken: string;
 }>;
 
@@ -22,6 +25,7 @@ export type ElitePageRequest =
       Readonly<{ kind: 'request'; id: number; method: 'providers.session.create'; params: readonly [LoginPayload, ...unknown[]] }>);
 
 export type ElitePageFrame =
+  | (EliteFrameBase & Readonly<{ kind: 'document-ready' }>)
   | (EliteFrameBase & Readonly<{ kind: 'ready' }>)
   | (EliteFrameBase & Readonly<{ kind: 'start-issued' }>)
   | (EliteFrameBase & Readonly<{ kind: 'start-settled'; status: 'completed' }>)
@@ -55,6 +59,7 @@ export function parseElitePageFrame(data: string): ElitePageFrame {
   if (!isRecord(value) || !hasValidBase(value) || typeof value.kind !== 'string') throw invalidFrame();
 
   switch (value.kind) {
+    case 'document-ready':
     case 'ready':
     case 'start-issued':
       break;
@@ -125,6 +130,7 @@ function hasValidBase(value: Record<string, unknown>): boolean {
   return (
     value.channel === ELITE_PROTOCOL_CHANNEL &&
     value.version === ELITE_PROTOCOL_VERSION &&
+    (value.documentMode === 'https' || value.documentMode === 'inline') &&
     typeof value.documentToken === 'string' &&
     DOCUMENT_TOKEN_PATTERN.test(value.documentToken)
   );

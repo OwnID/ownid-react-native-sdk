@@ -16,9 +16,8 @@ export interface OwnIDEliteFinishParams {
 /** Error details reported by an Elite View error callback. */
 export interface OwnIDEliteErrorDetails extends ErrorDetails {
   /**
-   * Whether the current authentication attempt has ended when the callback runs.
-   *
-   * `true` includes failures before the hosted flow starts. `false` does not by itself end the attempt or guarantee recovery.
+   * `true` means the attempt has ended or could not start; dismiss the screen or mount a new View to try again.
+   * `false` means the error alone does not end the attempt or guarantee recovery; keep the screen open unless your app needs to close it.
    */
   readonly terminal: boolean;
 }
@@ -26,30 +25,25 @@ export interface OwnIDEliteErrorDetails extends ErrorDetails {
 /**
  * Optional application callbacks for one mounted Elite flow.
  *
- * The application owns navigation and dismissal of the surrounding screen or modal. Reinitializing or destroying OwnID, or losing the WebView,
- * may end the attempt without cancelling an application callback already in progress.
+ * The application owns navigation and dismissal of the surrounding screen or modal. Closing the View does not cancel application work
+ * already in progress.
  */
 export interface OwnIDEliteEvents {
   /**
    * Called after successful hosted authentication. Update application state or navigate as needed.
    *
-   * During normal completion, the SDK waits for this promise before clearing the View, even if it rejects. Callback failures are logged when
-   * enabled and do not invoke `onError`.
+   * During normal completion, the SDK waits for this promise before clearing the View, even if it rejects.
    */
   readonly onFinish?: (params: OwnIDEliteFinishParams) => Promise<void>;
   /**
-   * Reports hosted authentication, preparation, and native WebView errors.
-   *
-   * With `terminal: true`, the attempt has ended; dismiss the surrounding UI or mount a new View to retry. With `terminal: false`, the error
-   * alone does not end the attempt or guarantee recovery. A terminal error callback does not delay cleanup. Callback failures are logged when
-   * enabled and never invoke `onError` recursively.
+   * Called for hosted authentication errors and unrecovered preparation, loading, or runtime failures.
+   * Use `details.terminal` to decide whether to keep the screen open or dismiss it.
    */
   readonly onError?: (message: string, details: OwnIDEliteErrorDetails) => Promise<void>;
   /**
    * Called when the hosted flow requests to close without successful completion. Dismiss the surrounding UI.
    *
-   * During normal closure, the SDK waits for this promise before clearing the View, even if it rejects. Callback failures are logged when
-   * enabled and do not invoke `onError`.
+   * During normal closure, the SDK waits for this promise before clearing the View, even if it rejects.
    */
   readonly onClose?: () => Promise<void>;
 }

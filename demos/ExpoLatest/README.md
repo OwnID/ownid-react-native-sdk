@@ -1,85 +1,46 @@
 # OwnID Expo Demo
 
-OwnID Expo Demo is an Expo development-build app that demonstrates the OwnID SDK Elite flow with the Brita UAT application. A successful OwnID login creates a Brita session, verifies it through Brita's current-user API, and shows the authenticated user's name and email until local logout.
+An Expo 57 app with React Native 0.86 demonstrating OwnID Elite sign-in with the Brita UAT application. Tap **Start Elite Flow**, complete sign-in, and view your name and email. **Logout** returns to the start screen.
 
-The demo uses Expo 57.0.23 with React Native 0.86.3. Expo Go cannot load the SDK's Android native module, so run a local native development build.
-
-At app startup, [`App.tsx`](./App.tsx) enables optional debug logging and initializes OwnID for the application lifetime. Reinitialization replaces the current SDK instance, so ordinary screen cleanup does not destroy it.
-
-## Code map
-
-- [`App.tsx`](./App.tsx) initializes OwnID and coordinates the Home, Elite, and User screens.
-- [`HomeScreen.tsx`](./src/screens/HomeScreen.tsx) renders initialization status and starts Elite.
-- [`EliteScreen.tsx`](./src/screens/EliteScreen.tsx) owns `OwnIDEliteView`, its callbacks, and the Brita session provider.
-- [`UserScreen.tsx`](./src/screens/UserScreen.tsx) displays the authenticated Brita user and provides local logout.
-- [`configuration.ts`](./src/configuration.ts) contains the fixed Brita UAT application, origin, and current-user endpoint.
-- [`britaSession.ts`](./src/identity/britaSession.ts) validates the OwnID token and creates the Brita session through `/api/auth/me`.
-- [`withDemoAndroidSigning.js`](./plugins/withDemoAndroidSigning.js) keeps the generated Android debug build on the registered demo signing key.
+This demo uses a native development build and cannot run in Expo Go.
 
 ## Requirements
 
-- Node 22.13 or later and npm 11.6.2
-- Android 7/API 24 or later with compile/target API 36
-- iOS 16.4 or later with Xcode 26.4 or later
-- A local checkout containing the SDK source in `../../sdk-core`
+- Node 22.13+ and npm 11.6.2 through Corepack
+- For Android: the Android toolchain with SDK API 36, and an emulator or device running Android 7/API 24 or later
+- For iOS: macOS, Xcode 26.4+, and an iOS Simulator running iOS 16.4 or later
 
-The demo's [`app.config.ts`](./app.config.ts) already declares Android camera, coarse-location, and fine-location permissions and supplies iOS camera and foreground-location purpose text for its configured Unico flow. Applications using that flow need equivalent native declarations with truthful, application-specific iOS text, followed by a native rebuild.
+## Install
 
-From this demo directory, build and pack the SDK, then install the demo from that archive:
+From the repository root:
 
 ```sh
-cd ../..
-mkdir -p .artifacts
-cd sdk-core
-corepack npm@11.6.2 run build
-corepack npm@11.6.2 pack --pack-destination ../.artifacts
-
-cd ../demos/ExpoLatest
+cd demos/ExpoLatest
 corepack npm@11.6.2 install
 ```
 
-The demo depends on `../../.artifacts/ownid-react-native-core-4.0.0.tgz`. Repack and reinstall it after changing the SDK. JavaScript or TypeScript changes then need only a Metro reload. Rebuild the target app after changing native SDK code. Regenerate the target native project first after changing native dependencies, Expo app configuration, a config plugin, or the Expo SDK version.
+The demo installs `@ownid/react-native-core` 4.0.1 from npm.
 
-## Run the demo
+## Run
 
-Build, install, and run the UAT app on a connected physical device:
+From `demos/ExpoLatest`, run the UAT demo on your chosen platform.
 
-```sh
-corepack npm run android -- --device
-corepack npm run ios -- --device
-```
-
-Omit `--device` to use the default Android emulator or iOS Simulator. Each run command starts Metro on the demo's reserved port 8082 when needed and reuses an existing Metro server for this project. Keep that Metro terminal running while building the other platform in a separate terminal.
-
-Once the development build is installed, the daily JavaScript and TypeScript development loop needs only Metro:
+For the Android emulator:
 
 ```sh
-corepack npm run start
+corepack npm@11.6.2 run android
 ```
 
-Open the installed development build and scan Metro's QR code on each physical phone, or select the discovered server from the development launcher. Both platforms use the same Metro server, and Fast Refresh applies source edits automatically. Reload the app when validating startup behavior or when Fast Refresh preserves state that the change depends on.
-
-When native regeneration is required, run the matching clean prebuild before the platform run command:
+For the iOS Simulator on macOS:
 
 ```sh
-corepack npm run prebuild:android
-corepack npm run prebuild:ios
+corepack npm@11.6.2 run ios
 ```
 
-Both platforms use `com.ownid.demo.uat`, so installing this app replaces the UAT BaseCompat demo on the same device. Android debug builds use the registered demo keystore outside the generated `android/` directory. iOS uses automatic signing with team `GR7KL5JY22` and the `webcredentials:brita.fido.fun` associated domain.
+These commands generate the native project on the first run, build and install the app, and start Metro. Keep the Metro terminal open.
 
-The demo-root [`assetlinks.json`](./assetlinks.json) and [`apple-app-site-association`](./apple-app-site-association) are website artifacts for Brita's `.well-known/` paths; native builds do not bundle them.
+Add `-- --device` to either command to select an emulator, Simulator, or connected physical device. Physical iOS builds require access to the configured Apple signing team; use the Simulator if you do not have that access.
 
-The Home and User screens follow the system light or dark appearance. Elite opens on a white full-screen safe-area surface without an app header or Back button.
+This demo and BaseCompat UAT use the same app identifier, so installing one replaces the other on the same device.
 
-## Development checks
-
-```sh
-corepack npm run config
-corepack npm run dependencies:check
-corepack npm run format:check
-corepack npm run lint
-corepack npm run typecheck
-```
-
-The demo keeps `react-native-webview` 16.0.0 because it is the SDK-required peer.
+See [`EliteScreen.tsx`](./src/screens/EliteScreen.tsx) for the integration example.

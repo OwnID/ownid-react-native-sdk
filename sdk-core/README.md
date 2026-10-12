@@ -16,7 +16,7 @@ npm install @ownid/react-native-core@next react-native-webview@^16.0.0
 
 ## Documentation
 
-See the [OwnID React Native SDK documentation](https://github.com/OwnID/ownid-react-native-sdk) for setup and integration guides.
+See the [OwnID React Native SDK documentation](https://github.com/OwnID/ownid-react-native-sdk/tree/next) for setup and integration guides.
 
 ## Support
 

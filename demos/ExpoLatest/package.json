@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ownid/react-native-core": "file:../../.artifacts/ownid-react-native-core-4.0.0.tgz",
+    "@ownid/react-native-core": "4.0.1",
     "expo": "57.0.23",
     "expo-build-properties": "57.0.19",
     "expo-dev-client": "57.0.19",

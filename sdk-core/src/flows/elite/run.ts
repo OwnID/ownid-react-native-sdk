@@ -1,29 +1,31 @@
 import { RuntimeConfigurationToken, RuntimeLanguageProviderToken } from '../../configuration/runtime';
 import { ContextToken } from '../../context';
 import { OwnIDLogLevel } from '../../logging';
-import { LoggingServiceToken } from '../../logging/internal';
-import type { LoggingService } from '../../logging/internal';
-import { ErrorCode } from '../../models/error';
+import type { OwnIdLogRouter } from '../../logging/OwnIdLogRouter';
+import { OwnIdLogRouterDiToken } from '../../logging';
 import type { ErrorDetails } from '../../models/error';
+import { ErrorCode } from '../../models/error';
 import type { OwnIDProviders } from '../../providers';
-import { createProvidersScope, prepareProviders, SessionCreateProviderToken } from '../../providers/internal';
 import type { SessionCreateProvider } from '../../providers/internal';
-import { assertNamespaceBindingAvailable } from '../../namespace/scoping';
+import { createProvidersScope, prepareProviders, SessionCreateProviderToken } from '../../providers/internal';
 import type { NamespaceBinding } from '../../namespace/scoping';
-import { createEliteDocument } from './document';
+import { assertNamespaceBindingAvailable } from '../../namespace/scoping';
 import type { EliteDocumentSource } from './document';
+import { createEliteDocument } from './document';
 import type { OwnIDEliteErrorDetails, OwnIDEliteEvents, OwnIDEliteFinishParams } from './events';
-import { getEliteNamespaceBinding } from './namespace';
 import type { OwnIDEliteNamespace } from './namespace';
-import { normalizeEliteOrigin } from './origin';
+import { getEliteNamespaceBinding } from './namespace';
+import { resolveEliteDocumentUrl } from './documentUrl';
+import type { EliteDocumentMode, EliteHostFrame, EliteHostFramePayload, ElitePageRequest } from './protocol';
 import { ELITE_PROTOCOL_CHANNEL, ELITE_PROTOCOL_VERSION, parseElitePageFrame, serializeEliteHostFrame } from './protocol';
-import type { EliteHostFrame, EliteHostFramePayload, ElitePageRequest } from './protocol';
 
-const STARTUP_TIMEOUT_MS = 15_000;
+const DOCUMENT_ACQUISITION_TIMEOUT_MS = 30_000;
+const SDK_STARTUP_TIMEOUT_MS = 30_000;
+const TOTAL_STARTUP_TIMEOUT_MS = DOCUMENT_ACQUISITION_TIMEOUT_MS + 2 * SDK_STARTUP_TIMEOUT_MS;
 const RUN_SOURCE = 'OwnIDEliteView';
 const EMPTY_EVENTS: OwnIDEliteEvents = Object.freeze({});
 
-type EliteOptionsInput = Readonly<{ origin?: string }>;
+type EliteOptionsInput = Readonly<{ origin: string }>;
 type TerminalRequest = Extract<ElitePageRequest, { method: 'events.onFinish' | 'events.onClose' }>;
 
 export type EliteLaunchSnapshot = Readonly<{
@@ -31,7 +33,7 @@ export type EliteLaunchSnapshot = Readonly<{
   binding: NamespaceBinding;
   events: OwnIDEliteEvents;
   sessionCreate: SessionCreateProvider['create'];
-  logging: LoggingService;
+  logging: OwnIdLogRouter;
 }>;
 
 export interface EliteRunPort {
@@ -39,14 +41,18 @@ export interface EliteRunPort {
   requestFocus(): void;
   stopLoading(): void;
   settle(): void;
+  loadFallback(): void;
+  ready(): void;
 }
 
 export interface EliteRunController {
   attach(): void;
   detach(): void;
-  loaded(): void;
+  mounted(documentMode: EliteDocumentMode): void;
+  loaded(documentMode: EliteDocumentMode): void;
   receive(message: string): void;
   fail(message: string, code: ErrorCode, source: string, cause?: unknown): void;
+  startupFailure(message: string, code: ErrorCode, source: string, cause?: unknown): void;
   dispose(): void;
 }
 
@@ -86,11 +92,14 @@ export function prepareEliteLaunch(
   namespace: OwnIDEliteNamespace,
   options: EliteOptionsInput | undefined,
   events: OwnIDEliteEvents,
-  providers: OwnIDProviders | undefined
+  providers: OwnIDProviders | undefined,
+  defaultDocumentPath: string
 ): EliteLaunchSnapshot {
   const binding = getEliteNamespaceBinding(namespace);
 
-  const origin = prepareOrigin(options);
+  if (options === undefined) throw new TypeError('OwnID Elite requires options.origin.');
+  assertRecord(options, 'options');
+  const documentUrl = resolveEliteDocumentUrl(options.origin, defaultDocumentPath);
   assertNamespaceBindingAvailable(binding);
 
   const preparedProviders = providers === undefined ? undefined : prepareProviders(providers);
@@ -105,16 +114,17 @@ export function prepareEliteLaunch(
   const configuration = runScope.resolve(RuntimeConfigurationToken);
   const context = runScope.resolveOptional(ContextToken);
   const languages = runScope.resolve(RuntimeLanguageProviderToken).snapshot();
-  const logging = runScope.resolve(LoggingServiceToken);
+  const logging = runScope.resolve(OwnIdLogRouterDiToken);
   assertNamespaceBindingAvailable(binding);
 
+  const documentInput = {
+    configuration,
+    url: documentUrl.url,
+    ...(languages?.[0] === undefined ? {} : { language: languages[0] }),
+    ...(context?.loginId === undefined ? {} : { loginId: context.loginId }),
+  };
   return Object.freeze({
-    source: createEliteDocument({
-      configuration,
-      origin,
-      ...(languages?.[0] === undefined ? {} : { language: languages[0] }),
-      ...(context?.loginId === undefined ? {} : { loginId: context.loginId }),
-    }),
+    source: createEliteDocument(documentInput),
     binding,
     events,
     sessionCreate: sessionProvider.create,
@@ -131,6 +141,8 @@ export class MissingEliteSessionProviderError extends Error {
 
 export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort, clock: EliteRunClock = defaultClock): EliteRunController {
   let state: 'active' | 'terminal' | 'settled' = 'active';
+  let documentMode: EliteDocumentMode = 'https';
+  let documentReady = false;
   let documentToken: string | undefined;
   let loaded = false;
   let ready = false;
@@ -139,6 +151,7 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
   let attached = false;
   let startupTimer: unknown;
   let startupDeadline: number | undefined;
+  let totalStartupDeadline: number | undefined;
   const requestIds = new Set<number>();
   const queuedRequests: ElitePageRequest[] = [];
   const queuedMessages: string[] = [];
@@ -160,8 +173,6 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
       finalize(false);
       return;
     }
-    startupDeadline ??= clock.now() + STARTUP_TIMEOUT_MS;
-
     snapshot.binding.signal.addEventListener('abort', onInstanceAbort);
     if (!isBindingActive()) {
       invalidateBinding();
@@ -202,43 +213,45 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     return false;
   }
 
-  function loadedDocument(): void {
-    if (!ensureActive()) return;
+  function mountedDocument(mountedMode: EliteDocumentMode): void {
+    if (mountedMode !== documentMode || !ensureActive() || totalStartupDeadline !== undefined) return;
+    totalStartupDeadline = clock.now() + TOTAL_STARTUP_TIMEOUT_MS;
+    startupDeadline = clock.now() + DOCUMENT_ACQUISITION_TIMEOUT_MS;
+    scheduleStartupTimeout();
+  }
+
+  function loadedDocument(loadedMode: EliteDocumentMode): void {
+    if (loadedMode !== documentMode || !ensureActive()) return;
     if (failIfStartupExpired()) return;
     loaded = true;
     grantStartPermissionIfReady();
   }
 
   function receive(message: string): void {
+    if (state === 'settled') return;
     const terminal = state === 'terminal';
-    if (terminal) {
-      if (!isBindingActive()) {
-        invalidateBinding();
-        return;
-      }
-    } else {
-      if (!ensureActive()) return;
-      if (failIfStartupExpired()) return;
-    }
-
     let frame;
     try {
       frame = parseElitePageFrame(message);
     } catch (cause) {
-      if (terminal) return;
+      if (terminal || !ensureActive()) return;
       terminalFailure('OwnID Elite received an invalid page message.', ErrorCode.UNKNOWN, `${RUN_SOURCE}.protocol`, cause);
       return;
     }
-
-    if (documentToken !== undefined && frame.documentToken !== documentToken) {
-      return;
-    }
+    if (frame.documentMode !== documentMode || (documentToken !== undefined && frame.documentToken !== documentToken)) return;
     if (terminal) {
-      if (frame.kind === 'failure') markTerminalPageUnavailable(frame.message);
+      if (!isBindingActive()) invalidateBinding();
+      else if (frame.kind === 'failure')
+        markTerminalPageUnavailable(
+          frame.message,
+          frame.details === undefined ? undefined : { code: frame.details.code },
+          frame.details?.source ?? `${RUN_SOURCE}.${frame.phase}`
+        );
       return;
     }
+    if (!ensureActive() || failIfStartupExpired()) return;
     if (documentToken === undefined) {
-      if (frame.kind !== 'ready' && frame.kind !== 'failure') {
+      if (frame.kind !== 'document-ready' && frame.kind !== 'failure') {
         terminalFailure('OwnID Elite received a message before the document was ready.', ErrorCode.UNKNOWN, `${RUN_SOURCE}.protocol`);
         return;
       }
@@ -246,12 +259,24 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     }
 
     switch (frame.kind) {
+      case 'document-ready':
+        if (documentReady) {
+          terminalFailure('OwnID Elite received duplicate document readiness.', ErrorCode.UNKNOWN, `${RUN_SOURCE}.protocol`);
+          return;
+        }
+        documentReady = true;
+        if (documentMode === 'https' && totalStartupDeadline !== undefined) {
+          startupDeadline = Math.min(clock.now() + SDK_STARTUP_TIMEOUT_MS, totalStartupDeadline);
+          scheduleStartupTimeout();
+        }
+        return;
       case 'ready':
-        if (ready) {
+        if (!documentReady || ready) {
           terminalFailure('OwnID Elite received duplicate readiness.', ErrorCode.UNKNOWN, `${RUN_SOURCE}.protocol`);
           return;
         }
         ready = true;
+        port.ready();
         grantStartPermissionIfReady();
         return;
       case 'start-issued':
@@ -269,15 +294,17 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
         }
         settleSilently();
         return;
-      case 'failure':
-        terminalFailure(
+      case 'failure': {
+        const reportFailure = frame.phase === 'start' ? terminalFailure : startupFailure;
+        reportFailure(
           frame.message,
           frame.details?.code ?? ErrorCode.UNKNOWN,
           frame.details?.source ?? `${RUN_SOURCE}.${frame.phase}`,
-          undefined,
+          frame.details === undefined ? undefined : { code: frame.details.code },
           frame.details
         );
         return;
+      }
       case 'request':
         handleRequest(frame);
         return;
@@ -286,12 +313,15 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
 
   function grantStartPermissionIfReady(): void {
     if (!attached || !ensureActive() || !ready || !loaded || startPermissionSent || documentToken === undefined) return;
+    const focusedDocumentMode = documentMode;
     try {
       port.requestFocus();
+      if (!ensureActive() || documentMode !== focusedDocumentMode || startPermissionSent) return;
       startPermissionSent = true;
       post({ kind: 'start-permission' });
     } catch (cause) {
-      terminalFailure('OwnID Elite could not start its hosted document.', ErrorCode.UNKNOWN, `${RUN_SOURCE}.bridge`, cause);
+      if (documentMode !== focusedDocumentMode) return;
+      startupFailure('OwnID Elite could not start its hosted document.', ErrorCode.UNKNOWN, `${RUN_SOURCE}.bridge`, cause);
     }
   }
 
@@ -400,7 +430,7 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     try {
       message = serialize({ kind: 'response', id, result: outcome.value });
     } catch (cause) {
-      snapshot.logging.emit(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite session provider returned an invalid result.', cause);
+      snapshot.logging.log(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite session provider returned an invalid result.', cause);
       if (!ensureActive()) return;
       sendApplicationResponse(id, false, 'OwnID Elite session provider failed.');
       return;
@@ -419,9 +449,9 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     if (callback === undefined) return { ok: true, value: undefined };
     try {
       const value = callback();
-      return { ok: true, value: await Promise.resolve(value) };
+      return { ok: true, value: await value };
     } catch (failure) {
-      snapshot.logging.emit(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite application callback failed.', failure);
+      snapshot.logging.log(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite application callback failed.', failure);
       return { ok: false };
     }
   }
@@ -457,6 +487,7 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     const value = {
       channel: ELITE_PROTOCOL_CHANNEL,
       version: ELITE_PROTOCOL_VERSION,
+      documentMode,
       documentToken,
       ...frame,
     } as EliteHostFrame;
@@ -467,9 +498,36 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     terminalFailure(message, code, source, cause);
   }
 
+  function startupFailure(message: string, code: ErrorCode, source: string, cause?: unknown, webDetails?: ErrorDetails): void {
+    if (state === 'terminal') {
+      terminalFailure(message, code, source, cause, webDetails);
+      return;
+    }
+    if (!ensureActive()) return;
+    if (documentMode !== 'https' || startPermissionSent || totalStartupDeadline === undefined || clock.now() >= totalStartupDeadline) {
+      terminalFailure(message, code, source, cause, webDetails);
+      return;
+    }
+    clearStartupTimer();
+    documentMode = 'inline';
+    documentToken = undefined;
+    loaded = ready = documentReady = false;
+    startupDeadline = Math.min(clock.now() + SDK_STARTUP_TIMEOUT_MS, totalStartupDeadline);
+    try {
+      port.loadFallback();
+    } catch (failure) {
+      terminalFailure('OwnID Elite could not load its inline content.', ErrorCode.UNKNOWN, `${RUN_SOURCE}.fallback`, failure);
+      return;
+    }
+    if (!ensureActive()) return;
+    snapshot.logging.log(OwnIDLogLevel.Warn, source, `OwnID Elite HTTPS startup failed; loading inline content. ${message}`, cause);
+    if (!ensureActive()) return;
+    scheduleStartupTimeout();
+  }
+
   function terminalFailure(message: string, code: ErrorCode, source: string, cause?: unknown, webDetails?: ErrorDetails): void {
     if (state === 'terminal') {
-      markTerminalPageUnavailable(message, cause);
+      markTerminalPageUnavailable(message, cause, source);
       return;
     }
     if (state !== 'active') return;
@@ -487,7 +545,7 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
               terminal: true,
             }),
           });
-    finalize(true, report, cause === undefined ? undefined : Object.freeze({ message, cause }));
+    finalize(true, report, Object.freeze({ message, source, ...(cause === undefined ? {} : { cause }) }));
   }
 
   function settleSilently(): void {
@@ -504,17 +562,17 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     finalize(true);
   }
 
-  function markTerminalPageUnavailable(message: string, cause?: unknown): void {
+  function markTerminalPageUnavailable(message: string, cause?: unknown, source = RUN_SOURCE): void {
     queuedMessages.length = 0;
     queuedRequests.length = 0;
     if (reservedTerminalRequest !== undefined) return;
-    finalize(false, undefined, cause === undefined ? undefined : Object.freeze({ message, cause }));
+    finalize(false, undefined, Object.freeze({ message, source, ...(cause === undefined ? {} : { cause }) }));
   }
 
   function finalize(
     sendAbort: boolean,
     report?: Readonly<{ message: string; details: OwnIDEliteErrorDetails }>,
-    log?: Readonly<{ message: string; cause: unknown }>
+    log?: Readonly<{ message: string; cause?: unknown; source?: string }>
   ): void {
     if (state !== 'settled') {
       state = 'settled';
@@ -527,7 +585,7 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     }
     abortPending ||= sendAbort;
     if (report !== undefined) terminalReport = report;
-    if (log !== undefined) snapshot.logging.emit(OwnIDLogLevel.Error, RUN_SOURCE, log.message, log.cause);
+    if (log !== undefined) snapshot.logging.log(OwnIDLogLevel.Error, log.source ?? RUN_SOURCE, log.message, log.cause);
     if (!settlementPending || !attached) return;
 
     settlementPending = false;
@@ -577,18 +635,20 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     if (deadline === undefined) return;
     const remaining = deadline - clock.now();
     if (remaining <= 0) {
-      terminalFailure('OwnID Elite did not start before its deadline.', ErrorCode.TIMEOUT, `${RUN_SOURCE}.startup`);
+      startupFailure('OwnID Elite did not start before its deadline.', ErrorCode.TIMEOUT, `${RUN_SOURCE}.startup`);
       return;
     }
-    startupTimer = clock.setTimeout(() => {
+    const handle = clock.setTimeout(() => {
+      if (startupTimer !== handle) return;
       startupTimer = undefined;
       scheduleStartupTimeout();
     }, remaining);
+    startupTimer = handle;
   }
 
   function failIfStartupExpired(): boolean {
     if (startIssued || startupDeadline === undefined || clock.now() < startupDeadline) return false;
-    terminalFailure('OwnID Elite did not start before its deadline.', ErrorCode.TIMEOUT, `${RUN_SOURCE}.startup`);
+    startupFailure('OwnID Elite did not start before its deadline.', ErrorCode.TIMEOUT, `${RUN_SOURCE}.startup`);
     return true;
   }
 
@@ -607,10 +667,10 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     try {
       const result = Reflect.apply(callback, undefined, [report.message, report.details]);
       void Promise.resolve(result).catch((failure: unknown) => {
-        snapshot.logging.emit(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite error callback failed.', failure);
+        snapshot.logging.log(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite error callback failed.', failure);
       });
     } catch (failure) {
-      snapshot.logging.emit(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite error callback failed.', failure);
+      snapshot.logging.log(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite error callback failed.', failure);
     }
   }
 
@@ -618,19 +678,11 @@ export function createEliteRun(snapshot: EliteLaunchSnapshot, port: EliteRunPort
     try {
       port.settle();
     } catch (cause) {
-      snapshot.logging.emit(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite View cleanup failed.', cause);
+      snapshot.logging.log(OwnIDLogLevel.Error, RUN_SOURCE, 'OwnID Elite View cleanup failed.', cause);
     }
   }
 
-  return Object.freeze({ attach, detach, loaded: loadedDocument, receive, fail, dispose });
-}
-
-function prepareOrigin(options: EliteOptionsInput | undefined): string {
-  if (options === undefined) {
-    return normalizeEliteOrigin(undefined);
-  }
-  assertRecord(options, 'options');
-  return normalizeEliteOrigin(options.origin);
+  return Object.freeze({ attach, detach, mounted: mountedDocument, loaded: loadedDocument, receive, fail, startupFailure, dispose });
 }
 
 function copyFinishParams(params: OwnIDEliteFinishParams): OwnIDEliteFinishParams {

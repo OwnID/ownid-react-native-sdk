@@ -1,3 +1,5 @@
+import '../reactNativePlatform';
+
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
@@ -10,6 +12,8 @@ import type { AuthResult, LoginPayload } from '../../src/models/authentication';
 import type { OwnIDProviders } from '../../src/providers';
 import { SessionCreateProviderToken } from '../../src/providers/internal';
 import { defaultRuntimeComposition } from '../../src/runtime/composition';
+import { OwnIdLogger } from '../../src/logging/OwnIdLogger';
+import { OwnIdLoggerDiToken } from '../../src/logging';
 import { RuntimeRoot } from '../../src/runtime/RuntimeRoot';
 import { prepareInitialization } from '../../src/configuration/runtime';
 
@@ -21,6 +25,7 @@ function createSession(label: string): SessionCreate {
 
 function composeNamespace() {
   const scope = Container.createRoot('ownid.scope.test-instance');
+  scope.registerValue(OwnIdLoggerDiToken, new OwnIdLogger());
   const configuration = prepareInitialization({ appId: 'Namespace123' }).configuration;
   const abortController = new AbortController();
   const composed = defaultRuntimeComposition.composeInstance(scope, configuration, abortController.signal, () => true);

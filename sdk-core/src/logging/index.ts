@@ -1,3 +1,8 @@
+import { createToken } from '../di';
+import type { OwnIdLogger } from './OwnIdLogger';
+import type { OwnIdLogRouter } from './OwnIdLogRouter';
+import type { ServerLogger } from './ServerLogger';
+
 export enum OwnIDLogLevel {
   Verbose = 'verbose',
   Debug = 'debug',
@@ -39,3 +44,7 @@ export type OwnIDLoggingOptions = Readonly<{
   /** Receives enabled entries. When omitted, enabled entries are written to the console. */
   onLog?: OwnIDLogHandler;
 }>;
+
+export const OwnIdLoggerDiToken = createToken<OwnIdLogger>('ownid.logging.local');
+export const OwnIdLogRouterDiToken = createToken<OwnIdLogRouter>('ownid.logging.router');
+export const ServerLoggerDiToken = createToken<ServerLogger>('ownid.logging.server');

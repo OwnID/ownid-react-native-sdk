@@ -1,5 +1,5 @@
-import { assertNamespaceBindingAvailable } from '../../namespace/scoping';
 import type { NamespaceBinding } from '../../namespace/scoping';
+import { assertNamespaceBindingAvailable } from '../../namespace/scoping';
 
 declare const eliteNamespaceBrand: unique symbol;
 

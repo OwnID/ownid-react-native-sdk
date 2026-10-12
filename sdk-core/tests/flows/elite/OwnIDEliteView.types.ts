@@ -40,23 +40,32 @@ const props: OwnIDEliteViewProps = {
 };
 
 const view: ReactElement = createElement(OwnIDEliteView, props);
-const defaultView: ReactElement = createElement(OwnIDEliteView, {});
+const defaultNamespaceView: ReactElement = createElement(OwnIDEliteView, { options });
+// @ts-expect-error The View requires launch options.
+const missingOptionsView: ReactElement = createElement(OwnIDEliteView, {});
+// @ts-expect-error Launch options require an explicit origin URL.
+const missingOrigin: OwnIDEliteOptions = {};
+// @ts-expect-error The View also rejects an options object without its origin.
+const missingOriginView: ReactElement = createElement(OwnIDEliteView, { options: {} });
 
 // @ts-expect-error Context belongs on a scoped namespace, not the View.
-const contextProp: OwnIDEliteViewProps = { context: { loginId: 'user@example.com' } };
+const contextProp: OwnIDEliteViewProps = { options, context: { loginId: 'user@example.com' } };
 // @ts-expect-error Instance selection uses an Elite namespace.
-const instanceNameProp: OwnIDEliteViewProps = { instanceName: 'checkout' };
+const instanceNameProp: OwnIDEliteViewProps = { options, instanceName: 'checkout' };
 // @ts-expect-error The application controls layout around the View.
-const styleProp: OwnIDEliteViewProps = { style: { flex: 1 } };
+const styleProp: OwnIDEliteViewProps = { options, style: { flex: 1 } };
 // @ts-expect-error Elite origins cannot be null.
 const nullOrigin: OwnIDEliteOptions = { origin: null };
 // @ts-expect-error Event handlers retain their asynchronous public contract.
-const synchronousClose: OwnIDEliteViewProps = { events: { onClose: () => undefined } };
+const synchronousClose: OwnIDEliteViewProps = { options, events: { onClose: () => undefined } };
 // @ts-expect-error Session providers return a Promise.
-const synchronousProvider: OwnIDEliteViewProps = { providers: { session: { create: () => ({ status: 'logged-in' }) } } };
+const synchronousProvider: OwnIDEliteViewProps = { options, providers: { session: { create: () => ({ status: 'logged-in' }) } } };
 
 void view;
-void defaultView;
+void defaultNamespaceView;
+void missingOptionsView;
+void missingOrigin;
+void missingOriginView;
 void contextProp;
 void instanceNameProp;
 void styleProp;

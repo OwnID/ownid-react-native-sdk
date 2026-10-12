@@ -1,3 +1,5 @@
+import '../reactNativePlatform';
+
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { describe, test } from 'node:test';
@@ -9,6 +11,8 @@ import { Container } from '../../src/di';
 import { OwnIDLogLevel } from '../../src/logging';
 import type { OwnIDLogEntry } from '../../src/logging';
 import { defaultRuntimeComposition } from '../../src/runtime/composition';
+import { OwnIdLogger } from '../../src/logging/OwnIdLogger';
+import { OwnIdLoggerDiToken } from '../../src/logging';
 import type { RuntimeComposition } from '../../src/runtime/composition';
 import { InstanceIdentityConflictError, RuntimeRoot } from '../../src/runtime/RuntimeRoot';
 
@@ -101,6 +105,7 @@ function withReactNativeAbortController(action: () => void): void {
 describe('runtime root lifecycle', () => {
   test('production composition binds instance configuration to its namespace scope', () => {
     const scope = Container.createRoot('ownid.scope.test-instance');
+    scope.registerValue(OwnIdLoggerDiToken, new OwnIdLogger());
     const candidate = prepareInitialization(options('Direct123', { env: 'uat', region: 'eu' })).configuration;
     defaultRuntimeComposition.composeInstance(scope, candidate, new AbortController().signal, () => true);
 

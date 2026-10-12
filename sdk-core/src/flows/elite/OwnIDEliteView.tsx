@@ -1,42 +1,51 @@
-import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import type { WebViewProps } from 'react-native-webview';
+import { WebView } from 'react-native-webview';
 
 import { OwnID } from '../../runtime/OwnID';
 import type { OwnIDProviders } from '../../providers';
 import { ErrorCode } from '../../models/error';
-import type { EliteDocumentSource } from './document';
 import type { OwnIDEliteErrorDetails, OwnIDEliteEvents } from './events';
 import type { OwnIDEliteNamespace } from './namespace';
 import { webAuthenticationNativeConfig } from './nativeWebView';
-import { decideEliteNavigation, isEliteDocumentUrl } from './origin';
-import { createEliteRun, MissingEliteSessionProviderError, prepareEliteEvents, prepareEliteLaunch } from './run';
+import { decideEliteNavigation, isEliteDocumentOrigin, isEliteDocumentUrl } from './documentUrl';
 import type { EliteRunController, EliteRunPort } from './run';
+import { createEliteRun, MissingEliteSessionProviderError, prepareEliteEvents, prepareEliteLaunch } from './run';
+import type { EliteDocumentMode } from './protocol';
 
 const ORIGIN_WHITELIST = ['*'];
+const DEFAULT_DOCUMENT_PATH = Platform.select({
+  android: '/.well-known/assetlinks.json',
+  ios: '/.well-known/apple-app-site-association',
+  default: '/.well-known/assetlinks.json',
+});
 
 /** Options captured when one mounted Elite flow starts. */
 export interface OwnIDEliteOptions {
   /**
-   * Security origin assigned to the generated Elite document. It does not change the configured OwnID environment or service endpoints.
+   * Required HTTPS origin or page URL. A non-root path or a root URL with a query loads that page directly.
+   * A host or root URL without a query loads `/.well-known/assetlinks.json` on Android or `/.well-known/apple-app-site-association` on iOS.
+   * Use an ASCII DNS hostname and optional port; fragments, user information, and IP addresses are rejected. The page must load without redirects.
    *
-   * Defaults to `https://webview.ownid.com`. The value must be HTTPS with an ASCII DNS host and optional port. A trailing slash is accepted;
-   * other paths, queries, fragments, user information, and IP addresses are rejected.
+   * The SDK replaces the page's content with Elite. An empty or plain page without complex styles or JavaScript is recommended.
+   * The page MUST NOT contain an existing OwnID Web SDK. The page's document policies must permit the configured OwnID resources.
    *
-   * For passkeys, align this host with the relying-party domain and deployed app-to-site associations. This option does not configure Android
-   * Digital Asset Links, iOS Associated Domains, or the site's association files.
+   * Available authentication methods depend on whether the HTTPS page can load securely, platform support, and your OwnID configuration.
+   *
+   * The HTTPS origin is used for passkey operations; its hostname must be valid for the configured relying party ID (RP ID).
+   * This URL does not change the configured OwnID environment or service endpoints.
    */
-  readonly origin?: string;
+  readonly origin: string;
 }
 
 /** Inputs captured when {@link OwnIDEliteView} first mounts. Later rerenders do not restart or retarget the run. */
 export interface OwnIDEliteViewProps {
   /** Elite flow selection supplying Context and providers. Defaults to `OwnID.flows.elite`. */
   readonly namespace?: OwnIDEliteNamespace;
-  /** Optional launch settings for this run. */
-  readonly options?: OwnIDEliteOptions;
+  /** Required launch settings for this run. */
+  readonly options: OwnIDEliteOptions;
   /** Optional application callbacks for this run. */
   readonly events?: OwnIDEliteEvents;
   /** Optional provider callbacks for this run; omitted callbacks remain inherited from the selected Elite flow. */
@@ -45,7 +54,10 @@ export interface OwnIDEliteViewProps {
 
 type MountedRun = Readonly<{
   controller: EliteRunController;
-  source: EliteDocumentSource;
+  documentMode: EliteDocumentMode;
+  source: NonNullable<WebViewProps['source']>;
+  ref(webView: WebView | null): void;
+  onLoadStart: NonNullable<WebViewProps['onLoadStart']>;
   onLoad: NonNullable<WebViewProps['onLoad']>;
   onMessage: NonNullable<WebViewProps['onMessage']>;
   onError: NonNullable<WebViewProps['onError']>;
@@ -64,31 +76,31 @@ type Setup = Readonly<{ kind: 'run'; value: MountedRun }> | Readonly<{ kind: 'fa
  * The View uses `flex: 1`, so its parent must provide dimensions. The application owns the surrounding screen, modal, safe-area layout, and
  * navigation. Props are captured once; unmount and remount to start a new run with different inputs. A valid effective
  * `providers.session.create` callback is required. Successful session creation requires an `AuthResult` with `status: 'logged-in'`. Its return
- * data must be JSON-compatible: unsupported JavaScript values, cycles, non-finite numbers, and missing array entries fail the request;
- * `undefined` object fields are omitted.
+ * data must be JSON-compatible.
  * Applications must add camera and foreground-location permission declarations, including iOS purpose strings, when hosted steps use those
  * capabilities.
  *
- * Reinitializing or destroying OwnID stops the run, as does a startup failure or native WebView loss. Setup errors are
- * reported through a valid `onError` when possible; otherwise the View remains empty instead of throwing the error from render.
+ * Reinitializing or destroying OwnID, or losing the native WebView, ends the attempt. If setup fails, the View remains empty and reports
+ * the failure through a valid `onError` callback when available.
  */
 export function OwnIDEliteView(props: OwnIDEliteViewProps): ReactElement {
   const webViewRef = useRef<WebView>(null);
   const setupRef = useRef<Setup | undefined>(undefined);
   const [mountedRun, setMountedRun] = useState<MountedRun | null>(null);
+  const [visible, setVisible] = useState(false);
 
   useLayoutEffect(() => {
     let setup = setupRef.current;
     if (setup === undefined) {
-      setup = prepareMountedRun(props, webViewRef, setMountedRun);
+      setup = prepareMountedRun(props, webViewRef, setMountedRun, setVisible);
       setupRef.current = setup;
       if (setup.kind === 'run') setMountedRun(setup.value);
     }
 
     if (setup.kind === 'failed') return undefined;
-    const controller = setup.value.controller;
-    controller.attach();
-    return () => controller.detach();
+    const run = setup.value;
+    run.controller.attach();
+    return () => run.controller.detach();
   }, []);
 
   if (mountedRun === null) {
@@ -96,37 +108,43 @@ export function OwnIDEliteView(props: OwnIDEliteViewProps): ReactElement {
   }
 
   return (
-    <WebView
-      ref={webViewRef}
-      style={styles.root}
-      source={mountedRun.source}
-      originWhitelist={ORIGIN_WHITELIST}
-      nativeConfig={webAuthenticationNativeConfig}
-      javaScriptEnabled
-      javaScriptCanOpenWindowsAutomatically={false}
-      allowFileAccess={false}
-      allowFileAccessFromFileURLs={false}
-      allowUniversalAccessFromFileURLs={false}
-      mixedContentMode="never"
-      setSupportMultipleWindows
-      allowsInlineMediaPlayback
-      geolocationEnabled
-      onLoad={mountedRun.onLoad}
-      onMessage={mountedRun.onMessage}
-      onError={mountedRun.onError}
-      onHttpError={mountedRun.onHttpError}
-      onRenderProcessGone={mountedRun.onRenderProcessGone}
-      onContentProcessDidTerminate={mountedRun.onContentProcessDidTerminate}
-      onOpenWindow={mountedRun.onOpenWindow}
-      onShouldStartLoadWithRequest={mountedRun.onShouldStartLoadWithRequest}
-    />
+    <View style={styles.root}>
+      <WebView
+        key={mountedRun.documentMode}
+        ref={mountedRun.ref}
+        style={[styles.root, !visible && styles.hidden]}
+        source={mountedRun.source}
+        originWhitelist={ORIGIN_WHITELIST}
+        nativeConfig={webAuthenticationNativeConfig}
+        javaScriptEnabled
+        javaScriptCanOpenWindowsAutomatically={false}
+        allowFileAccess={false}
+        allowFileAccessFromFileURLs={false}
+        allowUniversalAccessFromFileURLs={false}
+        mixedContentMode="never"
+        setSupportMultipleWindows
+        allowsInlineMediaPlayback
+        geolocationEnabled
+        onLoadStart={mountedRun.onLoadStart}
+        onLoad={mountedRun.onLoad}
+        onMessage={mountedRun.onMessage}
+        onError={mountedRun.onError}
+        onHttpError={mountedRun.onHttpError}
+        onRenderProcessGone={mountedRun.onRenderProcessGone}
+        onContentProcessDidTerminate={mountedRun.onContentProcessDidTerminate}
+        onOpenWindow={mountedRun.onOpenWindow}
+        onShouldStartLoadWithRequest={mountedRun.onShouldStartLoadWithRequest}
+      />
+      {!visible && <ActivityIndicator style={StyleSheet.absoluteFill} color="#858585" size="large" />}
+    </View>
   );
 }
 
 function prepareMountedRun(
   props: OwnIDEliteViewProps,
-  webViewRef: Readonly<{ current: WebView | null }>,
-  setMountedRun: (update: (current: MountedRun | null) => MountedRun | null) => void
+  webViewRef: { current: WebView | null },
+  setMountedRun: (update: (current: MountedRun | null) => MountedRun | null) => void,
+  setVisible: (visible: boolean) => void
 ): Setup {
   let events: OwnIDEliteEvents;
   try {
@@ -138,7 +156,9 @@ function prepareMountedRun(
 
   try {
     const namespace = props.namespace ?? OwnID.flows.elite;
-    const launch = prepareEliteLaunch(namespace, props.options, events, props.providers);
+    const launch = prepareEliteLaunch(namespace, props.options, events, props.providers, DEFAULT_DOCUMENT_PATH);
+    let activeDocumentMode: EliteDocumentMode = 'https';
+    let finished = false;
     const port: EliteRunPort = Object.freeze({
       postMessage(message: string) {
         const webView = webViewRef.current;
@@ -153,53 +173,129 @@ function prepareMountedRun(
       stopLoading() {
         webViewRef.current?.stopLoading();
       },
+      ready() {
+        if (!finished) setVisible(true);
+      },
+      loadFallback() {
+        activeDocumentMode = 'inline';
+        webViewRef.current?.stopLoading();
+        setVisible(false);
+        const fallback = createMountedDocument('inline');
+        setMountedRun((current) => (current?.controller === controller ? fallback : current));
+      },
       settle() {
-        setMountedRun((current) => (current === mountedRun ? null : current));
+        finished = true;
+        setMountedRun((current) => (current?.controller === controller ? null : current));
       },
     });
     const controller = createEliteRun(launch, port);
-    let initialNavigationPending = true;
-    const mountedRun: MountedRun = Object.freeze({
-      controller,
-      source: launch.source,
-      onLoad(event) {
-        if (!isEliteDocumentUrl(event.nativeEvent.url, launch.source.baseUrl)) {
-          controller.fail('OwnID Elite loaded an unexpected document.', ErrorCode.UNKNOWN, 'OwnIDEliteView.navigation', event.nativeEvent);
-          return;
+    function createMountedDocument(documentMode: EliteDocumentMode): MountedRun {
+      const document = launch.source;
+      const documentUrl = documentMode === 'https' ? document.url : document.baseUrl;
+      let initialNavigationPending = true;
+      let documentLoaded = false;
+      const isCurrent = (): boolean => !finished && activeDocumentMode === documentMode;
+      function blockedNavigation(cause?: unknown): void {
+        if (documentMode === 'https' && !documentLoaded) {
+          controller.startupFailure(
+            'OwnID Elite blocked initial document navigation.',
+            ErrorCode.UNKNOWN,
+            'OwnIDEliteView.navigation',
+            cause
+          );
+        } else {
+          controller.fail('OwnID Elite blocked document navigation.', ErrorCode.UNKNOWN, 'OwnIDEliteView.navigation', cause);
         }
-        initialNavigationPending = false;
-        controller.loaded();
-      },
-      onMessage(event) {
-        if (!isEliteDocumentUrl(event.nativeEvent.url, launch.source.baseUrl)) {
-          controller.fail('OwnID Elite received a message from an unexpected document.', ErrorCode.UNKNOWN, 'OwnIDEliteView.message');
-          return;
-        }
-        controller.receive(event.nativeEvent.data);
-      },
-      onError(event) {
-        controller.fail('OwnID Elite could not load its hosted content.', ErrorCode.NETWORK, 'OwnIDEliteView.load', event.nativeEvent);
-      },
-      onHttpError(event) {
-        controller.fail('OwnID Elite received an HTTP loading error.', ErrorCode.UNKNOWN, 'OwnIDEliteView.http', event.nativeEvent);
-      },
-      onRenderProcessGone(event) {
-        controller.fail('OwnID Elite WebView process stopped.', ErrorCode.UNKNOWN, 'OwnIDEliteView.process', event.nativeEvent);
-      },
-      onContentProcessDidTerminate(event) {
-        controller.fail('OwnID Elite WebView process stopped.', ErrorCode.UNKNOWN, 'OwnIDEliteView.process', event.nativeEvent);
-      },
-      onOpenWindow(event) {
-        controller.fail('OwnID Elite blocked a new browser window.', ErrorCode.UNKNOWN, 'OwnIDEliteView.navigation', event.nativeEvent);
-      },
-      onShouldStartLoadWithRequest(request) {
-        const decision = decideEliteNavigation(request, launch.source.baseUrl, initialNavigationPending);
-        initialNavigationPending = decision.initialNavigationPending;
-        if (decision.allowed) return true;
-        controller.fail('OwnID Elite blocked document navigation.', ErrorCode.UNKNOWN, 'OwnIDEliteView.navigation');
-        return false;
-      },
-    });
+      }
+      return Object.freeze({
+        controller,
+        documentMode,
+        source:
+          documentMode === 'https'
+            ? Object.freeze({ uri: document.url })
+            : Object.freeze({ html: document.html, baseUrl: document.baseUrl }),
+        ref(webView) {
+          if (!isCurrent()) return;
+          webViewRef.current = webView;
+          if (webView !== null) controller.mounted(documentMode);
+        },
+        onLoadStart(event) {
+          if (!isCurrent()) return;
+          initialNavigationPending = false;
+          if (!isEliteDocumentUrl(event.nativeEvent.url, documentUrl)) blockedNavigation(event.nativeEvent);
+        },
+        onLoad(event) {
+          if (!isCurrent() || documentLoaded) return;
+          if (!isEliteDocumentUrl(event.nativeEvent.url, documentUrl)) {
+            blockedNavigation(event.nativeEvent);
+            return;
+          }
+          if (documentMode === 'inline') {
+            documentLoaded = true;
+            initialNavigationPending = false;
+            controller.loaded(documentMode);
+            return;
+          }
+          const webView = webViewRef.current;
+          if (webView === null) return;
+          documentLoaded = true;
+          initialNavigationPending = false;
+          try {
+            webView.injectJavaScript(document.installEliteScript);
+            controller.loaded(documentMode);
+          } catch (cause) {
+            if (!isCurrent()) return;
+            controller.startupFailure('OwnID Elite could not install its content.', ErrorCode.UNKNOWN, 'OwnIDEliteView.bootstrap', cause);
+          }
+        },
+        onMessage(event) {
+          if (!isCurrent() || (documentMode === 'https' && !documentLoaded)) return;
+          // Android reports sourceOrigin; iOS reports the document URL. Document modes and tokens also constrain the sender.
+          if (!isEliteDocumentOrigin(event.nativeEvent.url, documentUrl)) {
+            controller.fail('OwnID Elite received a message from an unexpected origin.', ErrorCode.UNKNOWN, 'OwnIDEliteView.message', {
+              url: event.nativeEvent.url,
+            });
+            return;
+          }
+          controller.receive(event.nativeEvent.data);
+        },
+        onError(event) {
+          if (!isCurrent()) return;
+          const cause = event.nativeEvent.url ? event.nativeEvent : { ...event.nativeEvent, url: documentUrl };
+          controller.startupFailure('OwnID Elite could not load its hosted content.', ErrorCode.NETWORK, 'OwnIDEliteView.load', cause);
+        },
+        onHttpError(event) {
+          if (!isCurrent() || !isEliteDocumentUrl(event.nativeEvent.url, documentUrl)) return;
+          controller.startupFailure(
+            'OwnID Elite received an HTTP loading error.',
+            ErrorCode.UNKNOWN,
+            'OwnIDEliteView.http',
+            event.nativeEvent
+          );
+        },
+        onRenderProcessGone(event) {
+          if (!isCurrent()) return;
+          controller.fail('OwnID Elite WebView process stopped.', ErrorCode.UNKNOWN, 'OwnIDEliteView.process', event.nativeEvent);
+        },
+        onContentProcessDidTerminate(event) {
+          if (!isCurrent()) return;
+          controller.fail('OwnID Elite WebView process stopped.', ErrorCode.UNKNOWN, 'OwnIDEliteView.process', event.nativeEvent);
+        },
+        onOpenWindow(event) {
+          if (!isCurrent()) return;
+          controller.fail('OwnID Elite blocked a new browser window.', ErrorCode.UNKNOWN, 'OwnIDEliteView.navigation', event.nativeEvent);
+        },
+        onShouldStartLoadWithRequest(request) {
+          if (!isCurrent()) return false;
+          const decision = decideEliteNavigation(request, documentUrl, initialNavigationPending);
+          initialNavigationPending = decision.initialNavigationPending;
+          if (decision.allowed) return true;
+          blockedNavigation(request);
+          return false;
+        },
+      });
+    }
+    const mountedRun = createMountedDocument('https');
     return Object.freeze({ kind: 'run', value: mountedRun });
   } catch (cause) {
     reportPreparationFailure(events, cause);
@@ -231,4 +327,5 @@ function reportPreparationFailure(events: OwnIDEliteEvents, cause: unknown): voi
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  hidden: { opacity: 0 },
 });
